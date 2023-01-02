@@ -12,6 +12,7 @@ import java.io.OutputStreamWriter;
 import java.util.Collections;
 import java.util.Comparator;
 import javax.swing.JFileChooser;
+import javax.swing.text.DefaultCaret;
 
 /**
  *
@@ -19,7 +20,7 @@ import javax.swing.JFileChooser;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.16";
+    public final static String VERSION = "0.17";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -36,6 +37,8 @@ public class Main extends javax.swing.JFrame {
         Helpers.JTextFieldRegularPopupMenu.addTo(cuentas_textarea);
         Helpers.JTextFieldRegularPopupMenu.addTo(output_textarea);
         progressbar.setMinimum(0);
+        DefaultCaret caret = (DefaultCaret) output_textarea.getCaret();
+        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
         this.setTitle("MegaDoctor " + VERSION);
 
         Helpers.threadRun(() -> {
@@ -283,6 +286,7 @@ public class Main extends javax.swing.JFrame {
 
                         Helpers.GUIRun(() -> {
                             progressbar.setValue(j);
+                            output_textarea.setCaretPosition(output_textarea.getText().length());
                         });
 
                         if (_exit) {
@@ -290,13 +294,13 @@ public class Main extends javax.swing.JFrame {
                         }
 
                     }
-                    
+
                     Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-logout"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
                     Collections.sort(accounts_space, new Comparator<String[]>() {
                         @Override
                         public int compare(String[] o1, String[] o2) {
-                            
+
                             return Long.compare(Long.parseLong(o2[2]) - Long.parseLong(o2[1]), Long.parseLong(o1[2]) - Long.parseLong(o1[1]));
                         }
                     });
@@ -307,6 +311,7 @@ public class Main extends javax.swing.JFrame {
                             output_textarea.append(account[0] + " [" + Helpers.formatBytes(Long.parseLong(account[2]) - Long.parseLong(account[1])) + " FREE] (of " + Helpers.formatBytes(Long.parseLong(account[2])) + ")\n\n");
                         }
                         output_textarea.append("CHECKING END -> " + Helpers.getFechaHoraActual() + "\n");
+                        output_textarea.setCaretPosition(output_textarea.getText().length());
                     });
 
                     Helpers.mostrarMensajeInformativo(this, _exit ? "CANCELED!" : "DONE");
