@@ -19,7 +19,7 @@ import javax.swing.JFileChooser;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.15";
+    public final static String VERSION = "0.16";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -296,7 +296,8 @@ public class Main extends javax.swing.JFrame {
                     Collections.sort(accounts_space, new Comparator<String[]>() {
                         @Override
                         public int compare(String[] o1, String[] o2) {
-                            return (int) ((Long.parseLong(o2[2]) - Long.parseLong(o2[1])) - (Long.parseLong(o1[2]) - Long.parseLong(o1[1])));
+                            
+                            return Long.compare(Long.parseLong(o2[2]) - Long.parseLong(o2[1]), Long.parseLong(o1[2]) - Long.parseLong(o1[1]));
                         }
                     });
 
