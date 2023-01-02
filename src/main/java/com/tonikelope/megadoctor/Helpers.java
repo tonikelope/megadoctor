@@ -11,12 +11,15 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.DateFormat;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiSystem;
 import javax.sound.midi.MidiUnavailableException;
@@ -39,6 +42,33 @@ import javax.swing.undo.UndoManager;
  * @author tonikelope
  */
 public class Helpers {
+
+    public static String formatBytes(Long bytes) {
+
+        String[] units = {"B", "KB", "MB", "GB", "TB"};
+
+        bytes = Math.max(bytes, 0L);
+
+        int pow = Math.min((int) ((bytes > 0L ? Math.log(bytes) : 0) / Math.log(1024)), units.length - 1);
+
+        Double bytes_double = (double) bytes / (1L << (10 * pow));
+
+        DecimalFormat df = new DecimalFormat("#.##");
+
+        return df.format(bytes_double) + ' ' + units[pow];
+    }
+
+    public static String[] getAccountSpaceData(String email, String df) {
+        final String regex = "USED STORAGE: *([0-9]+).*?of *([0-9]+)";
+        final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+        final Matcher matcher = pattern.matcher(df);
+
+        if (matcher.find()) {
+            return new String[]{email, matcher.group(1), matcher.group(2)};
+        }
+
+        return null;
+    }
 
     public static String getFechaHoraActual() {
 
