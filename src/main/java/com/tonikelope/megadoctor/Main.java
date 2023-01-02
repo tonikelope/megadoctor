@@ -19,7 +19,7 @@ import javax.swing.JFileChooser;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.14";
+    public final static String VERSION = "0.15";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -290,6 +290,8 @@ public class Main extends javax.swing.JFrame {
                         }
 
                     }
+                    
+                    Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-logout"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
                     Collections.sort(accounts_space, new Comparator<String[]>() {
                         @Override
