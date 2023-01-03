@@ -223,6 +223,11 @@ public class Helpers {
         return result;
     }
 
+    public static String escapeMEGAPassword(String password) {
+
+        return password.contains(" ") ? password : "\"" + password + "\"";
+    }
+
     public static String[] runProcess(String[] command, String path) {
         try {
 

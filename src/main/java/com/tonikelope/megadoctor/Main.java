@@ -19,7 +19,7 @@ import javax.swing.JFileChooser;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.20";
+    public final static String VERSION = "0.21";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -224,6 +224,8 @@ public class Main extends javax.swing.JFrame {
 
                 ArrayList<String[]> accounts_space = new ArrayList<>();
 
+                ArrayList<String> login_errors = new ArrayList<>();
+
                 while (matcher.find()) {
                     accounts.add(new String[]{matcher.group(1), matcher.group(2)});
                 }
@@ -248,11 +250,12 @@ public class Main extends javax.swing.JFrame {
 
                         Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-logout"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-                        String login = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-login", account[0], "\"" + account[1] + "\""}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                        String login = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-login", account[0], Helpers.escapeMEGAPassword(account[1])}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
                         if (login.contains("Login failed")) {
+                            login_errors.add(account[0] + "#" + account[1]);
                             Helpers.GUIRun(() -> {
-                                output_textarea.append(account[0] + " LOGIN ERROR\n\n\n\n");
+                                output_textarea.append("\n[" + account[0] + "] LOGIN ERROR\n\n");
                             });
 
                         } else {
@@ -314,9 +317,16 @@ public class Main extends javax.swing.JFrame {
                             total_space += Long.parseLong(account[2]);
                             output_textarea.append(account[0] + " [" + Helpers.formatBytes(Long.parseLong(account[2]) - Long.parseLong(account[1])) + " FREE] (of " + Helpers.formatBytes(Long.parseLong(account[2])) + ")\n\n");
                         }
-                        
+
                         output_textarea.append("TOTAL FREE SPACE: " + Helpers.formatBytes(total_space - total_space_used) + " (of " + Helpers.formatBytes(total_space) + ")\n\n");
-                        
+
+                        if (!login_errors.isEmpty()) {
+                            output_textarea.append("(WARNING) LOGIN ERRORS: " + String.valueOf(login_errors.size()) + "\n");
+                            for (String errors : login_errors) {
+                                output_textarea.append("    ERROR: " + errors + "\n");
+                            }
+                        }
+
                         output_textarea.append("\nCHECKING END -> " + Helpers.getFechaHoraActual() + "\n");
 
                     });
