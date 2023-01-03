@@ -19,7 +19,7 @@ import javax.swing.JFileChooser;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.19";
+    public final static String VERSION = "0.20";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -239,6 +239,7 @@ public class Main extends javax.swing.JFrame {
                                 + "             |___/                                      \n\nCHECKING START -> " + Helpers.getFechaHoraActual() + "\n");
                     });
                     int i = 0;
+
                     for (String[] account : accounts) {
 
                         Helpers.GUIRun(() -> {
@@ -260,7 +261,7 @@ public class Main extends javax.swing.JFrame {
                                 status_label.setText("Reading " + account[0] + " info...");
                             });
 
-                            String ls = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-ls", "-haalr"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                            String ls = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
                             String du = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-du", "-h", "--use-pcre", "/.*"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
@@ -270,7 +271,7 @@ public class Main extends javax.swing.JFrame {
 
                             Helpers.GUIRun(() -> {
 
-                                output_textarea.append("\n[" + account[0] + "]\n\n" + df + "\n" + du + "\n" + ls + "\n\n\n");
+                                output_textarea.append("\n[" + account[0] + "]\n\n" + df + "\n" + du + "\n" + ls + "\n\n");
 
                             });
 
@@ -303,11 +304,20 @@ public class Main extends javax.swing.JFrame {
                     });
 
                     Helpers.GUIRun(() -> {
-                        output_textarea.append("ACCOUNTS ORDERED BY FREE SPACE (DESC):\n\n");
+                        output_textarea.append("--------------------------------------\n");
+                        output_textarea.append("ACCOUNTS ORDERED BY FREE SPACE (DESC):\n");
+                        output_textarea.append("--------------------------------------\n\n");
+                        long total_space = 0;
+                        long total_space_used = 0;
                         for (String[] account : accounts_space) {
+                            total_space_used += Long.parseLong(account[1]);
+                            total_space += Long.parseLong(account[2]);
                             output_textarea.append(account[0] + " [" + Helpers.formatBytes(Long.parseLong(account[2]) - Long.parseLong(account[1])) + " FREE] (of " + Helpers.formatBytes(Long.parseLong(account[2])) + ")\n\n");
                         }
-                        output_textarea.append("CHECKING END -> " + Helpers.getFechaHoraActual() + "\n");
+                        
+                        output_textarea.append("TOTAL FREE SPACE: " + Helpers.formatBytes(total_space - total_space_used) + " (of " + Helpers.formatBytes(total_space) + ")\n\n");
+                        
+                        output_textarea.append("\nCHECKING END -> " + Helpers.getFechaHoraActual() + "\n");
 
                     });
 
