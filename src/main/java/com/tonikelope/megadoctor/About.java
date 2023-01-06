@@ -1,6 +1,8 @@
 package com.tonikelope.megadoctor;
 
 import static com.tonikelope.megadoctor.Main.VERSION;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.sound.midi.Sequencer;
 
 /**
@@ -10,6 +12,7 @@ import javax.sound.midi.Sequencer;
 public class About extends javax.swing.JDialog {
 
     private static volatile Sequencer _midi = null;
+    private volatile boolean _exit = false;
 
     /**
      * Creates new form About
@@ -18,8 +21,26 @@ public class About extends javax.swing.JDialog {
         super(parent, modal);
         initComponents();
         this.setTitle("About MegaDoctor " + VERSION);
-        this.cmd_version.setText("Powered by the (super cool) " + Main.MEGA_CMD_VERSION);
+        this.cmd_version.setText("");
         pack();
+
+        Helpers.threadRun(() -> {
+
+            while (_exit && Main.MEGA_CMD_VERSION == null) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(About.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+
+            if (!_exit) {
+                Helpers.GUIRun(() -> {
+                    cmd_version.setText("Powered by the (super cool) " + Main.MEGA_CMD_VERSION);
+                    pack();
+                });
+            }
+        });
     }
 
     /**
@@ -120,6 +141,7 @@ public class About extends javax.swing.JDialog {
             _midi.stop();
         });
         dispose();
+        _exit = true;
     }//GEN-LAST:event_formWindowClosing
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

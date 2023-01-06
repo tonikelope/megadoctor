@@ -19,7 +19,7 @@ import javax.swing.JFileChooser;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.21";
+    public final static String VERSION = "0.22";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -37,8 +37,13 @@ public class Main extends javax.swing.JFrame {
         Helpers.JTextFieldRegularPopupMenu.addTo(output_textarea);
         progressbar.setMinimum(0);
         this.setTitle("MegaDoctor " + VERSION);
+        pack();
 
         Helpers.threadRun(() -> {
+
+            Helpers.GUIRun(() -> {
+                status_label.setText("Checking if MEGACMD is present...");
+            });
 
             MEGA_CMD_VERSION = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-version"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
@@ -47,6 +52,10 @@ public class Main extends javax.swing.JFrame {
                 Helpers.openBrowserURLAndWait(MEGA_CMD_URL);
                 System.exit(1);
             }
+
+            Helpers.GUIRun(() -> {
+                status_label.setText("");
+            });
 
         });
     }
@@ -201,165 +210,169 @@ public class Main extends javax.swing.JFrame {
     private void vamos_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_vamos_buttonActionPerformed
         // TODO add your handling code here:
 
-        if (!_running) {
+        if (MEGA_CMD_VERSION != null) {
 
-            if (!_firstAccountsTextareaClick) {
-                _firstAccountsTextareaClick = true;
-                cuentas_textarea.setText("");
-                cuentas_textarea.setForeground(null);
-            }
+            if (!_running) {
 
-            _running = true;
-            cuentas_textarea.setEnabled(false);
-            save_button.setEnabled(false);
-            vamos_button.setText("STOP");
-            vamos_button.setBackground(Color.red);
-
-            Helpers.threadRun(() -> {
-                final String regex = "(.*?)#(.+)";
-                final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
-                final Matcher matcher = pattern.matcher(cuentas_textarea.getText());
-
-                ArrayList<String[]> accounts = new ArrayList<>();
-
-                ArrayList<String[]> accounts_space = new ArrayList<>();
-
-                ArrayList<String> login_errors = new ArrayList<>();
-
-                while (matcher.find()) {
-                    accounts.add(new String[]{matcher.group(1), matcher.group(2)});
+                if (!_firstAccountsTextareaClick) {
+                    _firstAccountsTextareaClick = true;
+                    cuentas_textarea.setText("");
+                    cuentas_textarea.setForeground(null);
                 }
 
-                if (!accounts.isEmpty()) {
-                    Helpers.GUIRun(() -> {
-                        progressbar.setMaximum(accounts.size());
-                        output_textarea.append(" __  __                  ____             _             \n"
-                                + "|  \\/  | ___  __ _  __ _|  _ \\  ___   ___| |_ ___  _ __ \n"
-                                + "| |\\/| |/ _ \\/ _` |/ _` | | | |/ _ \\ / __| __/ _ \\| '__|\n"
-                                + "| |  | |  __/ (_| | (_| | |_| | (_) | (__| || (_) | |   \n"
-                                + "|_|  |_|\\___|\\__, |\\__,_|____/ \\___/ \\___|\\__\\___/|_|   \n"
-                                + "             |___/                                      \n\nCHECKING START -> " + Helpers.getFechaHoraActual() + "\n");
-                    });
-                    int i = 0;
+                _running = true;
+                cuentas_textarea.setEnabled(false);
+                save_button.setEnabled(false);
+                vamos_button.setText("STOP");
+                vamos_button.setBackground(Color.red);
 
-                    for (String[] account : accounts) {
+                Helpers.threadRun(() -> {
+                    final String regex = "(.*?)#(.+)";
+                    final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+                    final Matcher matcher = pattern.matcher(cuentas_textarea.getText());
 
+                    ArrayList<String[]> accounts = new ArrayList<>();
+
+                    ArrayList<String[]> accounts_space = new ArrayList<>();
+
+                    ArrayList<String> login_errors = new ArrayList<>();
+
+                    while (matcher.find()) {
+                        accounts.add(new String[]{matcher.group(1), matcher.group(2)});
+                    }
+
+                    if (!accounts.isEmpty()) {
                         Helpers.GUIRun(() -> {
-                            status_label.setText("Login " + account[0] + " ...");
+                            progressbar.setMaximum(accounts.size());
+                            output_textarea.append(" __  __                  ____             _             \n"
+                                    + "|  \\/  | ___  __ _  __ _|  _ \\  ___   ___| |_ ___  _ __ \n"
+                                    + "| |\\/| |/ _ \\/ _` |/ _` | | | |/ _ \\ / __| __/ _ \\| '__|\n"
+                                    + "| |  | |  __/ (_| | (_| | |_| | (_) | (__| || (_) | |   \n"
+                                    + "|_|  |_|\\___|\\__, |\\__,_|____/ \\___/ \\___|\\__\\___/|_|   \n"
+                                    + "             |___/                                      \n\nCHECKING START -> " + Helpers.getFechaHoraActual() + "\n");
                         });
+                        int i = 0;
+
+                        for (String[] account : accounts) {
+
+                            Helpers.GUIRun(() -> {
+                                status_label.setText("Login " + account[0] + " ...");
+                            });
+
+                            Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-logout"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+                            String login = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-login", account[0], Helpers.escapeMEGAPassword(account[1])}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+                            if (login.contains("Login failed")) {
+                                login_errors.add(account[0] + "#" + account[1]);
+                                Helpers.GUIRun(() -> {
+                                    output_textarea.append("\n[" + account[0] + "] LOGIN ERROR\n\n");
+                                });
+
+                            } else {
+
+                                Helpers.GUIRun(() -> {
+                                    status_label.setText("Reading " + account[0] + " info...");
+                                });
+
+                                String ls = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+                                String du = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-du", "-h", "--use-pcre", "/.*"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+                                String df = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-df", "-h"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+                                String df2 = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-df"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+                                Helpers.GUIRun(() -> {
+
+                                    output_textarea.append("\n[" + account[0] + "]\n\n" + df + "\n" + du + "\n" + ls + "\n\n");
+
+                                });
+
+                                accounts_space.add(Helpers.getAccountSpaceData(account[0], df2));
+                            }
+
+                            i++;
+
+                            int j = i;
+
+                            Helpers.GUIRun(() -> {
+                                progressbar.setValue(j);
+
+                            });
+
+                            if (_exit) {
+                                break;
+                            }
+
+                        }
 
                         Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-logout"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-                        String login = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-login", account[0], Helpers.escapeMEGAPassword(account[1])}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                        Collections.sort(accounts_space, new Comparator<String[]>() {
+                            @Override
+                            public int compare(String[] o1, String[] o2) {
 
-                        if (login.contains("Login failed")) {
-                            login_errors.add(account[0] + "#" + account[1]);
-                            Helpers.GUIRun(() -> {
-                                output_textarea.append("\n[" + account[0] + "] LOGIN ERROR\n\n");
-                            });
-
-                        } else {
-
-                            Helpers.GUIRun(() -> {
-                                status_label.setText("Reading " + account[0] + " info...");
-                            });
-
-                            String ls = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
-                            String du = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-du", "-h", "--use-pcre", "/.*"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
-                            String df = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-df", "-h"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
-                            String df2 = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-df"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
-                            Helpers.GUIRun(() -> {
-
-                                output_textarea.append("\n[" + account[0] + "]\n\n" + df + "\n" + du + "\n" + ls + "\n\n");
-
-                            });
-
-                            accounts_space.add(Helpers.getAccountSpaceData(account[0], df2));
-                        }
-
-                        i++;
-
-                        int j = i;
+                                return Long.compare(Long.parseLong(o2[2]) - Long.parseLong(o2[1]), Long.parseLong(o1[2]) - Long.parseLong(o1[1]));
+                            }
+                        });
 
                         Helpers.GUIRun(() -> {
-                            progressbar.setValue(j);
+                            output_textarea.append("--------------------------------------\n");
+                            output_textarea.append("ACCOUNTS ORDERED BY FREE SPACE (DESC):\n");
+                            output_textarea.append("--------------------------------------\n\n");
+                            long total_space = 0;
+                            long total_space_used = 0;
+                            for (String[] account : accounts_space) {
+                                total_space_used += Long.parseLong(account[1]);
+                                total_space += Long.parseLong(account[2]);
+                                output_textarea.append(account[0] + " [" + Helpers.formatBytes(Long.parseLong(account[2]) - Long.parseLong(account[1])) + " FREE] (of " + Helpers.formatBytes(Long.parseLong(account[2])) + ")\n\n");
+                            }
+
+                            output_textarea.append("TOTAL FREE SPACE: " + Helpers.formatBytes(total_space - total_space_used) + " (of " + Helpers.formatBytes(total_space) + ")\n\n");
+
+                            if (!login_errors.isEmpty()) {
+                                output_textarea.append("(WARNING) LOGIN ERRORS: " + String.valueOf(login_errors.size()) + "\n");
+                                for (String errors : login_errors) {
+                                    output_textarea.append("    ERROR: " + errors + "\n");
+                                }
+                            }
+
+                            output_textarea.append("\nCHECKING END -> " + Helpers.getFechaHoraActual() + "\n");
 
                         });
 
-                        if (_exit) {
-                            break;
-                        }
+                        Helpers.mostrarMensajeInformativo(this, _exit ? "CANCELED!" : "DONE");
 
+                    } else {
+                        Helpers.mostrarMensajeInformativo(this, "DONE");
                     }
 
-                    Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-logout"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
-
-                    Collections.sort(accounts_space, new Comparator<String[]>() {
-                        @Override
-                        public int compare(String[] o1, String[] o2) {
-
-                            return Long.compare(Long.parseLong(o2[2]) - Long.parseLong(o2[1]), Long.parseLong(o1[2]) - Long.parseLong(o1[1]));
-                        }
-                    });
-
                     Helpers.GUIRun(() -> {
-                        output_textarea.append("--------------------------------------\n");
-                        output_textarea.append("ACCOUNTS ORDERED BY FREE SPACE (DESC):\n");
-                        output_textarea.append("--------------------------------------\n\n");
-                        long total_space = 0;
-                        long total_space_used = 0;
-                        for (String[] account : accounts_space) {
-                            total_space_used += Long.parseLong(account[1]);
-                            total_space += Long.parseLong(account[2]);
-                            output_textarea.append(account[0] + " [" + Helpers.formatBytes(Long.parseLong(account[2]) - Long.parseLong(account[1])) + " FREE] (of " + Helpers.formatBytes(Long.parseLong(account[2])) + ")\n\n");
-                        }
-
-                        output_textarea.append("TOTAL FREE SPACE: " + Helpers.formatBytes(total_space - total_space_used) + " (of " + Helpers.formatBytes(total_space) + ")\n\n");
-
-                        if (!login_errors.isEmpty()) {
-                            output_textarea.append("(WARNING) LOGIN ERRORS: " + String.valueOf(login_errors.size()) + "\n");
-                            for (String errors : login_errors) {
-                                output_textarea.append("    ERROR: " + errors + "\n");
-                            }
-                        }
-
-                        output_textarea.append("\nCHECKING END -> " + Helpers.getFechaHoraActual() + "\n");
-
+                        progressbar.setValue(0);
+                        vamos_button.setText("CHECK ACCOUNTS");
+                        vamos_button.setBackground(new Color(0, 153, 0));
+                        vamos_button.setEnabled(true);
+                        cuentas_textarea.setEnabled(true);
+                        status_label.setText("");
+                        save_button.setEnabled(true);
                     });
 
-                    Helpers.mostrarMensajeInformativo(this, _exit ? "CANCELED!" : "DONE");
+                    _running = false;
+                    _exit = false;
 
-                } else {
-                    Helpers.mostrarMensajeInformativo(this, "DONE");
+                });
+
+            } else if (!_exit) {
+                if (Helpers.mostrarMensajeInformativoSINO(this, "SURE?") == 0) {
+                    _exit = true;
+                    Helpers.GUIRun(() -> {
+                        vamos_button.setText("CANCELING...");
+                        vamos_button.setEnabled(false);
+                    });
                 }
-
-                Helpers.GUIRun(() -> {
-                    progressbar.setValue(0);
-                    vamos_button.setText("CHECK ACCOUNTS");
-                    vamos_button.setBackground(new Color(0, 153, 0));
-                    vamos_button.setEnabled(true);
-                    cuentas_textarea.setEnabled(true);
-                    status_label.setText("");
-                    save_button.setEnabled(true);
-                });
-
-                _running = false;
-                _exit = false;
-
-            });
-
-        } else if (!_exit) {
-            if (Helpers.mostrarMensajeInformativoSINO(this, "SURE?") == 0) {
-                _exit = true;
-                Helpers.GUIRun(() -> {
-                    vamos_button.setText("CANCELING...");
-                    vamos_button.setEnabled(false);
-                });
             }
+
         }
 
     }//GEN-LAST:event_vamos_buttonActionPerformed
