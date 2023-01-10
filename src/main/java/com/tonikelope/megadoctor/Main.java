@@ -25,7 +25,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.23";
+    public final static String VERSION = "0.24";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -355,17 +355,20 @@ public class Main extends javax.swing.JFrame {
                     final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
                     final Matcher matcher = pattern.matcher(cuentas_textarea.getText());
 
+                    LinkedHashMap<String, String> mega_accounts = new LinkedHashMap<>();
+
                     MEGA_ACCOUNTS_SPACE.clear();
 
                     MEGA_ACCOUNTS_LOGIN_ERROR.clear();
 
                     while (matcher.find()) {
                         MEGA_ACCOUNTS.put(matcher.group(1), matcher.group(2));
+                        mega_accounts.put(matcher.group(1), matcher.group(2));
                     }
 
-                    if (!MEGA_ACCOUNTS.isEmpty()) {
+                    if (!mega_accounts.isEmpty()) {
                         Helpers.GUIRun(() -> {
-                            progressbar.setMaximum(MEGA_ACCOUNTS.size());
+                            progressbar.setMaximum(mega_accounts.size());
                             output_textarea.append(" __  __                  ____             _             \n"
                                     + "|  \\/  | ___  __ _  __ _|  _ \\  ___   ___| |_ ___  _ __ \n"
                                     + "| |\\/| |/ _ \\/ _` |/ _` | | | |/ _ \\ / __| __/ _ \\| '__|\n"
@@ -375,7 +378,7 @@ public class Main extends javax.swing.JFrame {
                         });
                         int i = 0;
 
-                        for (String email : MEGA_ACCOUNTS.keySet()) {
+                        for (String email : mega_accounts.keySet()) {
 
                             Helpers.GUIRun(() -> {
                                 status_label.setText("Login " + email + " ...");
@@ -383,10 +386,10 @@ public class Main extends javax.swing.JFrame {
 
                             Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-logout"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-                            String login = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-login", email, Helpers.escapeMEGAPassword(MEGA_ACCOUNTS.get(email))}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                            String login = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-login", email, Helpers.escapeMEGAPassword(mega_accounts.get(email))}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
                             if (login.contains("Login failed")) {
-                                MEGA_ACCOUNTS_LOGIN_ERROR.add(email + "#" + MEGA_ACCOUNTS.get(email));
+                                MEGA_ACCOUNTS_LOGIN_ERROR.add(email + "#" + mega_accounts.get(email));
                                 Helpers.GUIRun(() -> {
                                     output_textarea.append("\n[" + email + "] LOGIN ERROR\n\n");
                                 });
