@@ -270,20 +270,18 @@ public class Helpers {
 
         public static void addTo(JTextArea txtArea) {
             JPopupMenu popup = new JPopupMenu();
-            Action undoAction = null;
-            if (txtArea.isEditable()) {
-                UndoManager undoManager = new UndoManager();
-                txtArea.getDocument().addUndoableEditListener(undoManager);
-                undoAction = new AbstractAction("Undo") {
-                    @Override
-                    public void actionPerformed(ActionEvent ae) {
-                        if (undoManager.canUndo() && txtArea.isEditable()) {
-                            undoManager.undo();
-                        } else {
-                        }
+
+            UndoManager undoManager = new UndoManager();
+            txtArea.getDocument().addUndoableEditListener(undoManager);
+            Action undoAction = new AbstractAction("Undo") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    if (undoManager.canUndo() && txtArea.isEditable()) {
+                        undoManager.undo();
+                    } else {
                     }
-                };
-            }
+                }
+            };
 
             Action copyAction = new AbstractAction("Copy") {
                 @Override
@@ -313,7 +311,7 @@ public class Helpers {
             Action removeMEGANodesAction = new AbstractAction("DELETE SELECTED MEGA FOLDERS/FILES") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
-                    if (Main.MAIN_WINDOW.getVamos_button().isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                    if (Main.MAIN_WINDOW.getCuentas_textarea().isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
                         Helpers.threadRun(() -> {
                             Main.removeNodes(txtArea.getSelectedText());
                         });

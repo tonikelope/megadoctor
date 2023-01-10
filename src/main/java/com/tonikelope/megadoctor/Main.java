@@ -25,7 +25,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.24";
+    public final static String VERSION = "0.25";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -108,7 +108,7 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.GUIRun(() -> {
 
-            MAIN_WINDOW.getStatus_label().setText("REMOVING FOLDERS/FILES. PLEASE WAIT...");
+            MAIN_WINDOW.getStatus_label().setText("DELETING FOLDERS/FILES. PLEASE WAIT...");
 
         });
 
@@ -136,7 +136,7 @@ public class Main extends javax.swing.JFrame {
 
         }
 
-        if (!nodesToRemove.isEmpty() && Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "ARE YOU SURE? THE FILES WILL BE PERMANENTLY DELETED") == 0) {
+        if (!nodesToRemove.isEmpty() && Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "CAUTION!! ARE YOU SURE? THE FILES WILL BE PERMANENTLY DELETED") == 0) {
 
             for (String email : nodesToRemove.keySet()) {
 
