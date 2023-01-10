@@ -11,7 +11,13 @@ import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import javax.swing.JButton;
 import javax.swing.JFileChooser;
+import javax.swing.JLabel;
+import javax.swing.JProgressBar;
+import javax.swing.JTextArea;
 
 /**
  *
@@ -19,14 +25,43 @@ import javax.swing.JFileChooser;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.22";
+    public final static String VERSION = "0.23";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
     public volatile static String MEGA_CMD_VERSION = null;
+    public static Main MAIN_WINDOW;
+    private final static LinkedHashMap<String, String> MEGA_ACCOUNTS = new LinkedHashMap<>();
+    private final static ArrayList<String[]> MEGA_ACCOUNTS_SPACE = new ArrayList<>();
+    private final static ArrayList<String> MEGA_ACCOUNTS_LOGIN_ERROR = new ArrayList<>();
+    private final static HashMap<String, String> MEGA_NODES = new HashMap<>();
     private volatile boolean _running = false;
     private volatile boolean _exit = false;
     private volatile boolean _firstAccountsTextareaClick = false;
+
+    public JTextArea getCuentas_textarea() {
+        return cuentas_textarea;
+    }
+
+    public JTextArea getOutput_textarea() {
+        return output_textarea;
+    }
+
+    public JProgressBar getProgressbar() {
+        return progressbar;
+    }
+
+    public JButton getSave_button() {
+        return save_button;
+    }
+
+    public JLabel getStatus_label() {
+        return status_label;
+    }
+
+    public JButton getVamos_button() {
+        return vamos_button;
+    }
 
     /**
      * Creates new form Main
@@ -58,6 +93,95 @@ public class Main extends javax.swing.JFrame {
             });
 
         });
+    }
+
+    public static void removeNodes(String text) {
+
+        Helpers.GUIRun(() -> {
+
+            MAIN_WINDOW.getCuentas_textarea().setEnabled(false);
+            MAIN_WINDOW.getVamos_button().setEnabled(false);
+            MAIN_WINDOW.getSave_button().setEnabled(false);
+            MAIN_WINDOW.getProgressbar().setIndeterminate(true);
+
+        });
+
+        Helpers.GUIRun(() -> {
+
+            MAIN_WINDOW.getStatus_label().setText("REMOVING FOLDERS/FILES. PLEASE WAIT...");
+
+        });
+
+        final String regex = "<(H:[^>]+)>";
+
+        final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+        final Matcher matcher = pattern.matcher(text);
+
+        HashMap<String, ArrayList<String>> nodesToRemove = new HashMap<>();
+
+        while (matcher.find()) {
+
+            String node = matcher.group(1);
+
+            if (MEGA_NODES.containsKey(node)) {
+
+                String email = MEGA_NODES.get(node);
+
+                if (!nodesToRemove.containsKey(email)) {
+                    nodesToRemove.put(email, new ArrayList<>());
+                }
+
+                nodesToRemove.get(email).add(node);
+            }
+
+        }
+
+        if (!nodesToRemove.isEmpty() && Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "ARE YOU SURE? THE FILES WILL BE PERMANENTLY DELETED") == 0) {
+
+            for (String email : nodesToRemove.keySet()) {
+
+                ArrayList<String> node_list = nodesToRemove.get(email);
+
+                ArrayList<String> delete_command = new ArrayList<>();
+
+                delete_command.add("mega-rm");
+
+                delete_command.add("-rf");
+
+                delete_command.addAll(node_list);
+
+                Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-logout"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+                Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-login", email, Helpers.escapeMEGAPassword(MEGA_ACCOUNTS.get(email))}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+                Helpers.runProcess(Helpers.buildCommand(delete_command.toArray(new String[delete_command.size()])), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+            }
+
+            Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL SELECTED FOLDERS/FILES DELETED (REFRESH ACCOUNT/S TO CHECK IT)");
+        } else if (nodesToRemove.isEmpty()) {
+            Helpers.mostrarMensajeError(MAIN_WINDOW, "NO FOLDERS/FILES SELECTED (you must select with your mouse text that contains some H:xxxxxxxx MEGA NODE)");
+        }
+
+        Helpers.GUIRun(() -> {
+
+            MAIN_WINDOW.getCuentas_textarea().setEnabled(true);
+            MAIN_WINDOW.getVamos_button().setEnabled(true);
+            MAIN_WINDOW.getSave_button().setEnabled(true);
+            MAIN_WINDOW.getProgressbar().setIndeterminate(false);
+            MAIN_WINDOW.getStatus_label().setText("");
+
+        });
+    }
+
+    private void parseAccountNodes(String email, String ls) {
+
+        final String regex = "<(H:[^>]+)>";
+        final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+        final Matcher matcher = pattern.matcher(ls);
+
+        while (matcher.find()) {
+            MEGA_NODES.put(matcher.group(1), email);
+        }
     }
 
     /**
@@ -231,19 +355,17 @@ public class Main extends javax.swing.JFrame {
                     final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
                     final Matcher matcher = pattern.matcher(cuentas_textarea.getText());
 
-                    ArrayList<String[]> accounts = new ArrayList<>();
+                    MEGA_ACCOUNTS_SPACE.clear();
 
-                    ArrayList<String[]> accounts_space = new ArrayList<>();
-
-                    ArrayList<String> login_errors = new ArrayList<>();
+                    MEGA_ACCOUNTS_LOGIN_ERROR.clear();
 
                     while (matcher.find()) {
-                        accounts.add(new String[]{matcher.group(1), matcher.group(2)});
+                        MEGA_ACCOUNTS.put(matcher.group(1), matcher.group(2));
                     }
 
-                    if (!accounts.isEmpty()) {
+                    if (!MEGA_ACCOUNTS.isEmpty()) {
                         Helpers.GUIRun(() -> {
-                            progressbar.setMaximum(accounts.size());
+                            progressbar.setMaximum(MEGA_ACCOUNTS.size());
                             output_textarea.append(" __  __                  ____             _             \n"
                                     + "|  \\/  | ___  __ _  __ _|  _ \\  ___   ___| |_ ___  _ __ \n"
                                     + "| |\\/| |/ _ \\/ _` |/ _` | | | |/ _ \\ / __| __/ _ \\| '__|\n"
@@ -253,26 +375,26 @@ public class Main extends javax.swing.JFrame {
                         });
                         int i = 0;
 
-                        for (String[] account : accounts) {
+                        for (String email : MEGA_ACCOUNTS.keySet()) {
 
                             Helpers.GUIRun(() -> {
-                                status_label.setText("Login " + account[0] + " ...");
+                                status_label.setText("Login " + email + " ...");
                             });
 
                             Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-logout"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-                            String login = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-login", account[0], Helpers.escapeMEGAPassword(account[1])}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                            String login = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-login", email, Helpers.escapeMEGAPassword(MEGA_ACCOUNTS.get(email))}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
                             if (login.contains("Login failed")) {
-                                login_errors.add(account[0] + "#" + account[1]);
+                                MEGA_ACCOUNTS_LOGIN_ERROR.add(email + "#" + MEGA_ACCOUNTS.get(email));
                                 Helpers.GUIRun(() -> {
-                                    output_textarea.append("\n[" + account[0] + "] LOGIN ERROR\n\n");
+                                    output_textarea.append("\n[" + email + "] LOGIN ERROR\n\n");
                                 });
 
                             } else {
 
                                 Helpers.GUIRun(() -> {
-                                    status_label.setText("Reading " + account[0] + " info...");
+                                    status_label.setText("Reading " + email + " info...");
                                 });
 
                                 String ls = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
@@ -285,11 +407,13 @@ public class Main extends javax.swing.JFrame {
 
                                 Helpers.GUIRun(() -> {
 
-                                    output_textarea.append("\n[" + account[0] + "]\n\n" + df + "\n" + du + "\n" + ls + "\n\n");
+                                    output_textarea.append("\n[" + email + "]\n\n" + df + "\n" + du + "\n" + ls + "\n\n");
 
                                 });
 
-                                accounts_space.add(Helpers.getAccountSpaceData(account[0], df2));
+                                MEGA_ACCOUNTS_SPACE.add(Helpers.getAccountSpaceData(email, df2));
+
+                                parseAccountNodes(email, ls);
                             }
 
                             i++;
@@ -309,7 +433,7 @@ public class Main extends javax.swing.JFrame {
 
                         Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-logout"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-                        Collections.sort(accounts_space, new Comparator<String[]>() {
+                        Collections.sort(MEGA_ACCOUNTS_SPACE, new Comparator<String[]>() {
                             @Override
                             public int compare(String[] o1, String[] o2) {
 
@@ -323,7 +447,7 @@ public class Main extends javax.swing.JFrame {
                             output_textarea.append("--------------------------------------\n\n");
                             long total_space = 0;
                             long total_space_used = 0;
-                            for (String[] account : accounts_space) {
+                            for (String[] account : MEGA_ACCOUNTS_SPACE) {
                                 total_space_used += Long.parseLong(account[1]);
                                 total_space += Long.parseLong(account[2]);
                                 output_textarea.append(account[0] + " [" + Helpers.formatBytes(Long.parseLong(account[2]) - Long.parseLong(account[1])) + " FREE] (of " + Helpers.formatBytes(Long.parseLong(account[2])) + ")\n\n");
@@ -331,9 +455,9 @@ public class Main extends javax.swing.JFrame {
 
                             output_textarea.append("TOTAL FREE SPACE: " + Helpers.formatBytes(total_space - total_space_used) + " (of " + Helpers.formatBytes(total_space) + ")\n\n");
 
-                            if (!login_errors.isEmpty()) {
-                                output_textarea.append("(WARNING) LOGIN ERRORS: " + String.valueOf(login_errors.size()) + "\n");
-                                for (String errors : login_errors) {
+                            if (!MEGA_ACCOUNTS_LOGIN_ERROR.isEmpty()) {
+                                output_textarea.append("(WARNING) LOGIN ERRORS: " + String.valueOf(MEGA_ACCOUNTS_LOGIN_ERROR.size()) + "\n");
+                                for (String errors : MEGA_ACCOUNTS_LOGIN_ERROR) {
                                     output_textarea.append("    ERROR: " + errors + "\n");
                                 }
                             }
@@ -475,7 +599,8 @@ public class Main extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new Main().setVisible(true);
+                MAIN_WINDOW = new Main();
+                MAIN_WINDOW.setVisible(true);
             }
         });
     }
