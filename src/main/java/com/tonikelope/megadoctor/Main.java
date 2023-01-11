@@ -25,7 +25,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.28";
+    public final static String VERSION = "0.29";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -112,7 +112,7 @@ public class Main extends javax.swing.JFrame {
 
         HashMap<String, ArrayList<String>> nodesToCopy = Helpers.extractNodeMapFromText(text);
 
-        if (MEGA_ACCOUNTS.size() > nodesToCopy.keySet().size()) {
+        if (!nodesToCopy.isEmpty() && MEGA_ACCOUNTS.size() > nodesToCopy.keySet().size()) {
 
             ArrayList<String[]> exported_links = new ArrayList<>();
 
@@ -244,6 +244,8 @@ public class Main extends javax.swing.JFrame {
 
             }
 
+        }else if (nodesToCopy.isEmpty()) {
+            Helpers.mostrarMensajeError(MAIN_WINDOW, "NO FOLDERS/FILES SELECTED (you must select with your mouse text that contains some H:XXXXXXXX MEGA NODE)");
         }
 
         Helpers.GUIRun(() -> {
