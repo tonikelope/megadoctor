@@ -7,8 +7,7 @@
                                                               
 by tonikelope
 
-*/
-
+ */
 package com.tonikelope.megadoctor;
 
 import javax.swing.JTextField;
@@ -35,6 +34,8 @@ public class RenameNodeDialog extends javax.swing.JDialog {
     public RenameNodeDialog(java.awt.Frame parent, boolean modal, String old_fpath) {
         super(parent, modal);
         initComponents();
+
+        Helpers.JTextFieldRegularPopupMenu.addTo(new_name);
 
         String old_n = old_fpath.replaceAll("^.*/([^/]*)$", "$1");
         String old_p = old_fpath.replaceAll("^(.*/)[^/]*$", "$1");

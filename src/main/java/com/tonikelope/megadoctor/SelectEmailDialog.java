@@ -7,8 +7,7 @@
                                                               
 by tonikelope
 
-*/
-
+ */
 package com.tonikelope.megadoctor;
 
 import java.util.ArrayList;
