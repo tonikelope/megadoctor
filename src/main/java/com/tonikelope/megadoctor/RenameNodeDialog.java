@@ -1,7 +1,14 @@
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JDialog.java to edit this template
- */
+ __  __ _____ ____    _    ____   ___   ____ _____ ___  ____  
+|  \/  | ____/ ___|  / \  |  _ \ / _ \ / ___|_   _/ _ \|  _ \ 
+| |\/| |  _|| |  _  / _ \ | | | | | | | |     | || | | | |_) |
+| |  | | |__| |_| |/ ___ \| |_| | |_| | |___  | || |_| |  _ < 
+|_|  |_|_____\____/_/   \_\____/ \___/ \____| |_| \___/|_| \_\
+                                                              
+by tonikelope
+
+*/
+
 package com.tonikelope.megadoctor;
 
 import javax.swing.JTextField;
