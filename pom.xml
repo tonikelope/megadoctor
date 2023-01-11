@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.tonikelope.megadoctor</groupId>
     <artifactId>MegaDoctor</artifactId>
-    <version>0.29</version>
+    <version>0.30</version>
     <packaging>jar</packaging>
     <build>
         <plugins>

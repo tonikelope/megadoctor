@@ -314,6 +314,19 @@ public class Helpers {
         return nodesMAP;
     }
 
+    public static String getNodePathFromFind(String node, String find) {
+
+        final String regex = "(.+) <" + node + ">";
+        final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+        final Matcher matcher = pattern.matcher(find);
+
+        if (matcher.find()) {
+            return "/" + matcher.group(1).trim();
+        }
+
+        return null;
+    }
+
     public static class JTextFieldRegularPopupMenu {
 
         public static void addTo(JTextArea txtArea) {
@@ -386,6 +399,36 @@ public class Helpers {
                     }
                 }
             };
+            Action renameMEGANodesAction = new AbstractAction("RENAME SELECTED MEGA FOLDERS/FILES") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    if (Main.MAIN_WINDOW.getCuentas_textarea().isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                        Helpers.threadRun(() -> {
+                            Main.MAIN_WINDOW.renameNodes(txtArea.getSelectedText());
+                        });
+                    }
+                }
+            };
+            Action enableExporMEGANodesAction = new AbstractAction("ENABLE PUBLIC LINK ON SELECTED MEGA FOLDERS/FILES") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    if (Main.MAIN_WINDOW.getCuentas_textarea().isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                        Helpers.threadRun(() -> {
+                            Main.MAIN_WINDOW.exportNodes(txtArea.getSelectedText(), true);
+                        });
+                    }
+                }
+            };
+            Action disableExporMEGANodesAction = new AbstractAction("DISABLE PUBLIC LINK ON SELECTED MEGA FOLDERS/FILES") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    if (Main.MAIN_WINDOW.getCuentas_textarea().isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                        Helpers.threadRun(() -> {
+                            Main.MAIN_WINDOW.exportNodes(txtArea.getSelectedText(), false);
+                        });
+                    }
+                }
+            };
             cutAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control X"));
             copyAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control C"));
             pasteAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control V"));
@@ -437,6 +480,27 @@ public class Helpers {
             moveNodes.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/move.png")));
 
             popup.add(moveNodes);
+
+            popup.addSeparator();
+
+            JMenuItem renameNodes = new JMenuItem(renameMEGANodesAction);
+            renameNodes.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/rename.png")));
+
+            popup.add(renameNodes);
+
+            popup.addSeparator();
+
+            JMenuItem publicONNodes = new JMenuItem(enableExporMEGANodesAction);
+            publicONNodes.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/export_on.png")));
+
+            popup.add(publicONNodes);
+
+            popup.addSeparator();
+
+            JMenuItem publicOFFNodes = new JMenuItem(disableExporMEGANodesAction);
+            publicOFFNodes.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/export_off.png")));
+
+            popup.add(publicOFFNodes);
 
             txtArea.setComponentPopupMenu(popup);
         }
