@@ -25,7 +25,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.25";
+    public final static String VERSION = "0.26";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -95,7 +95,7 @@ public class Main extends javax.swing.JFrame {
         });
     }
 
-    public static void removeNodes(String text) {
+    public void removeNodes(String text) {
 
         Helpers.GUIRun(() -> {
 
@@ -155,9 +155,21 @@ public class Main extends javax.swing.JFrame {
                 Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-login", email, Helpers.escapeMEGAPassword(MEGA_ACCOUNTS.get(email))}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
                 Helpers.runProcess(Helpers.buildCommand(delete_command.toArray(new String[delete_command.size()])), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+                String ls = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+                String du = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-du", "-h", "--use-pcre", "/.*"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+                String df = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-df", "-h"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+                Helpers.GUIRun(() -> {
+
+                    output_textarea.append("\n[" + email + "] (Refreshed after deletion)\n\n" + df + "\n" + du + "\n" + ls + "\n\n");
+
+                });
             }
 
-            Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL SELECTED FOLDERS/FILES DELETED (REFRESH ACCOUNT/S TO CHECK IT)");
+            Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL SELECTED FOLDERS/FILES DELETED");
         } else if (nodesToRemove.isEmpty()) {
             Helpers.mostrarMensajeError(MAIN_WINDOW, "NO FOLDERS/FILES SELECTED (you must select with your mouse text that contains some H:xxxxxxxx MEGA NODE)");
         }

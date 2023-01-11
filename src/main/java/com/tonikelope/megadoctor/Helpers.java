@@ -313,7 +313,7 @@ public class Helpers {
                 public void actionPerformed(ActionEvent ae) {
                     if (Main.MAIN_WINDOW.getCuentas_textarea().isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
                         Helpers.threadRun(() -> {
-                            Main.removeNodes(txtArea.getSelectedText());
+                            Main.MAIN_WINDOW.removeNodes(txtArea.getSelectedText());
                         });
                     }
                 }
