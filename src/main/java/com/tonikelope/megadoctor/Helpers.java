@@ -1,5 +1,6 @@
 package com.tonikelope.megadoctor;
 
+import static com.tonikelope.megadoctor.Main.MEGA_NODES;
 import static com.tonikelope.megadoctor.Main.THREAD_POOL;
 import java.awt.Desktop;
 import java.awt.event.ActionEvent;
@@ -284,6 +285,35 @@ public class Helpers {
         return null;
     }
 
+    public static HashMap<String, ArrayList<String>> extractNodeMapFromText(String text) {
+
+        final String regex = "H:[^> ]+";
+
+        final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+        final Matcher matcher = pattern.matcher(text);
+
+        HashMap<String, ArrayList<String>> nodesMAP = new HashMap<>();
+
+        while (matcher.find()) {
+
+            String node = matcher.group(0);
+
+            if (MEGA_NODES.containsKey(node)) {
+
+                String email = (String) ((Object[]) MEGA_NODES.get(node))[1];
+
+                if (!nodesMAP.containsKey(email)) {
+                    nodesMAP.put(email, new ArrayList<>());
+                }
+
+                nodesMAP.get(email).add(node);
+            }
+
+        }
+
+        return nodesMAP;
+    }
+
     public static class JTextFieldRegularPopupMenu {
 
         public static void addTo(JTextArea txtArea) {
@@ -341,7 +371,17 @@ public class Helpers {
                 public void actionPerformed(ActionEvent ae) {
                     if (Main.MAIN_WINDOW.getCuentas_textarea().isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
                         Helpers.threadRun(() -> {
-                            Main.MAIN_WINDOW.copyNodes(txtArea.getSelectedText());
+                            Main.MAIN_WINDOW.copyNodes(txtArea.getSelectedText(), false);
+                        });
+                    }
+                }
+            };
+            Action moveMEGANodesAction = new AbstractAction("MOVE SELECTED MEGA FOLDERS/FILES TO ANOTHER ACCOUNT") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    if (Main.MAIN_WINDOW.getCuentas_textarea().isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                        Helpers.threadRun(() -> {
+                            Main.MAIN_WINDOW.copyNodes(txtArea.getSelectedText(), true);
                         });
                     }
                 }
@@ -390,6 +430,13 @@ public class Helpers {
             copyNodes.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/copy.png")));
 
             popup.add(copyNodes);
+
+            popup.addSeparator();
+
+            JMenuItem moveNodes = new JMenuItem(moveMEGANodesAction);
+            moveNodes.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/move.png")));
+
+            popup.add(moveNodes);
 
             txtArea.setComponentPopupMenu(popup);
         }

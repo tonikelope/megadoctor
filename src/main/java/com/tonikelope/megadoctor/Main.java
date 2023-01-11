@@ -25,7 +25,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.27";
+    public final static String VERSION = "0.28";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -38,6 +38,7 @@ public class Main extends javax.swing.JFrame {
     private volatile boolean _running = false;
     private volatile boolean _exit = false;
     private volatile boolean _firstAccountsTextareaClick = false;
+    private volatile SelectEmailDialog _email_dialog = null;
 
     public JTextArea getCuentas_textarea() {
         return cuentas_textarea;
@@ -95,7 +96,9 @@ public class Main extends javax.swing.JFrame {
         });
     }
 
-    public void copyNodes(String text) {
+    public void copyNodes(String text, final boolean move) {
+
+        _running = true;
 
         Helpers.GUIRun(() -> {
 
@@ -103,38 +106,11 @@ public class Main extends javax.swing.JFrame {
             MAIN_WINDOW.getVamos_button().setEnabled(false);
             MAIN_WINDOW.getSave_button().setEnabled(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
+            MAIN_WINDOW.getStatus_label().setText((move ? "MOVING" : "COPYING") + " FOLDERS/FILES. PLEASE WAIT...");
 
         });
 
-        Helpers.GUIRun(() -> {
-
-            MAIN_WINDOW.getStatus_label().setText("COPYING FOLDERS/FILES. PLEASE WAIT...");
-
-        });
-
-        final String regex = "<(H:[^>]+)>";
-
-        final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
-        final Matcher matcher = pattern.matcher(text);
-
-        HashMap<String, ArrayList<String>> nodesToCopy = new HashMap<>();
-
-        while (matcher.find()) {
-
-            String node = matcher.group(1);
-
-            if (MEGA_NODES.containsKey(node)) {
-
-                String email = (String) ((Object[]) MEGA_NODES.get(node))[1];
-
-                if (!nodesToCopy.containsKey(email)) {
-                    nodesToCopy.put(email, new ArrayList<>());
-                }
-
-                nodesToCopy.get(email).add(node);
-            }
-
-        }
+        HashMap<String, ArrayList<String>> nodesToCopy = Helpers.extractNodeMapFromText(text);
 
         if (MEGA_ACCOUNTS.size() > nodesToCopy.keySet().size()) {
 
@@ -172,15 +148,17 @@ public class Main extends javax.swing.JFrame {
 
             }
 
-            SelectEmailDialog dialog = new SelectEmailDialog(MAIN_WINDOW, true, nodesToCopy.keySet());
+            Helpers.GUIRunAndWait(() -> {
+                _email_dialog = new SelectEmailDialog(MAIN_WINDOW, true, nodesToCopy.keySet());
 
-            dialog.setLocationRelativeTo(MAIN_WINDOW);
+                _email_dialog.setLocationRelativeTo(MAIN_WINDOW);
 
-            dialog.setVisible(true);
+                _email_dialog.setVisible(true);
+            });
 
-            String email = (String) dialog.getEmail_combobox().getSelectedItem();
+            String email = (String) _email_dialog.getEmail_combobox().getSelectedItem();
 
-            if (dialog.isOk() && email != null && !email.isBlank()) {
+            if (_email_dialog.isOk() && email != null && !email.isBlank()) {
 
                 Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-logout"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
@@ -219,8 +197,47 @@ public class Main extends javax.swing.JFrame {
 
                     });
 
-                    Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL SELECTED FOLDERS/FILES COPIED");
+                    if (move) {
 
+                        for (String email_rm : nodesToCopy.keySet()) {
+
+                            ArrayList<String> node_list = nodesToCopy.get(email_rm);
+
+                            ArrayList<String> delete_command = new ArrayList<>();
+
+                            delete_command.add("mega-rm");
+
+                            delete_command.add("-rf");
+
+                            delete_command.addAll(node_list);
+
+                            Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-logout"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+                            Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-login", email_rm, Helpers.escapeMEGAPassword(MEGA_ACCOUNTS.get(email_rm))}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+                            Helpers.runProcess(Helpers.buildCommand(delete_command.toArray(String[]::new)), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+                            String ls_rm = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+                            String ls2_rm = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-ls", "-lr", "--show-handles"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+                            String du_rm = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-du", "-h", "--use-pcre", "/.*"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+                            String df_rm = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-df", "-h"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+                            parseAccountNodes(email_rm, ls2_rm);
+
+                            Helpers.GUIRun(() -> {
+
+                                output_textarea.append("\n[" + email_rm + "] (Refreshed after deletion)\n\n" + df_rm + "\n" + du_rm + "\n" + ls_rm + "\n\n");
+
+                            });
+                        }
+
+                        Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL SELECTED FOLDERS/FILES MOVED");
+                    } else {
+                        Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL SELECTED FOLDERS/FILES COPIED");
+                    }
                 } else {
                     Helpers.mostrarMensajeError(MAIN_WINDOW, "THERE IS NO ENOUGH FREE SPACE IN DESTINATION ACCOUNT");
                 }
@@ -238,9 +255,13 @@ public class Main extends javax.swing.JFrame {
             MAIN_WINDOW.getStatus_label().setText("");
 
         });
+
+        _running = false;
     }
 
     public void removeNodes(String text) {
+
+        _running = true;
 
         Helpers.GUIRun(() -> {
 
@@ -248,40 +269,13 @@ public class Main extends javax.swing.JFrame {
             MAIN_WINDOW.getVamos_button().setEnabled(false);
             MAIN_WINDOW.getSave_button().setEnabled(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
-
-        });
-
-        Helpers.GUIRun(() -> {
-
             MAIN_WINDOW.getStatus_label().setText("DELETING FOLDERS/FILES. PLEASE WAIT...");
 
         });
 
-        final String regex = "<(H:[^>]+)>";
+        HashMap<String, ArrayList<String>> nodesToRemove = Helpers.extractNodeMapFromText(text);
 
-        final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
-        final Matcher matcher = pattern.matcher(text);
-
-        HashMap<String, ArrayList<String>> nodesToRemove = new HashMap<>();
-
-        while (matcher.find()) {
-
-            String node = matcher.group(1);
-
-            if (MEGA_NODES.containsKey(node)) {
-
-                String email = (String) ((Object[]) MEGA_NODES.get(node))[1];
-
-                if (!nodesToRemove.containsKey(email)) {
-                    nodesToRemove.put(email, new ArrayList<>());
-                }
-
-                nodesToRemove.get(email).add(node);
-            }
-
-        }
-
-        if (!nodesToRemove.isEmpty() && Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "CAUTION!! ARE YOU SURE? THE FILES WILL BE PERMANENTLY DELETED") == 0) {
+        if (!nodesToRemove.isEmpty() && Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "CAUTION!! THE FILES WILL BE PERMANENTLY DELETED. ARE YOU SURE?") == 0) {
 
             for (String email : nodesToRemove.keySet()) {
 
@@ -299,7 +293,7 @@ public class Main extends javax.swing.JFrame {
 
                 Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-login", email, Helpers.escapeMEGAPassword(MEGA_ACCOUNTS.get(email))}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-                Helpers.runProcess(Helpers.buildCommand(delete_command.toArray(new String[delete_command.size()])), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+                Helpers.runProcess(Helpers.buildCommand(delete_command.toArray(String[]::new)), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
                 String ls = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
@@ -330,6 +324,8 @@ public class Main extends javax.swing.JFrame {
             MAIN_WINDOW.getStatus_label().setText("");
 
         });
+
+        _running = false;
     }
 
     private void parseAccountNodes(String email, String ls) {

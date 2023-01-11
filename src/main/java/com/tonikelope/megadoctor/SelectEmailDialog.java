@@ -62,6 +62,7 @@ public class SelectEmailDialog extends javax.swing.JDialog {
         vamos_button = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setTitle("DESTINATION ACCOUNT");
 
         email_combobox.setFont(new java.awt.Font("Noto Sans", 0, 24)); // NOI18N
         email_combobox.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));

@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.tonikelope.megadoctor</groupId>
     <artifactId>MegaDoctor</artifactId>
-    <version>0.27</version>
+    <version>0.28</version>
     <packaging>jar</packaging>
     <build>
         <plugins>
@@ -67,5 +67,5 @@
         <exec.mainClass>com.tonikelope.megadoctor.MegaDoctor</exec.mainClass>
     </properties>
     <name>MegaDoctor</name>
-    <description>Check your mega accounts</description>
+    <description>Check your mega accounts and copy/move or remove folders/files.</description>
 </project>
