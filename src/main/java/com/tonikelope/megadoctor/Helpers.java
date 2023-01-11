@@ -13,8 +13,10 @@ import java.net.URISyntaxException;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -133,6 +135,22 @@ public class Helpers {
 
         return THREAD_POOL.submit(r);
 
+    }
+
+    public static long getNodeMapTotalSize(HashMap<String, ArrayList<String>> map) {
+
+        long total = 0L;
+
+        for (String email : map.keySet()) {
+
+            ArrayList<String> node_list = map.get(email);
+
+            for (String node : node_list) {
+                total += (long) ((Object[]) Main.MEGA_NODES.get(node))[0];
+            }
+        }
+
+        return total;
     }
 
     public static void mostrarMensajeInformativo(JFrame frame, String msg) {
@@ -318,6 +336,16 @@ public class Helpers {
                     }
                 }
             };
+            Action copyMEGANodesAction = new AbstractAction("COPY SELECTED MEGA FOLDERS/FILES TO ANOTHER ACCOUNT") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    if (Main.MAIN_WINDOW.getCuentas_textarea().isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                        Helpers.threadRun(() -> {
+                            Main.MAIN_WINDOW.copyNodes(txtArea.getSelectedText());
+                        });
+                    }
+                }
+            };
             cutAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control X"));
             copyAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control C"));
             pasteAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control V"));
@@ -355,6 +383,13 @@ public class Helpers {
             removeNodes.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/remove.png")));
 
             popup.add(removeNodes);
+
+            popup.addSeparator();
+
+            JMenuItem copyNodes = new JMenuItem(copyMEGANodesAction);
+            copyNodes.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/copy.png")));
+
+            popup.add(copyNodes);
 
             txtArea.setComponentPopupMenu(popup);
         }

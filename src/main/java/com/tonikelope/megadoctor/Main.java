@@ -25,16 +25,16 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.26";
+    public final static String VERSION = "0.27";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
     public volatile static String MEGA_CMD_VERSION = null;
     public static Main MAIN_WINDOW;
-    private final static LinkedHashMap<String, String> MEGA_ACCOUNTS = new LinkedHashMap<>();
+    public final static LinkedHashMap<String, String> MEGA_ACCOUNTS = new LinkedHashMap<>();
+    public final static HashMap<String, Object[]> MEGA_NODES = new HashMap<>();
     private final static ArrayList<String[]> MEGA_ACCOUNTS_SPACE = new ArrayList<>();
     private final static ArrayList<String> MEGA_ACCOUNTS_LOGIN_ERROR = new ArrayList<>();
-    private final static HashMap<String, String> MEGA_NODES = new HashMap<>();
     private volatile boolean _running = false;
     private volatile boolean _exit = false;
     private volatile boolean _firstAccountsTextareaClick = false;
@@ -95,6 +95,151 @@ public class Main extends javax.swing.JFrame {
         });
     }
 
+    public void copyNodes(String text) {
+
+        Helpers.GUIRun(() -> {
+
+            MAIN_WINDOW.getCuentas_textarea().setEnabled(false);
+            MAIN_WINDOW.getVamos_button().setEnabled(false);
+            MAIN_WINDOW.getSave_button().setEnabled(false);
+            MAIN_WINDOW.getProgressbar().setIndeterminate(true);
+
+        });
+
+        Helpers.GUIRun(() -> {
+
+            MAIN_WINDOW.getStatus_label().setText("COPYING FOLDERS/FILES. PLEASE WAIT...");
+
+        });
+
+        final String regex = "<(H:[^>]+)>";
+
+        final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+        final Matcher matcher = pattern.matcher(text);
+
+        HashMap<String, ArrayList<String>> nodesToCopy = new HashMap<>();
+
+        while (matcher.find()) {
+
+            String node = matcher.group(1);
+
+            if (MEGA_NODES.containsKey(node)) {
+
+                String email = (String) ((Object[]) MEGA_NODES.get(node))[1];
+
+                if (!nodesToCopy.containsKey(email)) {
+                    nodesToCopy.put(email, new ArrayList<>());
+                }
+
+                nodesToCopy.get(email).add(node);
+            }
+
+        }
+
+        if (MEGA_ACCOUNTS.size() > nodesToCopy.keySet().size()) {
+
+            ArrayList<String[]> exported_links = new ArrayList<>();
+
+            for (String email : nodesToCopy.keySet()) {
+
+                ArrayList<String> node_list = nodesToCopy.get(email);
+
+                ArrayList<String> export_command = new ArrayList<>();
+
+                export_command.add("mega-export");
+
+                export_command.add("-fa");
+
+                export_command.addAll(node_list);
+
+                Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-logout"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+                Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-login", email, Helpers.escapeMEGAPassword(MEGA_ACCOUNTS.get(email))}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+                String exported_links_output = Helpers.runProcess(Helpers.buildCommand(export_command.toArray(String[]::new)), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+                final String regex2 = "Exported +(.*?): +(https://.+)";
+
+                final Pattern pattern2 = Pattern.compile(regex2, Pattern.MULTILINE);
+
+                final Matcher matcher2 = pattern2.matcher(exported_links_output);
+
+                while (matcher2.find()) {
+
+                    exported_links.add(new String[]{matcher2.group(1), matcher2.group(2)});
+
+                }
+
+            }
+
+            SelectEmailDialog dialog = new SelectEmailDialog(MAIN_WINDOW, true, nodesToCopy.keySet());
+
+            dialog.setLocationRelativeTo(MAIN_WINDOW);
+
+            dialog.setVisible(true);
+
+            String email = (String) dialog.getEmail_combobox().getSelectedItem();
+
+            if (dialog.isOk() && email != null && !email.isBlank()) {
+
+                Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-logout"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+                Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-login", email, Helpers.escapeMEGAPassword(MEGA_ACCOUNTS.get(email))}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+                String df2 = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-df"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+                String[] account_space = Helpers.getAccountSpaceData(email, df2);
+
+                if (Helpers.getNodeMapTotalSize(nodesToCopy) <= (Long.parseLong(account_space[2]) - Long.parseLong(account_space[1]))) {
+
+                    for (String[] s : exported_links) {
+
+                        String folder = s[0].replaceAll("^(.*/)[^/]*$", "$1");
+
+                        Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-mkdir", "-p", folder}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+                        Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-import", s[1], folder}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+                    }
+
+                    String ls = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+                    String ls2 = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-ls", "-lr", "--show-handles"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+                    String du = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-du", "-h", "--use-pcre", "/.*"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+                    String df = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-df", "-h"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+                    Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-logout"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+                    parseAccountNodes(email, ls2);
+
+                    Helpers.GUIRun(() -> {
+
+                        output_textarea.append("\n[" + email + "] (Refreshed after insertion)\n\n" + df + "\n" + du + "\n" + ls + "\n\n");
+
+                    });
+
+                    Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL SELECTED FOLDERS/FILES COPIED");
+
+                } else {
+                    Helpers.mostrarMensajeError(MAIN_WINDOW, "THERE IS NO ENOUGH FREE SPACE IN DESTINATION ACCOUNT");
+                }
+
+            }
+
+        }
+
+        Helpers.GUIRun(() -> {
+
+            MAIN_WINDOW.getCuentas_textarea().setEnabled(true);
+            MAIN_WINDOW.getVamos_button().setEnabled(true);
+            MAIN_WINDOW.getSave_button().setEnabled(true);
+            MAIN_WINDOW.getProgressbar().setIndeterminate(false);
+            MAIN_WINDOW.getStatus_label().setText("");
+
+        });
+    }
+
     public void removeNodes(String text) {
 
         Helpers.GUIRun(() -> {
@@ -125,7 +270,7 @@ public class Main extends javax.swing.JFrame {
 
             if (MEGA_NODES.containsKey(node)) {
 
-                String email = MEGA_NODES.get(node);
+                String email = (String) ((Object[]) MEGA_NODES.get(node))[1];
 
                 if (!nodesToRemove.containsKey(email)) {
                     nodesToRemove.put(email, new ArrayList<>());
@@ -174,6 +319,8 @@ public class Main extends javax.swing.JFrame {
             Helpers.mostrarMensajeError(MAIN_WINDOW, "NO FOLDERS/FILES SELECTED (you must select with your mouse text that contains some H:xxxxxxxx MEGA NODE)");
         }
 
+        Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-logout"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
         Helpers.GUIRun(() -> {
 
             MAIN_WINDOW.getCuentas_textarea().setEnabled(true);
@@ -187,12 +334,12 @@ public class Main extends javax.swing.JFrame {
 
     private void parseAccountNodes(String email, String ls) {
 
-        final String regex = "<(H:[^>]+)>";
+        final String regex = "([0-9]+|-) +[^ ]+ +[^ ]+ +(H:[^ ]+)";
         final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
         final Matcher matcher = pattern.matcher(ls);
 
         while (matcher.find()) {
-            MEGA_NODES.put(matcher.group(1), email);
+            MEGA_NODES.put(matcher.group(2), new Object[]{Long.parseLong(matcher.group(1).equals("-") ? "0" : matcher.group(1)), email});
         }
     }
 
@@ -414,6 +561,8 @@ public class Main extends javax.swing.JFrame {
 
                                 String ls = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
+                                String ls2 = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-ls", "-lr", "--show-handles"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
                                 String du = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-du", "-h", "--use-pcre", "/.*"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
                                 String df = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-df", "-h"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
@@ -428,7 +577,7 @@ public class Main extends javax.swing.JFrame {
 
                                 MEGA_ACCOUNTS_SPACE.add(Helpers.getAccountSpaceData(email, df2));
 
-                                parseAccountNodes(email, ls);
+                                parseAccountNodes(email, ls2);
                             }
 
                             i++;
