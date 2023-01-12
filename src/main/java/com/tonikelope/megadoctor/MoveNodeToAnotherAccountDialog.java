@@ -19,7 +19,7 @@ import javax.swing.JComboBox;
  *
  * @author tonikelope
  */
-public class SelectEmailDialog extends javax.swing.JDialog {
+public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog {
 
     public JComboBox<String> getEmail_combobox() {
         return email_combobox;
@@ -31,7 +31,7 @@ public class SelectEmailDialog extends javax.swing.JDialog {
 
     private boolean _ok = false;
 
-    public SelectEmailDialog(java.awt.Frame parent, boolean modal, Set<String> skip_emails) {
+    public MoveNodeToAnotherAccountDialog(java.awt.Frame parent, boolean modal, Set<String> skip_emails, boolean move) {
         super(parent, modal);
         initComponents();
 
@@ -48,6 +48,8 @@ public class SelectEmailDialog extends javax.swing.JDialog {
                 email_combobox.addItem(email);
             }
         }
+
+        vamos_button.setText(move ? "MOVE" : "COPY");
 
         pack();
     }
@@ -94,12 +96,12 @@ public class SelectEmailDialog extends javax.swing.JDialog {
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(email_combobox)
-                    .addComponent(vamos_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(vamos_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(email_combobox))
+                .addContainerGap())
         );
 
         pack();

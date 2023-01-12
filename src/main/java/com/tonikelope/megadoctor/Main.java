@@ -35,7 +35,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.32";
+    public final static String VERSION = "0.33";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -49,7 +49,7 @@ public class Main extends javax.swing.JFrame {
     private volatile boolean _running = false;
     private volatile boolean _exit = false;
     private volatile boolean _firstAccountsTextareaClick = false;
-    private volatile SelectEmailDialog _email_dialog = null;
+    private volatile MoveNodeToAnotherAccountDialog _email_dialog = null;
     private volatile MoveNodeDialog _move_dialog = null;
 
     public JTextArea getCuentas_textarea() {
@@ -212,7 +212,7 @@ public class Main extends javax.swing.JFrame {
             }
 
             Helpers.GUIRunAndWait(() -> {
-                _email_dialog = new SelectEmailDialog(MAIN_WINDOW, true, nodesToCopy.keySet());
+                _email_dialog = new MoveNodeToAnotherAccountDialog(MAIN_WINDOW, true, nodesToCopy.keySet(), move);
 
                 _email_dialog.setLocationRelativeTo(MAIN_WINDOW);
 
@@ -354,7 +354,7 @@ public class Main extends javax.swing.JFrame {
                     String old_full_path = Helpers.getNodePathFromFind(node, Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-find", "--show-handles", node}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]);
 
                     Helpers.GUIRunAndWait(() -> {
-                        _move_dialog = new MoveNodeDialog(MAIN_WINDOW, true, old_full_path, true);
+                        _move_dialog = new MoveNodeDialog(MAIN_WINDOW, true, old_full_path, true, "[" + email + "]\n" + Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]);
 
                         _move_dialog.setLocationRelativeTo(MAIN_WINDOW);
 
@@ -458,7 +458,7 @@ public class Main extends javax.swing.JFrame {
                     String old_path = old_full_path.replaceAll("^(.*/)[^/]*$", "$1");
 
                     Helpers.GUIRunAndWait(() -> {
-                        _move_dialog = new MoveNodeDialog(MAIN_WINDOW, true, old_full_path, false);
+                        _move_dialog = new MoveNodeDialog(MAIN_WINDOW, true, old_full_path, false, "[" + email + "]\n" + Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]);
 
                         _move_dialog.setLocationRelativeTo(MAIN_WINDOW);
 
