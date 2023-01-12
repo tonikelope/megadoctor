@@ -523,6 +523,16 @@ public class Helpers {
                     }
                 }
             };
+            Action forceRefreshAccountAction = new AbstractAction("REFRESH SELECTED ACCOUNT") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    if (Main.MAIN_WINDOW.getCuentas_textarea().isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                        Helpers.threadRun(() -> {
+                            Main.MAIN_WINDOW.forceRefreshAccount(txtArea.getSelectedText().trim(), "Force refresh");
+                        });
+                    }
+                }
+            };
             cutAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control X"));
             copyAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control C"));
             pasteAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control V"));
@@ -602,6 +612,13 @@ public class Helpers {
             publicOFFNodes.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/export_off.png")));
 
             popup.add(publicOFFNodes);
+
+            popup.addSeparator();
+
+            JMenuItem refreshAccount = new JMenuItem(forceRefreshAccountAction);
+            refreshAccount.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/refresh.png")));
+
+            popup.add(refreshAccount);
 
             txtArea.setComponentPopupMenu(popup);
         }

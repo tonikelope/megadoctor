@@ -35,7 +35,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.33";
+    public final static String VERSION = "0.34";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -645,6 +645,55 @@ public class Main extends javax.swing.JFrame {
             Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL SELECTED FOLDERS/FILES DELETED");
         } else if (nodesToRemove.isEmpty()) {
             Helpers.mostrarMensajeError(MAIN_WINDOW, "NO FOLDERS/FILES SELECTED (you must select with your mouse text that contains some H:xxxxxxxx MEGA NODE)");
+        }
+
+        Helpers.GUIRun(() -> {
+
+            MAIN_WINDOW.getCuentas_textarea().setEnabled(true);
+            MAIN_WINDOW.getVamos_button().setEnabled(true);
+            MAIN_WINDOW.getSave_button().setEnabled(true);
+            MAIN_WINDOW.getProgressbar().setIndeterminate(false);
+            MAIN_WINDOW.getStatus_label().setText("");
+
+        });
+
+        _running = false;
+    }
+
+    public void forceRefreshAccount(String email, String reason) {
+
+        _running = true;
+
+        Helpers.GUIRun(() -> {
+
+            MAIN_WINDOW.getCuentas_textarea().setEnabled(false);
+            MAIN_WINDOW.getVamos_button().setEnabled(false);
+            MAIN_WINDOW.getSave_button().setEnabled(false);
+            MAIN_WINDOW.getProgressbar().setIndeterminate(true);
+            MAIN_WINDOW.getStatus_label().setText("REFRESHING " + email + " PLEASE WAIT...");
+
+        });
+
+        if (MEGA_ACCOUNTS.containsKey(email)) {
+            logout(true);
+
+            login(email);
+
+            String ls = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+            String du = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-du", "-h", "--use-pcre", "/.*"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+            String df = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-df", "-h"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+            Helpers.GUIRun(() -> {
+
+                output_textarea.append("\n[" + email + "] (" + reason + ")\n\n" + df + "\n" + du + "\n" + ls + "\n\n");
+
+            });
+            Helpers.mostrarMensajeInformativo(MAIN_WINDOW, email + " REFRESHED");
+
+        } else {
+            Helpers.mostrarMensajeError(MAIN_WINDOW, "YOU MUST SELECT AN ALREADY CHECKED ACCOUNT");
         }
 
         Helpers.GUIRun(() -> {
