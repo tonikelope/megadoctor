@@ -1,8 +1,10 @@
 # megadoctor
 
-1. Check your accounts stats.
-2. Delete/Rename/Move folders/files.
-3. Move/copy folders/files to another account.
-4. Enable/Disable public links on folders/files.
+1. Check your accounts statistics.
+2. Delete/rename/move folders/files (selecting NODE-IDs with mouse).
+3. Move/copy folders/files to another account (selecting NODE-IDs with mouse).
+4. Enable/Disable public links on folders/files (selecting NODE-IDs with mouse).
 
-<p align="center"><img src="https://github.com/tonikelope/megadoctor/raw/main/screenshot.png"></p>
+<p align="center"><img src="https://github.com/tonikelope/megadoctor/snapshots/raw/main/screenshot.png"></p>
+<p align="center"><img src="https://github.com/tonikelope/megadoctor/snapshots/raw/main/megadoctor.png"></p>
+<p align="center"><img src="https://github.com/tonikelope/megadoctor/snapshots/raw/main/megadoctor2.png"></p>
