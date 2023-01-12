@@ -30,11 +30,11 @@
                   <Component id="old_full_path" max="32767" attributes="0"/>
                   <Component id="vamos_button" alignment="0" max="32767" attributes="0"/>
                   <Group type="102" alignment="1" attributes="0">
-                      <Component id="old_path" max="32767" attributes="0"/>
+                      <Component id="old_path" max="-2" attributes="0"/>
                       <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
-                      <Component id="new_name" pref="687" max="32767" attributes="0"/>
+                      <Component id="new_name" pref="678" max="32767" attributes="0"/>
                   </Group>
-                  <Component id="file_tree_scroll" alignment="0" pref="748" max="32767" attributes="0"/>
+                  <Component id="file_tree_scroll" alignment="0" pref="738" max="32767" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
           </Group>

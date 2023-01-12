@@ -35,7 +35,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.34";
+    public final static String VERSION = "0.35";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -796,8 +796,8 @@ public class Main extends javax.swing.JFrame {
         status_label.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
         status_label.setDoubleBuffered(true);
 
-        save_button.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
-        save_button.setText("SAVE RESULTS TO FILE");
+        save_button.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
+        save_button.setText("SAVE LOG TO FILE");
         save_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         save_button.setDoubleBuffered(true);
         save_button.addActionListener(new java.awt.event.ActionListener() {

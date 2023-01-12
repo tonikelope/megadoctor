@@ -122,10 +122,10 @@ public class MoveNodeDialog extends javax.swing.JDialog {
                     .addComponent(old_full_path, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(vamos_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addComponent(old_path, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(old_path)
                         .addGap(0, 0, 0)
-                        .addComponent(new_name, javax.swing.GroupLayout.DEFAULT_SIZE, 687, Short.MAX_VALUE))
-                    .addComponent(file_tree_scroll, javax.swing.GroupLayout.DEFAULT_SIZE, 748, Short.MAX_VALUE))
+                        .addComponent(new_name, javax.swing.GroupLayout.DEFAULT_SIZE, 678, Short.MAX_VALUE))
+                    .addComponent(file_tree_scroll, javax.swing.GroupLayout.DEFAULT_SIZE, 738, Short.MAX_VALUE))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
