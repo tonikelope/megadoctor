@@ -453,7 +453,16 @@ public class Helpers {
                     txtArea.selectAll();
                 }
             };
-
+            Action moveInsideMEGANodesAction = new AbstractAction("MOVE SELECTED MEGA FOLDERS/FILES (INSIDE THE ACCOUNT)") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    if (Main.MAIN_WINDOW.getCuentas_textarea().isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                        Helpers.threadRun(() -> {
+                            Main.MAIN_WINDOW.moveNodesInsideAccount(txtArea.getSelectedText());
+                        });
+                    }
+                }
+            };
             Action removeMEGANodesAction = new AbstractAction("DELETE SELECTED MEGA FOLDERS/FILES") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
@@ -469,7 +478,7 @@ public class Helpers {
                 public void actionPerformed(ActionEvent ae) {
                     if (Main.MAIN_WINDOW.getCuentas_textarea().isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
                         Helpers.threadRun(() -> {
-                            Main.MAIN_WINDOW.copyNodes(txtArea.getSelectedText(), false);
+                            Main.MAIN_WINDOW.copyNodesToAnotherAccount(txtArea.getSelectedText(), false);
                         });
                     }
                 }
@@ -479,7 +488,7 @@ public class Helpers {
                 public void actionPerformed(ActionEvent ae) {
                     if (Main.MAIN_WINDOW.getCuentas_textarea().isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
                         Helpers.threadRun(() -> {
-                            Main.MAIN_WINDOW.copyNodes(txtArea.getSelectedText(), true);
+                            Main.MAIN_WINDOW.copyNodesToAnotherAccount(txtArea.getSelectedText(), true);
                         });
                     }
                 }
@@ -547,6 +556,20 @@ public class Helpers {
 
             popup.addSeparator();
 
+            JMenuItem renameNodes = new JMenuItem(renameMEGANodesAction);
+            renameNodes.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/rename.png")));
+
+            popup.add(renameNodes);
+
+            popup.addSeparator();
+
+            JMenuItem moveInsideNodes = new JMenuItem(moveInsideMEGANodesAction);
+            moveInsideNodes.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/move.png")));
+
+            popup.add(moveInsideNodes);
+
+            popup.addSeparator();
+
             JMenuItem removeNodes = new JMenuItem(removeMEGANodesAction);
             removeNodes.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/remove.png")));
 
@@ -565,13 +588,6 @@ public class Helpers {
             moveNodes.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/move.png")));
 
             popup.add(moveNodes);
-
-            popup.addSeparator();
-
-            JMenuItem renameNodes = new JMenuItem(renameMEGANodesAction);
-            renameNodes.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/rename.png")));
-
-            popup.add(renameNodes);
 
             popup.addSeparator();
 

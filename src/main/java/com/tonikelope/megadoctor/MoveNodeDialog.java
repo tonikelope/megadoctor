@@ -16,7 +16,7 @@ import javax.swing.JTextField;
  *
  * @author tonikelope
  */
-public class RenameNodeDialog extends javax.swing.JDialog {
+public class MoveNodeDialog extends javax.swing.JDialog {
 
     public boolean isOk() {
         return _ok;
@@ -31,7 +31,7 @@ public class RenameNodeDialog extends javax.swing.JDialog {
     /**
      * Creates new form RenameNodeDialog
      */
-    public RenameNodeDialog(java.awt.Frame parent, boolean modal, String old_fpath) {
+    public MoveNodeDialog(java.awt.Frame parent, boolean modal, String old_fpath, boolean move) {
         super(parent, modal);
         initComponents();
 
@@ -41,8 +41,14 @@ public class RenameNodeDialog extends javax.swing.JDialog {
         String old_p = old_fpath.replaceAll("^(.*/)[^/]*$", "$1");
 
         old_full_path.setText(old_fpath);
-        old_path.setText(old_p);
-        new_name.setText(old_n);
+
+        if (!move) {
+            old_path.setText(old_p);
+            new_name.setText(old_n);
+        } else {
+            old_path.setVisible(false);
+            new_name.setText(old_fpath);
+        }
 
         pack();
     }

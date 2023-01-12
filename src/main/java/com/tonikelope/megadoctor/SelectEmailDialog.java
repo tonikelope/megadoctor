@@ -31,9 +31,6 @@ public class SelectEmailDialog extends javax.swing.JDialog {
 
     private boolean _ok = false;
 
-    /**
-     * Creates new form CopyDialog
-     */
     public SelectEmailDialog(java.awt.Frame parent, boolean modal, Set<String> skip_emails) {
         super(parent, modal);
         initComponents();
