@@ -104,12 +104,15 @@ public class MoveNodeDialog extends javax.swing.JDialog {
         old_path.setFont(new java.awt.Font("Noto Sans", 0, 18)); // NOI18N
         old_path.setText("jLabel1");
 
+        file_tree_scroll.setPreferredSize(new java.awt.Dimension(700, 400));
+
         file_tree.setEditable(false);
         file_tree.setBackground(new java.awt.Color(102, 102, 102));
         file_tree.setColumns(20);
         file_tree.setFont(new java.awt.Font("Monospaced", 0, 16)); // NOI18N
         file_tree.setForeground(new java.awt.Color(255, 255, 255));
         file_tree.setRows(5);
+        file_tree.setDoubleBuffered(true);
         file_tree_scroll.setViewportView(file_tree);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -124,23 +127,23 @@ public class MoveNodeDialog extends javax.swing.JDialog {
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addComponent(old_path)
                         .addGap(0, 0, 0)
-                        .addComponent(new_name, javax.swing.GroupLayout.DEFAULT_SIZE, 678, Short.MAX_VALUE))
-                    .addComponent(file_tree_scroll, javax.swing.GroupLayout.DEFAULT_SIZE, 738, Short.MAX_VALUE))
+                        .addComponent(new_name, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(file_tree_scroll, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(file_tree_scroll, javax.swing.GroupLayout.DEFAULT_SIZE, 339, Short.MAX_VALUE)
-                .addGap(18, 18, 18)
-                .addComponent(old_full_path)
+                .addComponent(file_tree_scroll, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(old_full_path, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(new_name, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(old_path, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addGap(18, 18, 18)
-                .addComponent(vamos_button)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(vamos_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addContainerGap())
         );
 

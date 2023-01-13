@@ -32,9 +32,9 @@
                   <Group type="102" alignment="1" attributes="0">
                       <Component id="old_path" max="-2" attributes="0"/>
                       <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
-                      <Component id="new_name" pref="678" max="32767" attributes="0"/>
+                      <Component id="new_name" max="32767" attributes="0"/>
                   </Group>
-                  <Component id="file_tree_scroll" alignment="0" pref="738" max="32767" attributes="0"/>
+                  <Component id="file_tree_scroll" alignment="0" max="32767" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
           </Group>
@@ -44,16 +44,16 @@
       <Group type="103" groupAlignment="0" attributes="0">
           <Group type="102" alignment="0" attributes="0">
               <EmptySpace max="-2" attributes="0"/>
-              <Component id="file_tree_scroll" pref="339" max="32767" attributes="0"/>
-              <EmptySpace type="separate" max="-2" attributes="0"/>
-              <Component id="old_full_path" min="-2" max="-2" attributes="0"/>
+              <Component id="file_tree_scroll" max="32767" attributes="0"/>
+              <EmptySpace type="unrelated" max="-2" attributes="0"/>
+              <Component id="old_full_path" max="32767" attributes="0"/>
               <EmptySpace type="unrelated" max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" max="-2" attributes="0">
                   <Component id="new_name" max="32767" attributes="0"/>
                   <Component id="old_path" max="32767" attributes="0"/>
               </Group>
-              <EmptySpace type="separate" max="-2" attributes="0"/>
-              <Component id="vamos_button" min="-2" max="-2" attributes="0"/>
+              <EmptySpace type="unrelated" max="-2" attributes="0"/>
+              <Component id="vamos_button" max="32767" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
           </Group>
       </Group>
@@ -105,6 +105,11 @@
       </Properties>
     </Component>
     <Container class="javax.swing.JScrollPane" name="file_tree_scroll">
+      <Properties>
+        <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+          <Dimension value="[700, 400]"/>
+        </Property>
+      </Properties>
       <AuxValues>
         <AuxValue name="autoScrollPane" type="java.lang.Boolean" value="true"/>
       </AuxValues>
@@ -125,6 +130,7 @@
               <Color blue="ff" green="ff" red="ff" type="rgb"/>
             </Property>
             <Property name="rows" type="int" value="5"/>
+            <Property name="doubleBuffered" type="boolean" value="true"/>
           </Properties>
         </Component>
       </SubComponents>

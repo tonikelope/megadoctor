@@ -35,7 +35,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.35";
+    public final static String VERSION = "0.36";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -108,7 +108,7 @@ public class Main extends javax.swing.JFrame {
         });
     }
 
-    private boolean login(String email) {
+    public boolean login(String email) {
 
         String session = MEGA_SESSIONS.get(email);
 
@@ -123,7 +123,7 @@ public class Main extends javax.swing.JFrame {
 
                 String login = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-login", email, Helpers.escapeMEGAPassword(password)}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-                if (login.contains("Login failed")) {
+                if (login.contains("failed")) {
                     return false;
                 }
 
@@ -145,7 +145,7 @@ public class Main extends javax.swing.JFrame {
         return true;
     }
 
-    private void logout(boolean keep_session) {
+    public void logout(boolean keep_session) {
         if (keep_session) {
             Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-logout", "--keep-session"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
         } else {
@@ -690,6 +690,7 @@ public class Main extends javax.swing.JFrame {
                 output_textarea.append("\n[" + email + "] (" + reason + ")\n\n" + df + "\n" + du + "\n" + ls + "\n\n");
 
             });
+            logout(true);
             Helpers.mostrarMensajeInformativo(MAIN_WINDOW, email + " REFRESHED");
 
         } else {
