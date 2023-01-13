@@ -5,6 +5,6 @@
 3. Move/copy folders/files to another account (selecting NODE-IDs with mouse).
 4. Enable/Disable public links on folders/files (selecting NODE-IDs with mouse).
 
-<p align="center"><img src="https://github.com/tonikelope/megadoctor/snapshots/raw/main/screenshot.png"></p>
-<p align="center"><img src="https://github.com/tonikelope/megadoctor/snapshots/raw/main/megadoctor.png"></p>
-<p align="center"><img src="https://github.com/tonikelope/megadoctor/snapshots/raw/main/megadoctor2.png"></p>
+<p align="center"><img src="https://github.com/tonikelope/megadoctor/raw/main/snapshots/screenshot.png"></p>
+<p align="center"><img src="https://github.com/tonikelope/megadoctor/raw/main/snapshots/megadoctor.png"></p>
+<p align="center"><img src="https://github.com/tonikelope/megadoctor/raw/main/snapshots/megadoctor2.png"></p>
