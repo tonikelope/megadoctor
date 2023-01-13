@@ -14,7 +14,6 @@ import static com.tonikelope.megadoctor.Main.MEGA_CMD_WINDOWS_PATH;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Set;
-import javax.swing.JComboBox;
 
 /**
  *
@@ -22,8 +21,8 @@ import javax.swing.JComboBox;
  */
 public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog {
 
-    public JComboBox<String> getEmail_combobox() {
-        return email_combobox;
+    public String getSelected_email() {
+        return selected_email;
     }
 
     public boolean isOk() {
@@ -32,9 +31,13 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog {
 
     private boolean _ok = false;
 
+    private String selected_email = null;
+
     public MoveNodeToAnotherAccountDialog(java.awt.Frame parent, boolean modal, Set<String> skip_emails, boolean move) {
         super(parent, modal);
         initComponents();
+
+        vamos_button.setEnabled(false);
 
         ArrayList<String> emails = new ArrayList<>();
 
@@ -51,6 +54,10 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog {
         }
 
         vamos_button.setText(move ? "MOVE" : "COPY");
+
+        vamos_button.setEnabled(true);
+        
+        email_comboboxItemStateChanged(null);
 
         pack();
     }
@@ -127,7 +134,7 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(bar, javax.swing.GroupLayout.DEFAULT_SIZE, 20, Short.MAX_VALUE)
+                .addComponent(bar, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -143,45 +150,48 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog {
     private void vamos_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_vamos_buttonActionPerformed
         // TODO add your handling code here:
         _ok = true;
+        selected_email = (String) email_combobox.getSelectedItem();
         dispose();
     }//GEN-LAST:event_vamos_buttonActionPerformed
 
     private void email_comboboxItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_email_comboboxItemStateChanged
         // TODO add your handling code here:
 
-        String email = (String) email_combobox.getSelectedItem();
-        email_combobox.setEnabled(false);
-        vamos_button.setEnabled(false);
-        account_stats_textarea.setText("");
-        bar.setVisible(true);
-        bar.setIndeterminate(true);
-        
-        Helpers.threadRun(() -> {
-            
-            Main.MAIN_WINDOW.logout(true);
+        if (vamos_button.isEnabled()) {
+            String email = (String) email_combobox.getSelectedItem();
+            email_combobox.setEnabled(false);
+            vamos_button.setEnabled(false);
+            account_stats_textarea.setText("");
+            bar.setVisible(true);
+            bar.setIndeterminate(true);
 
-            Main.MAIN_WINDOW.login(email);
+            Helpers.threadRun(() -> {
 
-            String ls = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                Main.MAIN_WINDOW.logout(true);
 
-            String df = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-df", "-h"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-            
-            Main.MAIN_WINDOW.logout(true);
-            
-            Helpers.GUIRun(() -> {
+                Main.MAIN_WINDOW.login(email);
 
-                account_stats_textarea.setText("[" + email + "] \n\n" + df + "\n" + ls + "\n\n");
-                account_stats_textarea.setCaretPosition(0);
-                email_combobox.setEnabled(true);
-                vamos_button.setEnabled(true);
-                bar.setVisible(false);
+                String ls = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+                String df = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-df", "-h"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+                Main.MAIN_WINDOW.logout(true);
+
+                Helpers.GUIRunAndWait(() -> {
+
+                    account_stats_textarea.setText("[" + email + "] \n\n" + df + "\n" + ls + "\n\n");
+                    account_stats_textarea.setCaretPosition(0);
+                    email_combobox.setEnabled(true);
+                    vamos_button.setEnabled(true);
+                    bar.setVisible(false);
+                });
             });
-        });
+        }
     }//GEN-LAST:event_email_comboboxItemStateChanged
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
         // TODO add your handling code here:
-        if(vamos_button.isEnabled()){
+        if (vamos_button.isEnabled()) {
             dispose();
         }
     }//GEN-LAST:event_formWindowClosing

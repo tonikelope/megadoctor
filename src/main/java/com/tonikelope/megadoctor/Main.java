@@ -35,7 +35,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.36";
+    public final static String VERSION = "0.37";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -178,39 +178,6 @@ public class Main extends javax.swing.JFrame {
 
         if (!nodesToCopy.isEmpty() && MEGA_ACCOUNTS.size() > nodesToCopy.keySet().size()) {
 
-            ArrayList<String[]> exported_links = new ArrayList<>();
-
-            for (String email : nodesToCopy.keySet()) {
-
-                ArrayList<String> node_list = nodesToCopy.get(email);
-
-                ArrayList<String> export_command = new ArrayList<>();
-
-                export_command.add("mega-export");
-
-                export_command.add("-fa");
-
-                export_command.addAll(node_list);
-
-                logout(true);
-
-                login(email);
-                String exported_links_output = Helpers.runProcess(Helpers.buildCommand(export_command.toArray(String[]::new)), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
-                final String regex2 = "Exported +(.*?): +(https://.+)";
-
-                final Pattern pattern2 = Pattern.compile(regex2, Pattern.MULTILINE);
-
-                final Matcher matcher2 = pattern2.matcher(exported_links_output);
-
-                while (matcher2.find()) {
-
-                    exported_links.add(new String[]{matcher2.group(1), matcher2.group(2)});
-
-                }
-
-            }
-
             Helpers.GUIRunAndWait(() -> {
                 _email_dialog = new MoveNodeToAnotherAccountDialog(MAIN_WINDOW, true, nodesToCopy.keySet(), move);
 
@@ -219,18 +186,53 @@ public class Main extends javax.swing.JFrame {
                 _email_dialog.setVisible(true);
             });
 
-            String email = (String) _email_dialog.getEmail_combobox().getSelectedItem();
+            String email = _email_dialog.getSelected_email();
 
             if (_email_dialog.isOk() && email != null && !email.isBlank()) {
 
                 logout(true);
 
                 login(email);
+
                 String df2 = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-df"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
                 String[] account_space = Helpers.getAccountSpaceData(email, df2);
 
                 if (Helpers.getNodeMapTotalSize(nodesToCopy) <= (Long.parseLong(account_space[2]) - Long.parseLong(account_space[1]))) {
+
+                    ArrayList<String[]> exported_links = new ArrayList<>();
+
+                    for (String e : nodesToCopy.keySet()) {
+
+                        ArrayList<String> node_list = nodesToCopy.get(e);
+
+                        ArrayList<String> export_command = new ArrayList<>();
+
+                        export_command.add("mega-export");
+
+                        export_command.add("-fa");
+
+                        export_command.addAll(node_list);
+
+                        logout(true);
+
+                        login(e);
+
+                        String exported_links_output = Helpers.runProcess(Helpers.buildCommand(export_command.toArray(String[]::new)), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+                        final String regex2 = "Exported +(.*?): +(https://.+)";
+
+                        final Pattern pattern2 = Pattern.compile(regex2, Pattern.MULTILINE);
+
+                        final Matcher matcher2 = pattern2.matcher(exported_links_output);
+
+                        while (matcher2.find()) {
+
+                            exported_links.add(new String[]{matcher2.group(1), matcher2.group(2)});
+
+                        }
+
+                    }
 
                     for (String[] s : exported_links) {
 
