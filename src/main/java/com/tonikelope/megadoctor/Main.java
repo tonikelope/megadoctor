@@ -109,6 +109,8 @@ public class Main extends javax.swing.JFrame {
     }
 
     public boolean login(String email) {
+        
+        logout(true);
 
         String session = MEGA_SESSIONS.get(email);
 
@@ -190,8 +192,6 @@ public class Main extends javax.swing.JFrame {
 
             if (_email_dialog.isOk() && email != null && !email.isBlank()) {
 
-                logout(true);
-
                 login(email);
 
                 String df2 = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-df"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
@@ -214,8 +214,6 @@ public class Main extends javax.swing.JFrame {
 
                         export_command.addAll(node_list);
 
-                        logout(true);
-
                         login(e);
 
                         String exported_links_output = Helpers.runProcess(Helpers.buildCommand(export_command.toArray(String[]::new)), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
@@ -233,6 +231,8 @@ public class Main extends javax.swing.JFrame {
                         }
 
                     }
+                    
+                    login(email);
 
                     for (String[] s : exported_links) {
 
@@ -275,9 +275,8 @@ public class Main extends javax.swing.JFrame {
 
                             delete_command.addAll(node_list);
 
-                            logout(true);
-
                             login(email_rm);
+                            
                             Helpers.runProcess(Helpers.buildCommand(delete_command.toArray(String[]::new)), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
                             String ls_rm = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
@@ -343,8 +342,6 @@ public class Main extends javax.swing.JFrame {
         if (!nodesToMove.isEmpty()) {
 
             for (String email : nodesToMove.keySet()) {
-
-                logout(true);
 
                 login(email);
                 ArrayList<String> node_list = nodesToMove.get(email);
@@ -443,8 +440,6 @@ public class Main extends javax.swing.JFrame {
         if (!nodesToRename.isEmpty()) {
 
             for (String email : nodesToRename.keySet()) {
-
-                logout(true);
 
                 login(email);
                 ArrayList<String> node_list = nodesToRename.get(email);
@@ -556,8 +551,6 @@ public class Main extends javax.swing.JFrame {
 
                 export_command.addAll(node_list);
 
-                logout(true);
-
                 login(email);
                 Helpers.runProcess(Helpers.buildCommand(export_command.toArray(String[]::new)), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
@@ -624,8 +617,6 @@ public class Main extends javax.swing.JFrame {
 
                 delete_command.addAll(node_list);
 
-                logout(true);
-
                 login(email);
                 Helpers.runProcess(Helpers.buildCommand(delete_command.toArray(String[]::new)), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
@@ -677,8 +668,7 @@ public class Main extends javax.swing.JFrame {
         });
 
         if (MEGA_ACCOUNTS.containsKey(email)) {
-            logout(true);
-
+            
             login(email);
 
             String ls = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
@@ -922,8 +912,6 @@ public class Main extends javax.swing.JFrame {
                             Helpers.GUIRun(() -> {
                                 status_label.setText("Login " + email + " ...");
                             });
-
-                            logout(true);
 
                             boolean login_ok = login(email);
 

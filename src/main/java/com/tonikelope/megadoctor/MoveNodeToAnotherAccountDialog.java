@@ -167,8 +167,6 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog {
 
             Helpers.threadRun(() -> {
 
-                Main.MAIN_WINDOW.logout(true);
-
                 Main.MAIN_WINDOW.login(email);
 
                 String ls = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
