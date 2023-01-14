@@ -35,7 +35,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.39";
+    public final static String VERSION = "0.40";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -93,7 +93,7 @@ public class Main extends javax.swing.JFrame {
                 status_label.setText("Checking if MEGACMD is present...");
             });
 
-            MEGA_CMD_VERSION = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-version"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+            MEGA_CMD_VERSION = Helpers.runProcess(new String[]{"mega-version"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
             if (MEGA_CMD_VERSION == null || "".equals(MEGA_CMD_VERSION)) {
                 Helpers.mostrarMensajeError(this, "MEGA CMD IS REQUIRED");
@@ -109,7 +109,7 @@ public class Main extends javax.swing.JFrame {
     }
 
     public boolean login(String email) {
-        
+
         logout(true);
 
         String session = MEGA_SESSIONS.get(email);
@@ -118,12 +118,12 @@ public class Main extends javax.swing.JFrame {
 
         if (session != null) {
 
-            String login_session_output = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-login", MEGA_SESSIONS.get(email)}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+            String login_session_output = Helpers.runProcess(new String[]{"mega-login", MEGA_SESSIONS.get(email)}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
             if (login_session_output.contains("Bad session ID")) {
                 MEGA_SESSIONS.remove(email);
 
-                String login = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-login", email, Helpers.escapeMEGAPassword(password)}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                String login = Helpers.runProcess(new String[]{"mega-login", email, Helpers.escapeMEGAPassword(password)}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
                 if (login.contains("failed")) {
                     return false;
@@ -134,7 +134,7 @@ public class Main extends javax.swing.JFrame {
 
         } else {
 
-            String login = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-login", email, Helpers.escapeMEGAPassword(password)}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+            String login = Helpers.runProcess(new String[]{"mega-login", email, Helpers.escapeMEGAPassword(password)}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
             if (login.contains("Login failed")) {
                 return false;
@@ -149,15 +149,15 @@ public class Main extends javax.swing.JFrame {
 
     public void logout(boolean keep_session) {
         if (keep_session) {
-            Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-logout", "--keep-session"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+            Helpers.runProcess(new String[]{"mega-logout", "--keep-session"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
         } else {
-            Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-logout"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+            Helpers.runProcess(new String[]{"mega-logout"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
         }
     }
 
     private String getCurrentSessionID() {
 
-        String session_output = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-session"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+        String session_output = Helpers.runProcess(new String[]{"mega-session"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
         return session_output.replaceAll("^.+: +(.+)$", "$1").trim();
     }
@@ -194,7 +194,7 @@ public class Main extends javax.swing.JFrame {
 
                 login(email);
 
-                String df2 = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-df"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                String df2 = Helpers.runProcess(new String[]{"mega-df"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
                 String[] account_space = Helpers.getAccountSpaceData(email, df2);
 
@@ -216,7 +216,7 @@ public class Main extends javax.swing.JFrame {
 
                         login(e);
 
-                        String exported_links_output = Helpers.runProcess(Helpers.buildCommand(export_command.toArray(String[]::new)), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                        String exported_links_output = Helpers.runProcess(export_command.toArray(String[]::new), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
                         final String regex2 = "Exported +(.*?): +(https://.+)";
 
@@ -231,25 +231,25 @@ public class Main extends javax.swing.JFrame {
                         }
 
                     }
-                    
+
                     login(email);
 
                     for (String[] s : exported_links) {
 
                         String folder = s[0].replaceAll("^(.*/)[^/]*$", "$1");
 
-                        Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-mkdir", "-p", folder}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+                        Helpers.runProcess(new String[]{"mega-mkdir", "-p", folder}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-                        Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-import", s[1], folder}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+                        Helpers.runProcess(new String[]{"mega-import", s[1], folder}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
                     }
 
-                    String ls = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                    String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-                    String ls2 = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-ls", "-lr", "--show-handles"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                    String ls2 = Helpers.runProcess(new String[]{"mega-ls", "-lr", "--show-handles"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-                    String du = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-du", "-h", "--use-pcre", "/.*"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                    String du = Helpers.runProcess(new String[]{"mega-du", "-h", "--use-pcre", "/.*"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-                    String df = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-df", "-h"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                    String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
                     logout(true);
 
@@ -276,16 +276,16 @@ public class Main extends javax.swing.JFrame {
                             delete_command.addAll(node_list);
 
                             login(email_rm);
-                            
-                            Helpers.runProcess(Helpers.buildCommand(delete_command.toArray(String[]::new)), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-                            String ls_rm = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                            Helpers.runProcess(delete_command.toArray(String[]::new), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-                            String ls2_rm = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-ls", "-lr", "--show-handles"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                            String ls_rm = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-                            String du_rm = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-du", "-h", "--use-pcre", "/.*"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                            String ls2_rm = Helpers.runProcess(new String[]{"mega-ls", "-lr", "--show-handles"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-                            String df_rm = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-df", "-h"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                            String du_rm = Helpers.runProcess(new String[]{"mega-du", "-h", "--use-pcre", "/.*"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+                            String df_rm = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
                             parseAccountNodes(email_rm, ls2_rm);
 
@@ -310,6 +310,104 @@ public class Main extends javax.swing.JFrame {
 
         } else if (nodesToCopy.isEmpty()) {
             Helpers.mostrarMensajeError(MAIN_WINDOW, "NO FOLDERS/FILES SELECTED (you must select with your mouse text that contains some H:XXXXXXXX MEGA NODE)");
+        }
+
+        Helpers.GUIRun(() -> {
+
+            MAIN_WINDOW.getCuentas_textarea().setEnabled(true);
+            MAIN_WINDOW.getVamos_button().setEnabled(true);
+            MAIN_WINDOW.getSave_button().setEnabled(true);
+            MAIN_WINDOW.getProgressbar().setIndeterminate(false);
+            MAIN_WINDOW.getStatus_label().setText("");
+
+        });
+
+        _running = false;
+    }
+
+    public void copyNodesInsideAccount(String text) {
+
+        Helpers.GUIRun(() -> {
+
+            MAIN_WINDOW.getCuentas_textarea().setEnabled(false);
+            MAIN_WINDOW.getVamos_button().setEnabled(false);
+            MAIN_WINDOW.getSave_button().setEnabled(false);
+            MAIN_WINDOW.getProgressbar().setIndeterminate(true);
+            MAIN_WINDOW.getStatus_label().setText("COPYING SELECTED FOLDERS/FILES. PLEASE WAIT...");
+
+        });
+
+        HashMap<String, ArrayList<String>> nodesToCopy = Helpers.extractNodeMapFromText(text);
+
+        if (!nodesToCopy.isEmpty()) {
+
+            for (String email : nodesToCopy.keySet()) {
+
+                login(email);
+                ArrayList<String> node_list = nodesToCopy.get(email);
+
+                int conta = 0;
+
+                for (String node : node_list) {
+
+                    String old_full_path = Helpers.getNodePathFromFindCommandOutput(node, Helpers.runProcess(new String[]{"mega-find", "--show-handles", node}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]);
+
+                    Helpers.GUIRunAndWait(() -> {
+                        _move_dialog = new MoveNodeDialog(MAIN_WINDOW, true, old_full_path, 1, "[" + email + "]\n" + Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]);
+
+                        _move_dialog.setLocationRelativeTo(MAIN_WINDOW);
+
+                        _move_dialog.setVisible(true);
+                    });
+
+                    String new_full_path = _move_dialog.getNew_name().getText().trim();
+
+                    if (_move_dialog.isOk() && !old_full_path.equals(new_full_path) && !new_full_path.isBlank()) {
+
+                        String folder = new_full_path.replaceAll("^(.*/)[^/]*$", "$1");
+
+                        Helpers.runProcess(new String[]{"mega-mkdir", "-p", folder}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+                        Helpers.runProcess(new String[]{"mega-cp", node, new_full_path}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+                        conta++;
+
+                    } else if (!_move_dialog.isOk()) {
+                        Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "CANCELED (SOME FOLDERS/FILES WERE NOT MOVED)");
+                        break;
+                    }
+                }
+
+                if (conta > 0) {
+
+                    String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+                    String ls2 = Helpers.runProcess(new String[]{"mega-ls", "-lr", "--show-handles"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+                    String du = Helpers.runProcess(new String[]{"mega-du", "-h", "--use-pcre", "/.*"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+                    String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+                    parseAccountNodes(email, ls2);
+
+                    Helpers.GUIRun(() -> {
+
+                        output_textarea.append("\n[" + email + "] (Refreshed after copying)\n\n" + df + "\n" + du + "\n" + ls + "\n\n");
+
+                    });
+
+                }
+
+            }
+
+            logout(true);
+
+            if (_move_dialog.isOk()) {
+                Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL FOLDERS/FILES COPIED");
+            }
+
+        } else if (nodesToCopy.isEmpty()) {
+            Helpers.mostrarMensajeError(MAIN_WINDOW, "NO FOLDERS/FILES SELECTED (you must select with your mouse text that contains some H:xxxxxxxx MEGA NODE)");
         }
 
         Helpers.GUIRun(() -> {
@@ -350,10 +448,10 @@ public class Main extends javax.swing.JFrame {
 
                 for (String node : node_list) {
 
-                    String old_full_path = Helpers.getNodePathFromFind(node, Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-find", "--show-handles", node}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]);
+                    String old_full_path = Helpers.getNodePathFromFindCommandOutput(node, Helpers.runProcess(new String[]{"mega-find", "--show-handles", node}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]);
 
                     Helpers.GUIRunAndWait(() -> {
-                        _move_dialog = new MoveNodeDialog(MAIN_WINDOW, true, old_full_path, true, "[" + email + "]\n" + Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]);
+                        _move_dialog = new MoveNodeDialog(MAIN_WINDOW, true, old_full_path, 2, "[" + email + "]\n" + Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]);
 
                         _move_dialog.setLocationRelativeTo(MAIN_WINDOW);
 
@@ -366,9 +464,9 @@ public class Main extends javax.swing.JFrame {
 
                         String folder = new_full_path.replaceAll("^(.*/)[^/]*$", "$1");
 
-                        Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-mkdir", "-p", folder}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+                        Helpers.runProcess(new String[]{"mega-mkdir", "-p", folder}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-                        Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-mv", node, new_full_path}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+                        Helpers.runProcess(new String[]{"mega-mv", node, new_full_path}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
                         conta++;
 
@@ -380,13 +478,13 @@ public class Main extends javax.swing.JFrame {
 
                 if (conta > 0) {
 
-                    String ls = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                    String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-                    String ls2 = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-ls", "-lr", "--show-handles"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                    String ls2 = Helpers.runProcess(new String[]{"mega-ls", "-lr", "--show-handles"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-                    String du = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-du", "-h", "--use-pcre", "/.*"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                    String du = Helpers.runProcess(new String[]{"mega-du", "-h", "--use-pcre", "/.*"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-                    String df = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-df", "-h"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                    String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
                     parseAccountNodes(email, ls2);
 
@@ -448,14 +546,14 @@ public class Main extends javax.swing.JFrame {
 
                 for (String node : node_list) {
 
-                    String old_full_path = Helpers.getNodePathFromFind(node, Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-find", "--show-handles", node}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]);
+                    String old_full_path = Helpers.getNodePathFromFindCommandOutput(node, Helpers.runProcess(new String[]{"mega-find", "--show-handles", node}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]);
 
                     String old_name = old_full_path.replaceAll("^.*/([^/]*)$", "$1");
 
                     String old_path = old_full_path.replaceAll("^(.*/)[^/]*$", "$1");
 
                     Helpers.GUIRunAndWait(() -> {
-                        _move_dialog = new MoveNodeDialog(MAIN_WINDOW, true, old_full_path, false, "[" + email + "]\n" + Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]);
+                        _move_dialog = new MoveNodeDialog(MAIN_WINDOW, true, old_full_path, 0, "[" + email + "]\n" + Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]);
 
                         _move_dialog.setLocationRelativeTo(MAIN_WINDOW);
 
@@ -466,7 +564,7 @@ public class Main extends javax.swing.JFrame {
 
                     if (_move_dialog.isOk() && !old_name.equals(new_name) && !new_name.isBlank()) {
 
-                        Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-mv", node, old_path + new_name}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+                        Helpers.runProcess(new String[]{"mega-mv", node, old_path + new_name}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
                         conta++;
 
@@ -478,13 +576,13 @@ public class Main extends javax.swing.JFrame {
 
                 if (conta > 0) {
 
-                    String ls = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                    String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-                    String ls2 = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-ls", "-lr", "--show-handles"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                    String ls2 = Helpers.runProcess(new String[]{"mega-ls", "-lr", "--show-handles"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-                    String du = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-du", "-h", "--use-pcre", "/.*"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                    String du = Helpers.runProcess(new String[]{"mega-du", "-h", "--use-pcre", "/.*"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-                    String df = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-df", "-h"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                    String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
                     parseAccountNodes(email, ls2);
 
@@ -552,13 +650,13 @@ public class Main extends javax.swing.JFrame {
                 export_command.addAll(node_list);
 
                 login(email);
-                Helpers.runProcess(Helpers.buildCommand(export_command.toArray(String[]::new)), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+                Helpers.runProcess(export_command.toArray(String[]::new), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-                String ls = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-                String du = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-du", "-h", "--use-pcre", "/.*"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                String du = Helpers.runProcess(new String[]{"mega-du", "-h", "--use-pcre", "/.*"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-                String df = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-df", "-h"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
                 Helpers.GUIRun(() -> {
 
@@ -618,13 +716,13 @@ public class Main extends javax.swing.JFrame {
                 delete_command.addAll(node_list);
 
                 login(email);
-                Helpers.runProcess(Helpers.buildCommand(delete_command.toArray(String[]::new)), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+                Helpers.runProcess(delete_command.toArray(String[]::new), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-                String ls = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-                String du = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-du", "-h", "--use-pcre", "/.*"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                String du = Helpers.runProcess(new String[]{"mega-du", "-h", "--use-pcre", "/.*"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-                String df = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-df", "-h"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
                 Helpers.GUIRun(() -> {
 
@@ -668,14 +766,14 @@ public class Main extends javax.swing.JFrame {
         });
 
         if (MEGA_ACCOUNTS.containsKey(email)) {
-            
+
             login(email);
 
-            String ls = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+            String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-            String du = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-du", "-h", "--use-pcre", "/.*"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+            String du = Helpers.runProcess(new String[]{"mega-du", "-h", "--use-pcre", "/.*"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-            String df = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-df", "-h"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+            String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
             Helpers.GUIRun(() -> {
 
@@ -927,15 +1025,15 @@ public class Main extends javax.swing.JFrame {
                                     status_label.setText("Reading " + email + " info...");
                                 });
 
-                                String ls = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                                String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-                                String ls2 = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-ls", "-lr", "--show-handles"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                                String ls2 = Helpers.runProcess(new String[]{"mega-ls", "-lr", "--show-handles"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-                                String du = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-du", "-h", "--use-pcre", "/.*"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                                String du = Helpers.runProcess(new String[]{"mega-du", "-h", "--use-pcre", "/.*"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-                                String df = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-df", "-h"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                                String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-                                String df2 = Helpers.runProcess(Helpers.buildCommand(new String[]{"mega-df"}), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                                String df2 = Helpers.runProcess(new String[]{"mega-df"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
                                 Helpers.GUIRun(() -> {
 

@@ -260,7 +260,7 @@ public class Helpers {
     public static String[] runProcess(String[] command, String path) {
         try {
 
-            ProcessBuilder processbuilder = new ProcessBuilder(command);
+            ProcessBuilder processbuilder = new ProcessBuilder(Helpers.buildCommand(command));
 
             if (path != null && !"".equals(path)) {
 
@@ -325,7 +325,7 @@ public class Helpers {
         return nodesMAP;
     }
 
-    public static String getNodePathFromFind(String node, String find) {
+    public static String getNodePathFromFindCommandOutput(String node, String find) {
 
         final String regex = "(.+) <" + node + ">";
         final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
@@ -453,6 +453,16 @@ public class Helpers {
                     txtArea.selectAll();
                 }
             };
+            Action copyInsideMEGANodesAction = new AbstractAction("COPY SELECTED MEGA FOLDERS/FILES (INSIDE THE ACCOUNT)") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    if (Main.MAIN_WINDOW.getCuentas_textarea().isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                        Helpers.threadRun(() -> {
+                            Main.MAIN_WINDOW.copyNodesInsideAccount(txtArea.getSelectedText());
+                        });
+                    }
+                }
+            };
             Action moveInsideMEGANodesAction = new AbstractAction("MOVE SELECTED MEGA FOLDERS/FILES (INSIDE THE ACCOUNT)") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
@@ -570,6 +580,13 @@ public class Helpers {
             renameNodes.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/rename.png")));
 
             popup.add(renameNodes);
+
+            popup.addSeparator();
+
+            JMenuItem copyInsideNodes = new JMenuItem(copyInsideMEGANodesAction);
+            copyInsideNodes.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/copy.png")));
+
+            popup.add(copyInsideNodes);
 
             popup.addSeparator();
 

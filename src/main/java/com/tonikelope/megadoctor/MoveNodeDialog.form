@@ -46,14 +46,14 @@
               <EmptySpace max="-2" attributes="0"/>
               <Component id="file_tree_scroll" max="32767" attributes="0"/>
               <EmptySpace type="unrelated" max="-2" attributes="0"/>
-              <Component id="old_full_path" max="32767" attributes="0"/>
+              <Component id="old_full_path" max="-2" attributes="0"/>
               <EmptySpace type="unrelated" max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                  <Component id="new_name" max="32767" attributes="0"/>
-                  <Component id="old_path" max="32767" attributes="0"/>
+                  <Component id="new_name" max="-2" attributes="0"/>
+                  <Component id="old_path" max="-2" attributes="0"/>
               </Group>
               <EmptySpace type="unrelated" max="-2" attributes="0"/>
-              <Component id="vamos_button" max="32767" attributes="0"/>
+              <Component id="vamos_button" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
           </Group>
       </Group>

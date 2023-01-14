@@ -31,7 +31,7 @@ public class MoveNodeDialog extends javax.swing.JDialog {
     /**
      * Creates new form RenameNodeDialog
      */
-    public MoveNodeDialog(java.awt.Frame parent, boolean modal, String old_fpath, boolean move, String ls) {
+    public MoveNodeDialog(java.awt.Frame parent, boolean modal, String old_fpath, int mode, String ls) {
         super(parent, modal);
         initComponents();
 
@@ -48,8 +48,12 @@ public class MoveNodeDialog extends javax.swing.JDialog {
 
         old_full_path.setText(old_fpath);
 
-        if (move) {
+        if (mode == 2) {
             setTitle("MOVE FOLDER/FILE");
+            old_path.setVisible(false);
+            new_name.setText(old_fpath);
+        } else if (mode == 1) {
+            setTitle("COPY FOLDER/FILE");
             old_path.setVisible(false);
             new_name.setText(old_fpath);
         } else {
@@ -137,13 +141,13 @@ public class MoveNodeDialog extends javax.swing.JDialog {
                 .addContainerGap()
                 .addComponent(file_tree_scroll, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(old_full_path, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(old_full_path)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(new_name, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(old_path, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(new_name, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(old_path))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(vamos_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(vamos_button)
                 .addContainerGap())
         );
 
