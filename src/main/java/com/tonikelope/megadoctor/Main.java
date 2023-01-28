@@ -11,6 +11,7 @@ by tonikelope
 package com.tonikelope.megadoctor;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.util.ArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -23,6 +24,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
@@ -35,12 +38,13 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.40";
+    public final static String VERSION = "0.41";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
     public volatile static String MEGA_CMD_VERSION = null;
     public volatile static Main MAIN_WINDOW;
+    public static final Object TRANSFERENCES_LOCK = new Object();
     public final static LinkedHashMap<String, String> MEGA_ACCOUNTS = new LinkedHashMap<>();
     public final static HashMap<String, String> MEGA_SESSIONS = new HashMap<>();
     public final static HashMap<String, Object[]> MEGA_NODES = new HashMap<>();
@@ -51,6 +55,7 @@ public class Main extends javax.swing.JFrame {
     private volatile boolean _firstAccountsTextareaClick = false;
     private volatile MoveNodeToAnotherAccountDialog _email_dialog = null;
     private volatile MoveNodeDialog _move_dialog = null;
+    private volatile boolean _transferences_running = false;
 
     public JTextArea getCuentas_textarea() {
         return cuentas_textarea;
@@ -84,7 +89,10 @@ public class Main extends javax.swing.JFrame {
         Helpers.JTextFieldRegularPopupMenu.addTo(cuentas_textarea);
         Helpers.JTextFieldRegularPopupMenu.addTo(output_textarea);
         progressbar.setMinimum(0);
-        this.setTitle("MegaDoctor " + VERSION);
+        upload_button.setEnabled(false);
+        transf_scroll.getVerticalScrollBar().setUnitIncrement(20);
+        setTitle("MegaDoctor " + VERSION);
+
         pack();
 
         Helpers.threadRun(() -> {
@@ -106,6 +114,52 @@ public class Main extends javax.swing.JFrame {
             });
 
         });
+
+        Helpers.threadRun(() -> {
+
+            while (true) {
+
+                synchronized (TRANSFERENCES_LOCK) {
+                    try {
+                        TRANSFERENCES_LOCK.wait(1000);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+
+                Helpers.GUIRunAndWait(() -> {
+
+                    synchronized (TRANSFERENCES_LOCK) {
+                        _transferences_running = false;
+
+                        for (Component t : transferences.getComponents()) {
+
+                            Transference trans = (Transference) t;
+
+                            if (trans.isRunning()) {
+                                _transferences_running = true;
+                                break;
+                            }
+                        }
+
+                        if (!_transferences_running) {
+                            for (Component t : transferences.getComponents()) {
+
+                                Transference trans = (Transference) t;
+
+                                if (!trans.isRunning() && !trans.isFinished()) {
+                                    _transferences_running = true;
+                                    trans.start();
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+        });
+
     }
 
     public boolean login(String email) {
@@ -751,7 +805,7 @@ public class Main extends javax.swing.JFrame {
         _running = false;
     }
 
-    public void forceRefreshAccount(String email, String reason) {
+    public void forceRefreshAccount(String email, String reason, boolean notification, boolean login) {
 
         _running = true;
 
@@ -767,7 +821,9 @@ public class Main extends javax.swing.JFrame {
 
         if (MEGA_ACCOUNTS.containsKey(email)) {
 
-            login(email);
+            if (login) {
+                login(email);
+            }
 
             String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
@@ -780,8 +836,14 @@ public class Main extends javax.swing.JFrame {
                 output_textarea.append("\n[" + email + "] (" + reason + ")\n\n" + df + "\n" + du + "\n" + ls + "\n\n");
 
             });
-            logout(true);
-            Helpers.mostrarMensajeInformativo(MAIN_WINDOW, email + " REFRESHED");
+
+            if (login) {
+                logout(true);
+            }
+
+            if (notification) {
+                Helpers.mostrarMensajeInformativo(MAIN_WINDOW, email + " REFRESHED");
+            }
 
         } else {
             Helpers.mostrarMensajeError(MAIN_WINDOW, "YOU MUST SELECT AN ALREADY CHECKED ACCOUNT");
@@ -821,14 +883,18 @@ public class Main extends javax.swing.JFrame {
     private void initComponents() {
 
         logo_label = new javax.swing.JLabel();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        output_textarea = new javax.swing.JTextArea();
         jScrollPane2 = new javax.swing.JScrollPane();
         cuentas_textarea = new javax.swing.JTextArea();
         vamos_button = new javax.swing.JButton();
         status_label = new javax.swing.JLabel();
         progressbar = new javax.swing.JProgressBar();
         save_button = new javax.swing.JButton();
+        tabbed_panel = new javax.swing.JTabbedPane();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        output_textarea = new javax.swing.JTextArea();
+        transf_scroll = new javax.swing.JScrollPane();
+        transferences = new javax.swing.JPanel();
+        upload_button = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         jMenuItem1 = new javax.swing.JMenuItem();
@@ -845,14 +911,6 @@ public class Main extends javax.swing.JFrame {
         logo_label.setBackground(new java.awt.Color(255, 255, 255));
         logo_label.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/megadoctor_frame.png"))); // NOI18N
         logo_label.setDoubleBuffered(true);
-
-        output_textarea.setEditable(false);
-        output_textarea.setBackground(new java.awt.Color(102, 102, 102));
-        output_textarea.setColumns(20);
-        output_textarea.setFont(new java.awt.Font("Monospaced", 0, 16)); // NOI18N
-        output_textarea.setForeground(new java.awt.Color(255, 255, 255));
-        output_textarea.setRows(5);
-        jScrollPane1.setViewportView(output_textarea);
 
         cuentas_textarea.setColumns(20);
         cuentas_textarea.setFont(new java.awt.Font("Monospaced", 0, 16)); // NOI18N
@@ -897,6 +955,37 @@ public class Main extends javax.swing.JFrame {
             }
         });
 
+        tabbed_panel.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
+
+        output_textarea.setEditable(false);
+        output_textarea.setBackground(new java.awt.Color(102, 102, 102));
+        output_textarea.setColumns(20);
+        output_textarea.setFont(new java.awt.Font("Monospaced", 0, 16)); // NOI18N
+        output_textarea.setForeground(new java.awt.Color(255, 255, 255));
+        output_textarea.setRows(5);
+        jScrollPane1.setViewportView(output_textarea);
+
+        tabbed_panel.addTab("Log", jScrollPane1);
+
+        transf_scroll.setBorder(null);
+
+        transferences.setLayout(new javax.swing.BoxLayout(transferences, javax.swing.BoxLayout.PAGE_AXIS));
+        transf_scroll.setViewportView(transferences);
+
+        tabbed_panel.addTab("Transferences", transf_scroll);
+
+        upload_button.setBackground(new java.awt.Color(0, 0, 0));
+        upload_button.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
+        upload_button.setForeground(new java.awt.Color(255, 255, 255));
+        upload_button.setText("UPLOAD FILE");
+        upload_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        upload_button.setDoubleBuffered(true);
+        upload_button.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                upload_buttonActionPerformed(evt);
+            }
+        });
+
         jMenuBar1.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
 
         jMenu1.setText("Help");
@@ -926,12 +1015,15 @@ public class Main extends javax.swing.JFrame {
                         .addComponent(logo_label)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(vamos_button, javax.swing.GroupLayout.DEFAULT_SIZE, 912, Short.MAX_VALUE)
+                            .addComponent(vamos_button, javax.swing.GroupLayout.DEFAULT_SIZE, 989, Short.MAX_VALUE)
                             .addComponent(status_label, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(save_button, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                    .addComponent(jScrollPane1)
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                                .addComponent(upload_button)
+                                .addGap(18, 18, 18)
+                                .addComponent(save_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
                     .addComponent(jScrollPane2)
-                    .addComponent(progressbar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(progressbar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(tabbed_panel))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -943,7 +1035,9 @@ public class Main extends javax.swing.JFrame {
                         .addContainerGap()
                         .addComponent(vamos_button)
                         .addGap(18, 18, 18)
-                        .addComponent(save_button)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(save_button)
+                            .addComponent(upload_button))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(status_label)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -951,7 +1045,7 @@ public class Main extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 185, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 279, Short.MAX_VALUE)
+                .addComponent(tabbed_panel, javax.swing.GroupLayout.DEFAULT_SIZE, 439, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -974,6 +1068,7 @@ public class Main extends javax.swing.JFrame {
                 _running = true;
                 cuentas_textarea.setEnabled(false);
                 save_button.setEnabled(false);
+                upload_button.setEnabled(false);
                 vamos_button.setText("STOP");
                 vamos_button.setBackground(Color.red);
 
@@ -1094,6 +1189,8 @@ public class Main extends javax.swing.JFrame {
 
                             output_textarea.append("\nCHECKING END -> " + Helpers.getFechaHoraActual() + "\n");
 
+                            upload_button.setEnabled(true);
+
                         });
 
                         Helpers.mostrarMensajeInformativo(this, _exit ? "CANCELED!" : "DONE");
@@ -1107,6 +1204,7 @@ public class Main extends javax.swing.JFrame {
                         vamos_button.setText("CHECK ACCOUNTS");
                         vamos_button.setBackground(new Color(0, 153, 0));
                         vamos_button.setEnabled(true);
+                        upload_button.setEnabled(!MEGA_ACCOUNTS.isEmpty());
                         cuentas_textarea.setEnabled(true);
                         status_label.setText("");
                         save_button.setEnabled(true);
@@ -1114,7 +1212,6 @@ public class Main extends javax.swing.JFrame {
 
                     _running = false;
                     _exit = false;
-
                 });
 
             } else if (!_exit) {
@@ -1169,7 +1266,7 @@ public class Main extends javax.swing.JFrame {
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
         // TODO add your handling code here:
 
-        if (_running || !"".equals(output_textarea.getText().trim())) {
+        if (_transferences_running || _running || !"".equals(output_textarea.getText().trim())) {
 
             if (Helpers.mostrarMensajeInformativoSINO(this, "EXIT?") == 0) {
                 System.exit(0);
@@ -1198,6 +1295,33 @@ public class Main extends javax.swing.JFrame {
             cuentas_textarea.setForeground(null);
         }
     }//GEN-LAST:event_cuentas_textareaMouseReleased
+
+    private void upload_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_upload_buttonActionPerformed
+        // TODO add your handling code here:
+
+        if (!Main.MEGA_ACCOUNTS.isEmpty()) {
+            UploadFileDialog dialog = new UploadFileDialog(this, true);
+
+            dialog.setLocationRelativeTo(this);
+
+            dialog.setVisible(true);
+
+            if (dialog.isOk()) {
+                synchronized (TRANSFERENCES_LOCK) {
+                    Transference trans = new Transference(dialog.getSelected_email(), dialog.getLocal_path(), dialog.getRemote_path(), 1);
+                    transferences.add(trans);
+                    transferences.revalidate();
+                    transferences.repaint();
+                    tabbed_panel.setSelectedIndex(1);
+
+                    TRANSFERENCES_LOCK.notifyAll();
+
+                }
+            }
+        } else {
+            Helpers.mostrarMensajeError(this, "YOU HAVE TO FIRST ADD SOME ACCOUNTS AND CHECK THEM");
+        }
+    }//GEN-LAST:event_upload_buttonActionPerformed
 
     /**
      * @param args the command line arguments
@@ -1247,6 +1371,10 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JProgressBar progressbar;
     private javax.swing.JButton save_button;
     private javax.swing.JLabel status_label;
+    private javax.swing.JTabbedPane tabbed_panel;
+    private javax.swing.JScrollPane transf_scroll;
+    private javax.swing.JPanel transferences;
+    private javax.swing.JButton upload_button;
     private javax.swing.JButton vamos_button;
     // End of variables declaration//GEN-END:variables
 }
