@@ -94,7 +94,9 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog {
             }
         });
 
+        vamos_button.setBackground(new java.awt.Color(0, 153, 0));
         vamos_button.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
+        vamos_button.setForeground(new java.awt.Color(255, 255, 255));
         vamos_button.setText("LET'S GO");
         vamos_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         vamos_button.setDoubleBuffered(true);

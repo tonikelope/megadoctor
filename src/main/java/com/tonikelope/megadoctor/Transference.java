@@ -19,6 +19,7 @@ public class Transference extends javax.swing.JPanel {
     private volatile int _tag;
     private volatile int _action;
     private volatile int _prog;
+    private volatile long _size;
     private volatile String _lpath, _rpath, _email;
     private volatile boolean _running;
     private volatile boolean _finished;
@@ -87,18 +88,22 @@ public class Transference extends javax.swing.JPanel {
 
             String transfer_data = Helpers.runProcess(new String[]{"mega-transfers", "--col-separator=#_#"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-            String[] transfer_data_lines = transfer_data.split("\n");
+            if (!transfer_data.trim().isEmpty()) {
 
-            String[] transfer_tokens = transfer_data_lines[1].trim().split("#_#");
+                String[] transfer_data_lines = transfer_data.split("\n");
 
-            _tag = Integer.parseInt(transfer_tokens[1].trim());
+                String[] transfer_tokens = transfer_data_lines[1].trim().split("#_#");
 
-            while (udpdateProgress()) {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
+                _tag = Integer.parseInt(transfer_tokens[1].trim());
+
+                while (udpdateProgress()) {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 }
+
             }
 
             Helpers.GUIRun(() -> {
@@ -120,7 +125,7 @@ public class Transference extends javax.swing.JPanel {
                 ok.setVisible(true);
             });
 
-            Main.MAIN_WINDOW.forceRefreshAccount(_email, "Refreshed after upload " + local_path.getText(), false, false);
+            Main.MAIN_WINDOW.forceRefreshAccount(_email, "Refreshed after upload [" + (_size > 0 ? Helpers.formatBytes(_size) : "---") + "] " + _rpath, false, false);
 
             _running = false;
 
@@ -136,9 +141,9 @@ public class Transference extends javax.swing.JPanel {
 
     private boolean remoteFileExists() {
 
-        String find = Helpers.runProcess(new String[]{"mega-find", _rpath + _lpath.replaceAll("^.+/([^/]+)$", "$1")}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+        String find = Helpers.runProcess(new String[]{"mega-find", _rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-        return find.trim().equals(_rpath + _lpath.replaceAll("^.+/([^/]+)$", "$1"));
+        return !find.trim().startsWith("[API:err:");
     }
 
     private boolean udpdateProgress() {
@@ -171,16 +176,27 @@ public class Transference extends javax.swing.JPanel {
     public Transference(String email, String lpath, String rpath, int act) {
         initComponents();
         ok.setVisible(false);
-        _email = email;
+        _email = email.trim();
         _lpath = lpath;
-        _rpath = rpath.isBlank() ? "/" : rpath;
+
+        rpath = rpath.isBlank() ? "/" : rpath.trim();
+
         _action = act;
 
-        long size = new File(lpath).length();
+        File local = new File(lpath);
 
-        local_path.setText("[" + Helpers.formatBytes(size) + "] " + _lpath);
+        if (local.isFile()) {
+            _size = new File(lpath).length();
+
+        } else {
+            _size = 0;
+        }
+
+        _rpath = rpath.endsWith("/") ? rpath + new File(_lpath).getName() : rpath;
+
+        local_path.setText("[" + (_size > 0 ? Helpers.formatBytes(_size) : "---") + "] " + _lpath);
         remote_path.setText("(" + _email + ") " + _rpath);
-        action.setText(act == 0 ? "<== DOWNLOAD <==" : "==> UPLOAD ==>");
+        action.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/" + (act == 0 ? "left" : "right") + "-arrow.png")));
 
         progress.setMinimum(0);
         progress.setMaximum(10000);
@@ -210,7 +226,7 @@ public class Transference extends javax.swing.JPanel {
         local_path.setDoubleBuffered(true);
 
         action.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
-        action.setText("jLabel2");
+        action.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/right-arrow.png"))); // NOI18N
         action.setDoubleBuffered(true);
 
         remote_path.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N

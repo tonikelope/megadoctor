@@ -38,7 +38,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.41";
+    public final static String VERSION = "0.42";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -393,6 +393,8 @@ public class Main extends javax.swing.JFrame {
 
         HashMap<String, ArrayList<String>> nodesToCopy = Helpers.extractNodeMapFromText(text);
 
+        boolean cancel = false;
+
         if (!nodesToCopy.isEmpty()) {
 
             for (String email : nodesToCopy.keySet()) {
@@ -427,7 +429,7 @@ public class Main extends javax.swing.JFrame {
                         conta++;
 
                     } else if (!_move_dialog.isOk()) {
-                        Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "CANCELED (SOME FOLDERS/FILES WERE NOT MOVED)");
+                        cancel = true;
                         break;
                     }
                 }
@@ -450,6 +452,11 @@ public class Main extends javax.swing.JFrame {
 
                     });
 
+                }
+
+                if (cancel) {
+                    Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "CANCELED (SOME FOLDERS/FILES WERE NOT MOVED)");
+                    break;
                 }
 
             }
@@ -739,6 +746,18 @@ public class Main extends javax.swing.JFrame {
         _running = false;
     }
 
+    public void truncateAccount(String email) {
+
+        if (Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "CAUTION!! ALL CONTENT INSIDE [" + email + "] WILL BE PERMANENTLY DELETED. ARE YOU SURE?") == 0) {
+            login(email);
+
+            String ls = Helpers.runProcess(new String[]{"mega-ls", "--show-handles"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+            removeNodes(ls);
+        }
+
+    }
+
     public void removeNodes(String text) {
 
         _running = true;
@@ -977,7 +996,7 @@ public class Main extends javax.swing.JFrame {
         upload_button.setBackground(new java.awt.Color(0, 0, 0));
         upload_button.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
         upload_button.setForeground(new java.awt.Color(255, 255, 255));
-        upload_button.setText("UPLOAD FILE");
+        upload_button.setText("NEW UPLOAD");
         upload_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         upload_button.setDoubleBuffered(true);
         upload_button.addActionListener(new java.awt.event.ActionListener() {

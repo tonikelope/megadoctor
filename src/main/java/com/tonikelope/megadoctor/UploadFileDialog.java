@@ -78,6 +78,7 @@ public class UploadFileDialog extends javax.swing.JDialog {
         local_path = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
         remote_path = new javax.swing.JTextField();
+        local_folder_button = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle("UPLOAD FILE");
@@ -91,7 +92,9 @@ public class UploadFileDialog extends javax.swing.JDialog {
         email_combobox.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         email_combobox.setDoubleBuffered(true);
 
+        vamos_button.setBackground(new java.awt.Color(0, 153, 0));
         vamos_button.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
+        vamos_button.setForeground(new java.awt.Color(255, 255, 255));
         vamos_button.setText("LET'S GO");
         vamos_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         vamos_button.setDoubleBuffered(true);
@@ -102,7 +105,7 @@ public class UploadFileDialog extends javax.swing.JDialog {
         });
 
         local_file_button.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
-        local_file_button.setText("Select LOCAL FILE");
+        local_file_button.setText("Select FILE");
         local_file_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         local_file_button.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -117,6 +120,15 @@ public class UploadFileDialog extends javax.swing.JDialog {
 
         remote_path.setFont(new java.awt.Font("Noto Sans", 0, 18)); // NOI18N
 
+        local_folder_button.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
+        local_folder_button.setText("Select FOLDER");
+        local_folder_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        local_folder_button.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                local_folder_buttonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -129,13 +141,15 @@ public class UploadFileDialog extends javax.swing.JDialog {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(vamos_button))
                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(local_file_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addComponent(jLabel2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(local_path, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(remote_path, javax.swing.GroupLayout.DEFAULT_SIZE, 516, Short.MAX_VALUE))))
+                        .addComponent(remote_path, javax.swing.GroupLayout.DEFAULT_SIZE, 468, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(local_file_button)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(local_folder_button)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(local_path, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -144,8 +158,9 @@ public class UploadFileDialog extends javax.swing.JDialog {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(local_file_button)
+                    .addComponent(local_folder_button)
                     .addComponent(local_path))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
                     .addComponent(remote_path, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -194,10 +209,29 @@ public class UploadFileDialog extends javax.swing.JDialog {
         pack();
     }//GEN-LAST:event_local_file_buttonActionPerformed
 
+    private void local_folder_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_local_folder_buttonActionPerformed
+        // TODO add your handling code here:
+        JFileChooser fileChooser = new JFileChooser();
+
+        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+
+        int option = fileChooser.showOpenDialog(this);
+
+        if (option == JFileChooser.APPROVE_OPTION) {
+
+            File file = fileChooser.getSelectedFile();
+
+            local_path.setText(file.getAbsolutePath());
+        }
+
+        pack();
+    }//GEN-LAST:event_local_folder_buttonActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JComboBox<String> email_combobox;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JButton local_file_button;
+    private javax.swing.JButton local_folder_button;
     private javax.swing.JLabel local_path;
     private javax.swing.JTextField remote_path;
     private javax.swing.JButton vamos_button;

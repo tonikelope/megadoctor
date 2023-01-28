@@ -543,6 +543,16 @@ public class Helpers {
                     }
                 }
             };
+            Action truncateAccountAction = new AbstractAction("TRUNCATE SELECTED ACCOUNT") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    if (Main.MAIN_WINDOW.getCuentas_textarea().isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                        Helpers.threadRun(() -> {
+                            Main.MAIN_WINDOW.truncateAccount(txtArea.getSelectedText().trim());
+                        });
+                    }
+                }
+            };
             cutAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control X"));
             copyAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control C"));
             pasteAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control V"));
@@ -636,6 +646,14 @@ public class Helpers {
             refreshAccount.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/refresh.png")));
 
             popup.add(refreshAccount);
+
+            popup.addSeparator();
+
+            JMenuItem truncateAccount = new JMenuItem(truncateAccountAction);
+
+            truncateAccount.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/remove.png")));
+
+            popup.add(truncateAccount);
 
             txtArea.setComponentPopupMenu(popup);
         }
