@@ -38,7 +38,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.42";
+    public final static String VERSION = "0.43";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -748,13 +748,42 @@ public class Main extends javax.swing.JFrame {
 
     public void truncateAccount(String email) {
 
+        _running = true;
+
+        Helpers.GUIRun(() -> {
+
+            MAIN_WINDOW.getCuentas_textarea().setEnabled(false);
+            MAIN_WINDOW.getVamos_button().setEnabled(false);
+            MAIN_WINDOW.getSave_button().setEnabled(false);
+            MAIN_WINDOW.getProgressbar().setIndeterminate(true);
+            MAIN_WINDOW.getStatus_label().setText("TRUNCATING [" + email + "]. PLEASE WAIT...");
+
+        });
+
         if (Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "CAUTION!! ALL CONTENT INSIDE [" + email + "] WILL BE PERMANENTLY DELETED. ARE YOU SURE?") == 0) {
+
             login(email);
 
-            String ls = Helpers.runProcess(new String[]{"mega-ls", "--show-handles"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+            Helpers.runProcess(new String[]{"mega-rm", "-rf", "'/*'"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+            Helpers.runProcess(new String[]{"mega-rm", "-rf", "'//in/*'"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+            Helpers.runProcess(new String[]{"mega-rm", "-rf", "'//bin/*'"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-            removeNodes(ls);
+            forceRefreshAccount(email, "Refreshed after account truncate", false, false);
+
+            Helpers.mostrarMensajeInformativo(MAIN_WINDOW, email + " TRUNCATED");
         }
+
+        Helpers.GUIRun(() -> {
+
+            MAIN_WINDOW.getCuentas_textarea().setEnabled(true);
+            MAIN_WINDOW.getVamos_button().setEnabled(true);
+            MAIN_WINDOW.getSave_button().setEnabled(true);
+            MAIN_WINDOW.getProgressbar().setIndeterminate(false);
+            MAIN_WINDOW.getStatus_label().setText("");
+
+        });
+
+        _running = false;
 
     }
 
@@ -789,19 +818,10 @@ public class Main extends javax.swing.JFrame {
                 delete_command.addAll(node_list);
 
                 login(email);
+
                 Helpers.runProcess(delete_command.toArray(String[]::new), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-                String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
-                String du = Helpers.runProcess(new String[]{"mega-du", "-h", "--use-pcre", "/.*"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
-                String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
-                Helpers.GUIRun(() -> {
-
-                    output_textarea.append("\n[" + email + "] (Refreshed after deletion)\n\n" + df + "\n" + du + "\n" + ls + "\n\n");
-
-                });
+                forceRefreshAccount(email, "Refreshed after deletion", false, false);
             }
 
             logout(true);
@@ -1287,14 +1307,24 @@ public class Main extends javax.swing.JFrame {
 
         if (_transferences_running || _running || !"".equals(output_textarea.getText().trim())) {
 
-            if (Helpers.mostrarMensajeInformativoSINO(this, "EXIT?") == 0) {
-                System.exit(0);
+            if (Helpers.mostrarMensajeInformativoSINO(this, "EXIT NOW?") == 0) {
+
+                if (_transferences_running) {
+
+                    if (Helpers.mostrarMensajeInformativoSINO(this, "All transactions in progress or on hold will be lost. ARE YOU SURE?") == 0) {
+                        logout(false);
+                        System.exit(0);
+                    }
+                } else {
+                    logout(false);
+                    System.exit(0);
+                }
             }
 
         } else {
+            logout(false);
             System.exit(0);
         }
-
     }//GEN-LAST:event_formWindowClosing
 
     private void cuentas_textareaFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_cuentas_textareaFocusGained

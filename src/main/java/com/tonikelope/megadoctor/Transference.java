@@ -1,6 +1,12 @@
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JPanel.java to edit this template
+ __  __ _____ ____    _    ____   ___   ____ _____ ___  ____  
+|  \/  | ____/ ___|  / \  |  _ \ / _ \ / ___|_   _/ _ \|  _ \ 
+| |\/| |  _|| |  _  / _ \ | | | | | | | |     | || | | | |_) |
+| |  | | |__| |_| |/ ___ \| |_| | |_| | |___  | || |_| |  _ < 
+|_|  |_|_____\____/_/   \_\____/ \___/ \____| |_| \___/|_| \_\
+                                                              
+by tonikelope
+
  */
 package com.tonikelope.megadoctor;
 
@@ -9,6 +15,8 @@ import static com.tonikelope.megadoctor.Main.TRANSFERENCES_LOCK;
 import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -68,6 +76,21 @@ public class Transference extends javax.swing.JPanel {
         return _finished;
     }
 
+    private void setTransferTag() {
+
+        if (_size > 0) {
+            String transfer_data = Helpers.runProcess(new String[]{"mega-transfers", "--col-separator=#_#"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+            if (!transfer_data.trim().isEmpty()) {
+                String[] transfer_data_lines = transfer_data.split("\n");
+
+                String[] transfer_tokens = transfer_data_lines[1].trim().split("#_#");
+
+                _tag = Integer.parseInt(transfer_tokens[1].trim());
+            }
+        }
+    }
+
     public void start() {
         Helpers.threadRun(() -> {
 
@@ -86,24 +109,33 @@ public class Transference extends javax.swing.JPanel {
                 Helpers.runProcess(new String[]{"mega-put", "-cq", "--ignore-quota-warn", _lpath, _rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
             }
 
-            String transfer_data = Helpers.runProcess(new String[]{"mega-transfers", "--col-separator=#_#"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+            Helpers.GUIRun(() -> {
+                progress.setIndeterminate(true);
 
-            if (!transfer_data.trim().isEmpty()) {
+            });
 
-                String[] transfer_data_lines = transfer_data.split("\n");
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
+            }
 
-                String[] transfer_tokens = transfer_data_lines[1].trim().split("#_#");
+            Helpers.GUIRun(() -> {
+                progress.setIndeterminate(false);
 
-                _tag = Integer.parseInt(transfer_tokens[1].trim());
+            });
 
-                while (udpdateProgress()) {
+            if (transferRunning()) {
+
+                setTransferTag();
+
+                while (updateProgress()) {
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException ex) {
                         Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
-
             }
 
             Helpers.GUIRun(() -> {
@@ -111,12 +143,18 @@ public class Transference extends javax.swing.JPanel {
 
             });
 
-            while (!remoteFileExists()) {
+            while (transferRunning()) {
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException ex) {
                     Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
                 }
+            }
+
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
             }
 
             Helpers.GUIRun(() -> {
@@ -139,35 +177,42 @@ public class Transference extends javax.swing.JPanel {
         });
     }
 
-    private boolean remoteFileExists() {
+    private boolean transferRunning() {
 
-        String find = Helpers.runProcess(new String[]{"mega-find", _rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+        String transfer_data = Helpers.runProcess(new String[]{"mega-transfers", "--limit=1"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-        return !find.trim().startsWith("[API:err:");
+        return !transfer_data.trim().isEmpty();
     }
 
-    private boolean udpdateProgress() {
-        String transfer_data = Helpers.runProcess(new String[]{"mega-transfers", "--col-separator=#_#"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+    private boolean updateProgress() {
 
-        if (!transfer_data.trim().isEmpty()) {
-            String[] transfer_data_lines = transfer_data.split("\n");
+        if (!transferRunning()) {
+            return false;
+        }
 
-            String[] transfer_tokens = transfer_data_lines[1].trim().split("#_#");
+        String transfer_data = Helpers.runProcess(new String[]{"mega-transfers", "--summary"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-            String prog = transfer_tokens[4].trim();
+        String[] transfer_data_lines = transfer_data.split("\n");
 
-            prog = prog.replaceAll("^([0-9.]+).+$", "$1");
+        final String regex = "^ *(\\d+) +([\\d.]+ +[^ ]+) +([\\d.]+ +[^ ]+) +([\\d.]+) *% +(\\d+) +([\\d.]+ +[^ ]+) +([\\d.]+ +[^ ]+) +([\\d.]+) *%.*$";
+        final Pattern pattern = Pattern.compile(regex);
 
-            _prog = (int) (Float.parseFloat(prog) * 100);
+        final Matcher matcher = pattern.matcher(transfer_data_lines[1].trim());
+
+        if (matcher.find()) {
+
+            _prog = (int) (Float.parseFloat(matcher.group((_action == 0 ? 4 : 8))) * 100);
 
             Helpers.GUIRun(() -> {
+
                 progress.setValue(_prog);
             });
 
             return true;
-        } else {
-            return false;
         }
+
+        return false;
+
     }
 
     /**
@@ -185,11 +230,10 @@ public class Transference extends javax.swing.JPanel {
 
         File local = new File(lpath);
 
-        if (local.isFile()) {
-            _size = new File(lpath).length();
-
-        } else {
+        if (local.isDirectory()) {
             _size = 0;
+        } else {
+            _size = new File(lpath).length();
         }
 
         _rpath = rpath.endsWith("/") ? rpath + new File(_lpath).getName() : rpath;
