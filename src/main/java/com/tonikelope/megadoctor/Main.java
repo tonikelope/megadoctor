@@ -38,7 +38,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.44";
+    public final static String VERSION = "0.45";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -869,6 +869,10 @@ public class Main extends javax.swing.JFrame {
             String du = Helpers.runProcess(new String[]{"mega-du", "-h", "--use-pcre", "/.*"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
             String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+            String ls2 = Helpers.runProcess(new String[]{"mega-ls", "-lr", "--show-handles"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+            parseAccountNodes(email, ls2);
 
             Helpers.GUIRun(() -> {
 

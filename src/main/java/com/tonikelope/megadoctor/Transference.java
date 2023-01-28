@@ -163,6 +163,8 @@ public class Transference extends javax.swing.JPanel {
                 Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
             }
 
+            Helpers.runProcess(new String[]{"mega-export", "-af", _rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
             Helpers.GUIRun(() -> {
                 progress.setIndeterminate(false);
                 progress.setStringPainted(true);
