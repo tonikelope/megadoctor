@@ -1,7 +1,7 @@
 # megadoctor
 
 1. Check your accounts statistics.
-2. Delete/rename/move folders/files (selecting NODE-IDs with mouse).
+2. Delete/rename/move/copy folders/files (selecting NODE-IDs with mouse).
 3. Move/copy folders/files to another account (selecting NODE-IDs with mouse).
 4. Enable/Disable public links on folders/files (selecting NODE-IDs with mouse).
 
