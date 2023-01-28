@@ -38,7 +38,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.43";
+    public final static String VERSION = "0.44";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -51,7 +51,7 @@ public class Main extends javax.swing.JFrame {
     private final static ArrayList<String[]> MEGA_ACCOUNTS_SPACE = new ArrayList<>();
     private final static ArrayList<String> MEGA_ACCOUNTS_LOGIN_ERROR = new ArrayList<>();
     private volatile boolean _running = false;
-    private volatile boolean _exit = false;
+    private volatile boolean _aborting = false;
     private volatile boolean _firstAccountsTextareaClick = false;
     private volatile MoveNodeToAnotherAccountDialog _email_dialog = null;
     private volatile MoveNodeDialog _move_dialog = null;
@@ -756,7 +756,7 @@ public class Main extends javax.swing.JFrame {
             MAIN_WINDOW.getVamos_button().setEnabled(false);
             MAIN_WINDOW.getSave_button().setEnabled(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
-            MAIN_WINDOW.getStatus_label().setText("TRUNCATING [" + email + "]. PLEASE WAIT...");
+            MAIN_WINDOW.getStatus_label().setText("TRUNCATING " + email + " PLEASE WAIT...");
 
         });
 
@@ -1189,7 +1189,7 @@ public class Main extends javax.swing.JFrame {
 
                             });
 
-                            if (_exit) {
+                            if (_aborting) {
                                 break;
                             }
 
@@ -1232,7 +1232,7 @@ public class Main extends javax.swing.JFrame {
 
                         });
 
-                        Helpers.mostrarMensajeInformativo(this, _exit ? "CANCELED!" : "DONE");
+                        Helpers.mostrarMensajeInformativo(this, _aborting ? "CANCELED!" : "DONE");
 
                     } else {
                         Helpers.mostrarMensajeInformativo(this, "DONE");
@@ -1250,12 +1250,12 @@ public class Main extends javax.swing.JFrame {
                     });
 
                     _running = false;
-                    _exit = false;
+                    _aborting = false;
                 });
 
-            } else if (!_exit) {
+            } else if (!_aborting) {
                 if (Helpers.mostrarMensajeInformativoSINO(this, "SURE?") == 0) {
-                    _exit = true;
+                    _aborting = true;
                     Helpers.GUIRun(() -> {
                         vamos_button.setText("CANCELING...");
                         vamos_button.setEnabled(false);
@@ -1304,26 +1304,30 @@ public class Main extends javax.swing.JFrame {
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
         // TODO add your handling code here:
+        if (!_aborting) {
+            if (_transferences_running || _running || !"".equals(output_textarea.getText().trim())) {
 
-        if (_transferences_running || _running || !"".equals(output_textarea.getText().trim())) {
+                if (Helpers.mostrarMensajeInformativoSINO(this, "EXIT NOW?") == 0) {
 
-            if (Helpers.mostrarMensajeInformativoSINO(this, "EXIT NOW?") == 0) {
+                    if (_transferences_running) {
 
-                if (_transferences_running) {
-
-                    if (Helpers.mostrarMensajeInformativoSINO(this, "All transactions in progress or on hold will be lost. ARE YOU SURE?") == 0) {
+                        if (Helpers.mostrarMensajeInformativoSINO(this, "All transactions in progress or on hold will be lost. ARE YOU SURE?") == 0) {
+                            _aborting = true;
+                            logout(false);
+                            System.exit(0);
+                        }
+                    } else {
+                        _aborting = true;
                         logout(false);
                         System.exit(0);
                     }
-                } else {
-                    logout(false);
-                    System.exit(0);
                 }
-            }
 
-        } else {
-            logout(false);
-            System.exit(0);
+            } else {
+                _aborting = true;
+                logout(false);
+                System.exit(0);
+            }
         }
     }//GEN-LAST:event_formWindowClosing
 

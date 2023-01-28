@@ -77,7 +77,7 @@
                       <Component id="remote_path" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
                   <EmptySpace max="-2" attributes="0"/>
-                  <Component id="progress" min="-2" max="-2" attributes="0"/>
+                  <Component id="progress" min="-2" pref="35" max="-2" attributes="0"/>
                   <EmptySpace max="32767" attributes="0"/>
               </Group>
           </Group>

@@ -24,6 +24,7 @@ import java.util.regex.Pattern;
  */
 public class Transference extends javax.swing.JPanel {
 
+    public static final int WARMING_TRANSFER_WAIT = 5000;
     private volatile int _tag;
     private volatile int _action;
     private volatile int _prog;
@@ -84,9 +85,11 @@ public class Transference extends javax.swing.JPanel {
             if (!transfer_data.trim().isEmpty()) {
                 String[] transfer_data_lines = transfer_data.split("\n");
 
-                String[] transfer_tokens = transfer_data_lines[1].trim().split("#_#");
+                if (transfer_data_lines.length >= 2) {
+                    String[] transfer_tokens = transfer_data_lines[1].trim().split("#_#");
 
-                _tag = Integer.parseInt(transfer_tokens[1].trim());
+                    _tag = Integer.parseInt(transfer_tokens[1].trim());
+                }
             }
         }
     }
@@ -115,15 +118,18 @@ public class Transference extends javax.swing.JPanel {
             });
 
             try {
-                Thread.sleep(1000);
+                Thread.sleep(WARMING_TRANSFER_WAIT); //SECURITY WAIT
             } catch (InterruptedException ex) {
                 Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
             }
 
-            Helpers.GUIRun(() -> {
-                progress.setIndeterminate(false);
+            if (_size > 0) {
 
-            });
+                Helpers.GUIRun(() -> {
+                    progress.setIndeterminate(false);
+
+                });
+            }
 
             if (transferRunning()) {
 
@@ -152,15 +158,17 @@ public class Transference extends javax.swing.JPanel {
             }
 
             try {
-                Thread.sleep(1000);
+                Thread.sleep(2000);
             } catch (InterruptedException ex) {
                 Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
             }
 
             Helpers.GUIRun(() -> {
                 progress.setIndeterminate(false);
+                progress.setStringPainted(true);
                 progress.setValue(progress.getMaximum());
                 ok.setVisible(true);
+                local_path.setText("[" + (_size > 0 ? Helpers.formatBytes(_size) : "---") + "] " + _lpath);
             });
 
             Main.MAIN_WINDOW.forceRefreshAccount(_email, "Refreshed after upload [" + (_size > 0 ? Helpers.formatBytes(_size) : "---") + "] " + _rpath, false, false);
@@ -204,14 +212,21 @@ public class Transference extends javax.swing.JPanel {
             _prog = (int) (Float.parseFloat(matcher.group((_action == 0 ? 4 : 8))) * 100);
 
             Helpers.GUIRun(() -> {
+                local_path.setText("[" + (_size > 0 ? Helpers.formatBytes(_size) : "---") + "] (" + Integer.parseInt(matcher.group((_action == 0 ? 1 : 5))) + " files pending) " + _lpath);
 
-                progress.setValue(_prog);
+                if (_size > 0) {
+
+                    local_path.setText("[" + (_size > 0 ? Helpers.formatBytes(_size) : "---") + "] " + _lpath);
+
+                    progress.setValue(_prog);
+                } else {
+                    local_path.setText("[" + (_size > 0 ? Helpers.formatBytes(_size) : "---") + "] (" + Integer.parseInt(matcher.group((_action == 0 ? 1 : 5))) + " files pending (" + matcher.group((_action == 0 ? 3 : 7)).replaceAll("  *", " ") + ")) " + _lpath);
+
+                }
             });
-
-            return true;
         }
 
-        return false;
+        return true;
 
     }
 
@@ -244,7 +259,7 @@ public class Transference extends javax.swing.JPanel {
 
         progress.setMinimum(0);
         progress.setMaximum(10000);
-        progress.setStringPainted(true);
+        progress.setStringPainted(_size > 0);
     }
 
     /**
@@ -305,7 +320,7 @@ public class Transference extends javax.swing.JPanel {
                     .addComponent(action)
                     .addComponent(remote_path))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(progress, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(progress, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
