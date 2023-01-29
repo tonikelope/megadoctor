@@ -207,6 +207,7 @@ public class Transference extends javax.swing.JPanel {
                 Helpers.GUIRun(() -> {
 
                     progress.setIndeterminate(true);
+                    action.setText("");
 
                 });
 
