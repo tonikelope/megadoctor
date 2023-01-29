@@ -45,7 +45,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.50";
+    public final static String VERSION = "0.51";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -56,7 +56,7 @@ public class Main extends javax.swing.JFrame {
     public volatile static Main MAIN_WINDOW;
     public static final Object TRANSFERENCES_LOCK = new Object();
     public static LinkedHashMap<String, String> MEGA_ACCOUNTS = new LinkedHashMap<>();
-    public static HashMap<String, String> MEGA_SESSIONS = new HashMap<>();
+    public volatile static HashMap<String, String> MEGA_SESSIONS = new HashMap<>();
     public final static HashMap<String, Object[]> MEGA_NODES = new HashMap<>();
     private final static ArrayList<String[]> MEGA_ACCOUNTS_SPACE = new ArrayList<>();
     private final static ArrayList<String> MEGA_ACCOUNTS_LOGIN_ERROR = new ArrayList<>();
@@ -231,25 +231,30 @@ public class Main extends javax.swing.JFrame {
 
         String ls = Helpers.runProcess(new String[]{"mega-ls", "/", "--show-handles"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-        final String regex = "(.+) <H:[^>]+>";
+        if (!du.trim().isEmpty() && !ls.trim().isEmpty()) {
 
-        final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+            final String regex = "(.+) <H:[^>]+>";
 
-        final Matcher matcher = pattern.matcher(ls);
+            final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
 
-        while (matcher.find()) {
-            du = du.replace(matcher.group(1), matcher.group(0));
+            final Matcher matcher = pattern.matcher(ls);
+
+            while (matcher.find()) {
+                du = du.replace(matcher.group(1), matcher.group(0));
+            }
+
+            String[] du_lines = du.split("\n");
+
+            du_lines[du_lines.length - 2] += "-------------";
+
+            du_lines[0] = du_lines[0].replaceAll("( +)", "$1             ");
+
+            du_lines[du_lines.length - 1] = du_lines[du_lines.length - 1].replaceAll("(used:)( +)(\\d)", "$1             $2$3");
+
+            return String.join("\n", du_lines);
+        } else {
+            return "";
         }
-
-        String[] du_lines = du.split("\n");
-
-        du_lines[du_lines.length - 2] += "-------------";
-
-        du_lines[0] = du_lines[0].replaceAll("( +)", "$1             ");
-
-        du_lines[du_lines.length - 1] = du_lines[du_lines.length - 1].replaceAll("(used:)( +)(\\d)", "$1             $2$3");
-
-        return String.join("\n", du_lines);
     }
 
     public void logout(boolean keep_session) {
