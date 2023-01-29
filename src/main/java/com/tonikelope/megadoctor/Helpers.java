@@ -165,7 +165,9 @@ public class Helpers {
         return total;
     }
 
-    public static void mostrarMensajeInformativo(JFrame frame, String msg) {
+    public static void mostrarMensajeInformativo(JFrame frame, String m) {
+
+        final String msg = m.replace("\n", "<br>");
 
         if (SwingUtilities.isEventDispatchThread()) {
 
@@ -182,7 +184,9 @@ public class Helpers {
     }
 
     // 0=yes, 1=no, 2=cancel
-    public static int mostrarMensajeInformativoSINO(JFrame frame, String msg) {
+    public static int mostrarMensajeInformativoSINO(JFrame frame, String m) {
+
+        final String msg = m.replace("\n", "<br>");
 
         if (SwingUtilities.isEventDispatchThread()) {
 
@@ -206,7 +210,9 @@ public class Helpers {
 
     }
 
-    public static void mostrarMensajeError(JFrame frame, String msg) {
+    public static void mostrarMensajeError(JFrame frame, String m) {
+
+        final String msg = m.replace("\n", "<br>");
 
         if (SwingUtilities.isEventDispatchThread()) {
 

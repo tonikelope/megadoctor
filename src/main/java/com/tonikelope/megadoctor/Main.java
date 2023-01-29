@@ -29,6 +29,7 @@ import java.util.logging.Logger;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JTextArea;
 
@@ -38,7 +39,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.45";
+    public final static String VERSION = "0.46";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -50,7 +51,7 @@ public class Main extends javax.swing.JFrame {
     public final static HashMap<String, Object[]> MEGA_NODES = new HashMap<>();
     private final static ArrayList<String[]> MEGA_ACCOUNTS_SPACE = new ArrayList<>();
     private final static ArrayList<String> MEGA_ACCOUNTS_LOGIN_ERROR = new ArrayList<>();
-    private volatile boolean _running = false;
+    private volatile boolean _running_global_check = false;
     private volatile boolean _aborting = false;
     private volatile boolean _firstAccountsTextareaClick = false;
     private volatile MoveNodeToAnotherAccountDialog _email_dialog = null;
@@ -79,6 +80,10 @@ public class Main extends javax.swing.JFrame {
 
     public JButton getVamos_button() {
         return vamos_button;
+    }
+
+    public JPanel getTransferences() {
+        return transferences;
     }
 
     /**
@@ -126,36 +131,46 @@ public class Main extends javax.swing.JFrame {
                         Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
+                synchronized (TRANSFERENCES_LOCK) {
+                    Helpers.GUIRunAndWait(() -> {
 
-                Helpers.GUIRunAndWait(() -> {
+                        if (transferences.getComponentCount() > 0) {
+                            _transferences_running = false;
 
-                    synchronized (TRANSFERENCES_LOCK) {
-                        _transferences_running = false;
-
-                        for (Component t : transferences.getComponents()) {
-
-                            Transference trans = (Transference) t;
-
-                            if (trans.isRunning()) {
-                                _transferences_running = true;
-                                break;
-                            }
-                        }
-
-                        if (!_transferences_running) {
                             for (Component t : transferences.getComponents()) {
 
                                 Transference trans = (Transference) t;
 
-                                if (!trans.isRunning() && !trans.isFinished()) {
+                                if (trans.isRunning()) {
                                     _transferences_running = true;
-                                    trans.start();
                                     break;
                                 }
                             }
+
+                            if (!_transferences_running) {
+                                for (Component t : transferences.getComponents()) {
+
+                                    Transference trans = (Transference) t;
+
+                                    if (!trans.isRunning() && !trans.isFinished() && !trans.isCanceled()) {
+                                        _transferences_running = true;
+                                        trans.start();
+                                        break;
+                                    }
+                                }
+                            }
+
+                        } else {
+                            _transferences_running = false;
+
+                            if (!_running_global_check) {
+                                vamos_button.setEnabled(true);
+                                cuentas_textarea.setEnabled(true);
+                            }
                         }
-                    }
-                });
+
+                    });
+                }
             }
 
         });
@@ -201,6 +216,33 @@ public class Main extends javax.swing.JFrame {
         return true;
     }
 
+    public String DUWithHandles() {
+
+        String du = Helpers.runProcess(new String[]{"mega-du", "-h", "--use-pcre", "/.*"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+        String ls = Helpers.runProcess(new String[]{"mega-ls", "/", "--show-handles"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+        final String regex = "(.+) <H:[^>]+>";
+
+        final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+
+        final Matcher matcher = pattern.matcher(ls);
+
+        while (matcher.find()) {
+            du = du.replace(matcher.group(1), matcher.group(0));
+        }
+
+        String[] du_lines = du.split("\n");
+
+        du_lines[du_lines.length - 2] += "-------------";
+
+        du_lines[0] = du_lines[0].replaceAll("( +)", "$1             ");
+
+        du_lines[du_lines.length - 1] = du_lines[du_lines.length - 1].replaceAll("(used:)( +)(\\d)", "$1             $2$3");
+
+        return String.join("\n", du_lines);
+    }
+
     public void logout(boolean keep_session) {
         if (keep_session) {
             Helpers.runProcess(new String[]{"mega-logout", "--keep-session"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
@@ -218,7 +260,7 @@ public class Main extends javax.swing.JFrame {
 
     public void copyNodesToAnotherAccount(String text, final boolean move) {
 
-        _running = true;
+        _running_global_check = true;
 
         Helpers.GUIRun(() -> {
 
@@ -299,15 +341,13 @@ public class Main extends javax.swing.JFrame {
 
                     String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-                    String ls2 = Helpers.runProcess(new String[]{"mega-ls", "-lr", "--show-handles"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
-                    String du = Helpers.runProcess(new String[]{"mega-du", "-h", "--use-pcre", "/.*"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                    String du = DUWithHandles();
 
                     String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-                    logout(true);
+                    parseAccountNodes(email);
 
-                    parseAccountNodes(email, ls2);
+                    logout(true);
 
                     Helpers.GUIRun(() -> {
 
@@ -335,13 +375,11 @@ public class Main extends javax.swing.JFrame {
 
                             String ls_rm = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-                            String ls2_rm = Helpers.runProcess(new String[]{"mega-ls", "-lr", "--show-handles"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
-                            String du_rm = Helpers.runProcess(new String[]{"mega-du", "-h", "--use-pcre", "/.*"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                            String du_rm = DUWithHandles();
 
                             String df_rm = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-                            parseAccountNodes(email_rm, ls2_rm);
+                            parseAccountNodes(email_rm);
 
                             Helpers.GUIRun(() -> {
 
@@ -376,7 +414,7 @@ public class Main extends javax.swing.JFrame {
 
         });
 
-        _running = false;
+        _running_global_check = false;
     }
 
     public void copyNodesInsideAccount(String text) {
@@ -438,13 +476,11 @@ public class Main extends javax.swing.JFrame {
 
                     String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-                    String ls2 = Helpers.runProcess(new String[]{"mega-ls", "-lr", "--show-handles"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
-                    String du = Helpers.runProcess(new String[]{"mega-du", "-h", "--use-pcre", "/.*"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                    String du = DUWithHandles();
 
                     String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-                    parseAccountNodes(email, ls2);
+                    parseAccountNodes(email);
 
                     Helpers.GUIRun(() -> {
 
@@ -481,7 +517,7 @@ public class Main extends javax.swing.JFrame {
 
         });
 
-        _running = false;
+        _running_global_check = false;
     }
 
     public void moveNodesInsideAccount(String text) {
@@ -541,13 +577,11 @@ public class Main extends javax.swing.JFrame {
 
                     String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-                    String ls2 = Helpers.runProcess(new String[]{"mega-ls", "-lr", "--show-handles"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
-                    String du = Helpers.runProcess(new String[]{"mega-du", "-h", "--use-pcre", "/.*"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                    String du = DUWithHandles();
 
                     String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-                    parseAccountNodes(email, ls2);
+                    parseAccountNodes(email);
 
                     Helpers.GUIRun(() -> {
 
@@ -579,7 +613,7 @@ public class Main extends javax.swing.JFrame {
 
         });
 
-        _running = false;
+        _running_global_check = false;
     }
 
     public void renameNodes(String text) {
@@ -639,13 +673,11 @@ public class Main extends javax.swing.JFrame {
 
                     String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-                    String ls2 = Helpers.runProcess(new String[]{"mega-ls", "-lr", "--show-handles"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
-                    String du = Helpers.runProcess(new String[]{"mega-du", "-h", "--use-pcre", "/.*"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                    String du = DUWithHandles();
 
                     String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-                    parseAccountNodes(email, ls2);
+                    parseAccountNodes(email);
 
                     Helpers.GUIRun(() -> {
 
@@ -677,12 +709,12 @@ public class Main extends javax.swing.JFrame {
 
         });
 
-        _running = false;
+        _running_global_check = false;
     }
 
     public void exportNodes(String text, boolean enable) {
 
-        _running = true;
+        _running_global_check = true;
 
         Helpers.GUIRun(() -> {
 
@@ -715,7 +747,7 @@ public class Main extends javax.swing.JFrame {
 
                 String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-                String du = Helpers.runProcess(new String[]{"mega-du", "-h", "--use-pcre", "/.*"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                String du = DUWithHandles();
 
                 String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
@@ -743,12 +775,12 @@ public class Main extends javax.swing.JFrame {
 
         });
 
-        _running = false;
+        _running_global_check = false;
     }
 
     public void truncateAccount(String email) {
 
-        _running = true;
+        _running_global_check = true;
 
         Helpers.GUIRun(() -> {
 
@@ -783,13 +815,13 @@ public class Main extends javax.swing.JFrame {
 
         });
 
-        _running = false;
+        _running_global_check = false;
 
     }
 
     public void removeNodes(String text) {
 
-        _running = true;
+        _running_global_check = true;
 
         Helpers.GUIRun(() -> {
 
@@ -841,12 +873,12 @@ public class Main extends javax.swing.JFrame {
 
         });
 
-        _running = false;
+        _running_global_check = false;
     }
 
     public void forceRefreshAccount(String email, String reason, boolean notification, boolean login) {
 
-        _running = true;
+        _running_global_check = true;
 
         Helpers.GUIRun(() -> {
 
@@ -866,13 +898,11 @@ public class Main extends javax.swing.JFrame {
 
             String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-            String du = Helpers.runProcess(new String[]{"mega-du", "-h", "--use-pcre", "/.*"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+            String du = DUWithHandles();
 
             String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-            String ls2 = Helpers.runProcess(new String[]{"mega-ls", "-lr", "--show-handles"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
-            parseAccountNodes(email, ls2);
+            parseAccountNodes(email);
 
             Helpers.GUIRun(() -> {
 
@@ -902,10 +932,12 @@ public class Main extends javax.swing.JFrame {
 
         });
 
-        _running = false;
+        _running_global_check = false;
     }
 
-    private void parseAccountNodes(String email, String ls) {
+    private void parseAccountNodes(String email) {
+
+        String ls = Helpers.runProcess(new String[]{"mega-ls", "-lr", "--show-handles"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
         final String regex = "([0-9]+|-) +[^ ]+ +[^ ]+ +(H:[^ ]+) (.+)";
         final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
@@ -936,6 +968,10 @@ public class Main extends javax.swing.JFrame {
         jScrollPane1 = new javax.swing.JScrollPane();
         output_textarea = new javax.swing.JTextArea();
         transf_scroll = new javax.swing.JScrollPane();
+        jPanel1 = new javax.swing.JPanel();
+        transferences_control_panel = new javax.swing.JPanel();
+        cancel_trans_button = new javax.swing.JButton();
+        clear_trans_button = new javax.swing.JButton();
         transferences = new javax.swing.JPanel();
         upload_button = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
@@ -1012,8 +1048,69 @@ public class Main extends javax.swing.JFrame {
 
         transf_scroll.setBorder(null);
 
+        jPanel1.setPreferredSize(new java.awt.Dimension(1000, 350));
+
+        cancel_trans_button.setBackground(new java.awt.Color(255, 51, 0));
+        cancel_trans_button.setFont(new java.awt.Font("Noto Sans", 1, 14)); // NOI18N
+        cancel_trans_button.setForeground(new java.awt.Color(255, 255, 255));
+        cancel_trans_button.setText("CANCEL ALL");
+        cancel_trans_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        cancel_trans_button.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cancel_trans_buttonActionPerformed(evt);
+            }
+        });
+
+        clear_trans_button.setBackground(new java.awt.Color(0, 153, 0));
+        clear_trans_button.setFont(new java.awt.Font("Noto Sans", 1, 14)); // NOI18N
+        clear_trans_button.setForeground(new java.awt.Color(255, 255, 255));
+        clear_trans_button.setText("Clear all finished");
+        clear_trans_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        clear_trans_button.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                clear_trans_buttonActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout transferences_control_panelLayout = new javax.swing.GroupLayout(transferences_control_panel);
+        transferences_control_panel.setLayout(transferences_control_panelLayout);
+        transferences_control_panelLayout.setHorizontalGroup(
+            transferences_control_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, transferences_control_panelLayout.createSequentialGroup()
+                .addGap(0, 0, 0)
+                .addComponent(clear_trans_button)
+                .addGap(18, 18, 18)
+                .addComponent(cancel_trans_button)
+                .addContainerGap(710, Short.MAX_VALUE))
+        );
+        transferences_control_panelLayout.setVerticalGroup(
+            transferences_control_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(transferences_control_panelLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(transferences_control_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(cancel_trans_button)
+                    .addComponent(clear_trans_button))
+                .addContainerGap())
+        );
+
         transferences.setLayout(new javax.swing.BoxLayout(transferences, javax.swing.BoxLayout.PAGE_AXIS));
-        transf_scroll.setViewportView(transferences);
+
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(transferences_control_panel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(transferences, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addComponent(transferences_control_panel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 0, 0)
+                .addComponent(transferences, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        transf_scroll.setViewportView(jPanel1);
 
         tabbed_panel.addTab("Transferences", transf_scroll);
 
@@ -1058,7 +1155,7 @@ public class Main extends javax.swing.JFrame {
                         .addComponent(logo_label)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(vamos_button, javax.swing.GroupLayout.DEFAULT_SIZE, 989, Short.MAX_VALUE)
+                            .addComponent(vamos_button, javax.swing.GroupLayout.DEFAULT_SIZE, 727, Short.MAX_VALUE)
                             .addComponent(status_label, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                                 .addComponent(upload_button)
@@ -1066,7 +1163,7 @@ public class Main extends javax.swing.JFrame {
                                 .addComponent(save_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
                     .addComponent(jScrollPane2)
                     .addComponent(progressbar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(tabbed_panel))
+                    .addComponent(tabbed_panel, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -1088,7 +1185,7 @@ public class Main extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 185, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(tabbed_panel, javax.swing.GroupLayout.DEFAULT_SIZE, 439, Short.MAX_VALUE)
+                .addComponent(tabbed_panel)
                 .addContainerGap())
         );
 
@@ -1100,7 +1197,7 @@ public class Main extends javax.swing.JFrame {
 
         if (MEGA_CMD_VERSION != null) {
 
-            if (!_running) {
+            if (!_running_global_check) {
 
                 if (!_firstAccountsTextareaClick) {
                     _firstAccountsTextareaClick = true;
@@ -1108,7 +1205,7 @@ public class Main extends javax.swing.JFrame {
                     cuentas_textarea.setForeground(null);
                 }
 
-                _running = true;
+                _running_global_check = true;
                 cuentas_textarea.setEnabled(false);
                 save_button.setEnabled(false);
                 upload_button.setEnabled(false);
@@ -1165,9 +1262,7 @@ public class Main extends javax.swing.JFrame {
 
                                 String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-                                String ls2 = Helpers.runProcess(new String[]{"mega-ls", "-lr", "--show-handles"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
-                                String du = Helpers.runProcess(new String[]{"mega-du", "-h", "--use-pcre", "/.*"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                                String du = DUWithHandles();
 
                                 String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
@@ -1181,7 +1276,7 @@ public class Main extends javax.swing.JFrame {
 
                                 MEGA_ACCOUNTS_SPACE.add(Helpers.getAccountSpaceData(email, df2));
 
-                                parseAccountNodes(email, ls2);
+                                parseAccountNodes(email);
                             }
 
                             i++;
@@ -1253,7 +1348,7 @@ public class Main extends javax.swing.JFrame {
                         save_button.setEnabled(true);
                     });
 
-                    _running = false;
+                    _running_global_check = false;
                     _aborting = false;
                 });
 
@@ -1309,7 +1404,7 @@ public class Main extends javax.swing.JFrame {
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
         // TODO add your handling code here:
         if (!_aborting) {
-            if (_transferences_running || _running || !"".equals(output_textarea.getText().trim())) {
+            if (_transferences_running || _running_global_check || !"".equals(output_textarea.getText().trim())) {
 
                 if (Helpers.mostrarMensajeInformativoSINO(this, "EXIT NOW?") == 0) {
 
@@ -1380,6 +1475,74 @@ public class Main extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_upload_buttonActionPerformed
 
+    private void clear_trans_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clear_trans_buttonActionPerformed
+        // TODO add your handling code here:
+
+        synchronized (TRANSFERENCES_LOCK) {
+
+            if (transferences.getComponentCount() > 0) {
+                ArrayList<Component> finished = new ArrayList<>();
+
+                for (Component t : transferences.getComponents()) {
+
+                    Transference trans = (Transference) t;
+
+                    if (trans.isFinished()) {
+                        finished.add(trans);
+                    }
+                }
+
+                for (Component t : finished) {
+                    transferences.remove(t);
+                }
+
+                transferences.revalidate();
+
+                transferences.repaint();
+            }
+        }
+
+    }//GEN-LAST:event_clear_trans_buttonActionPerformed
+
+    private void cancel_trans_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancel_trans_buttonActionPerformed
+        // TODO add your handling code here:
+        synchronized (TRANSFERENCES_LOCK) {
+
+            if (transferences.getComponentCount() > 0) {
+
+                if (Helpers.mostrarMensajeInformativoSINO(this, "All transactions in progress or on hold will be lost. ARE YOU SURE?") == 0) {
+
+                    upload_button.setEnabled(false);
+
+                    Helpers.threadRun(() -> {
+
+                        synchronized (TRANSFERENCES_LOCK) {
+
+                            Helpers.runProcess(new String[]{"mega-transfers", "-ca"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+                            _transferences_running = false;
+
+                            Helpers.GUIRunAndWait(() -> {
+                                transferences.removeAll();
+                                transferences.revalidate();
+                                transferences.repaint();
+                                upload_button.setEnabled(!MEGA_ACCOUNTS.isEmpty());
+                                vamos_button.setEnabled(true);
+                                cuentas_textarea.setEnabled(true);
+                            });
+
+                            TRANSFERENCES_LOCK.notifyAll();
+                        }
+
+                    });
+
+                }
+            }
+
+        }
+
+    }//GEN-LAST:event_cancel_trans_buttonActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -1417,10 +1580,13 @@ public class Main extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton cancel_trans_button;
+    private javax.swing.JButton clear_trans_button;
     private javax.swing.JTextArea cuentas_textarea;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItem1;
+    private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JLabel logo_label;
@@ -1431,6 +1597,7 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JTabbedPane tabbed_panel;
     private javax.swing.JScrollPane transf_scroll;
     private javax.swing.JPanel transferences;
+    private javax.swing.JPanel transferences_control_panel;
     private javax.swing.JButton upload_button;
     private javax.swing.JButton vamos_button;
     // End of variables declaration//GEN-END:variables

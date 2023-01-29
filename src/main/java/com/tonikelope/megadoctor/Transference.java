@@ -17,6 +17,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.swing.SwingUtilities;
 
 /**
  *
@@ -24,14 +25,19 @@ import java.util.regex.Pattern;
  */
 public class Transference extends javax.swing.JPanel {
 
-    public static final int WARMING_TRANSFER_WAIT = 5000;
     private volatile int _tag;
     private volatile int _action;
-    private volatile int _prog;
+    private volatile int _prog = 0;
     private volatile long _size;
     private volatile String _lpath, _rpath, _email;
-    private volatile boolean _running;
-    private volatile boolean _finished;
+    private volatile boolean _running = false;
+    private volatile boolean _finished = false;
+    private volatile boolean _canceled = false;
+    private volatile long _prog_timestamp = 0;
+
+    public boolean isCanceled() {
+        return _canceled;
+    }
 
     public int getTag() {
         return _tag;
@@ -94,6 +100,52 @@ public class Transference extends javax.swing.JPanel {
         }
     }
 
+    public void clearFinished() {
+        Helpers.threadRun(() -> {
+
+            synchronized (TRANSFERENCES_LOCK) {
+
+                Helpers.GUIRunAndWait(() -> {
+                    Main.MAIN_WINDOW.getTransferences().remove(this);
+
+                    Main.MAIN_WINDOW.getTransferences().revalidate();
+
+                    Main.MAIN_WINDOW.getTransferences().repaint();
+                });
+
+                TRANSFERENCES_LOCK.notifyAll();
+
+            }
+        });
+    }
+
+    public void stop() {
+        _canceled = true;
+
+        Helpers.threadRun(() -> {
+
+            synchronized (TRANSFERENCES_LOCK) {
+
+                if (_running) {
+                    Helpers.runProcess(new String[]{"mega-transfers", "-ca"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+                }
+
+                _running = false;
+
+                Helpers.GUIRunAndWait(() -> {
+                    Main.MAIN_WINDOW.getTransferences().remove(this);
+
+                    Main.MAIN_WINDOW.getTransferences().revalidate();
+
+                    Main.MAIN_WINDOW.getTransferences().repaint();
+                });
+
+                TRANSFERENCES_LOCK.notifyAll();
+            }
+
+        });
+    }
+
     public void start() {
         Helpers.threadRun(() -> {
 
@@ -112,15 +164,21 @@ public class Transference extends javax.swing.JPanel {
                 Helpers.runProcess(new String[]{"mega-put", "-cq", "--ignore-quota-warn", _lpath, _rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
             }
 
+            long start_timestamp = System.currentTimeMillis();
+
             Helpers.GUIRun(() -> {
                 progress.setIndeterminate(true);
 
             });
 
-            try {
-                Thread.sleep(WARMING_TRANSFER_WAIT); //SECURITY WAIT
-            } catch (InterruptedException ex) {
-                Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
+            if (_size == 0) {
+                while (!remoteFileExists(_rpath)) {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
             }
 
             if (_size > 0) {
@@ -144,44 +202,77 @@ public class Transference extends javax.swing.JPanel {
                 }
             }
 
-            Helpers.GUIRun(() -> {
-                progress.setIndeterminate(true);
+            if (!_canceled) {
 
-            });
+                Helpers.GUIRun(() -> {
 
-            while (transferRunning()) {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
+                    progress.setIndeterminate(true);
+
+                });
+
+                while (!remoteFileExists(_rpath)) {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 }
-            }
 
-            try {
-                Thread.sleep(2000);
-            } catch (InterruptedException ex) {
-                Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
-            }
+                long finish_timestamp = System.currentTimeMillis();
 
-            Helpers.runProcess(new String[]{"mega-export", "-af", _rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+                Helpers.runProcess(new String[]{"mega-export", "-af", _rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-            Helpers.GUIRun(() -> {
-                progress.setIndeterminate(false);
-                progress.setStringPainted(true);
-                progress.setValue(progress.getMaximum());
-                ok.setVisible(true);
-                local_path.setText("[" + (_size > 0 ? Helpers.formatBytes(_size) : "---") + "] " + _lpath);
-            });
+                Helpers.GUIRun(() -> {
+                    progress.setIndeterminate(false);
+                    progress.setStringPainted(true);
+                    progress.setValue(progress.getMaximum());
+                    ok.setVisible(true);
 
-            Main.MAIN_WINDOW.forceRefreshAccount(_email, "Refreshed after upload [" + (_size > 0 ? Helpers.formatBytes(_size) : "---") + "] " + _rpath, false, false);
+                    long folder_size = 0;
 
-            _running = false;
+                    if (_size == 0) {
+                        long pre_folder_size = remoteFolderSize(_rpath);
 
-            _finished = true;
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException ex) {
+                            Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
+                        }
 
-            synchronized (TRANSFERENCES_LOCK) {
+                        while ((folder_size = remoteFolderSize(_rpath)) != pre_folder_size) {
+                            pre_folder_size = folder_size;
+                            try {
+                                Thread.sleep(1000);
+                            } catch (InterruptedException ex) {
+                                Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        }
 
-                TRANSFERENCES_LOCK.notifyAll();
+                    }
+
+                    local_path.setText("[" + Helpers.formatBytes(_size > 0 ? _size : folder_size) + "] " + _lpath);
+
+                    if (_size > 0) {
+                        long speed = calculateSpeed(_size, 0, 10000, start_timestamp, finish_timestamp);
+                        action.setText("(Avg: " + Helpers.formatBytes(speed) + "/s)");
+                    } else {
+                        long speed = calculateSpeed(folder_size, 0, 10000, start_timestamp, finish_timestamp);
+                        action.setText("(Avg: " + Helpers.formatBytes(speed) + "/s)");
+                    }
+
+                });
+
+                Main.MAIN_WINDOW.forceRefreshAccount(_email, "Refreshed after upload [" + (_size > 0 ? Helpers.formatBytes(_size) : "---") + "] " + _rpath, false, false);
+
+                _running = false;
+
+                _finished = true;
+
+                synchronized (TRANSFERENCES_LOCK) {
+
+                    TRANSFERENCES_LOCK.notifyAll();
+
+                }
 
             }
         });
@@ -189,14 +280,53 @@ public class Transference extends javax.swing.JPanel {
 
     private boolean transferRunning() {
 
+        if (_canceled) {
+            return false;
+        }
+
         String transfer_data = Helpers.runProcess(new String[]{"mega-transfers", "--limit=1"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
         return !transfer_data.trim().isEmpty();
     }
 
+    private long calculateSpeed(long size, int old_prog, int new_prog, long old_timestamp, long new_timestamp) {
+
+        int delta_prog = new_prog - old_prog;
+
+        long delta_time = new_timestamp - old_timestamp;
+
+        long speed = (long) (((((float) delta_prog / 10000) * size) / delta_time) * 1000);
+
+        return speed;
+    }
+
+    private long remoteFolderSize(String rpath) {
+
+        String du = Helpers.runProcess(new String[]{"mega-du", rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+        final String regex = Pattern.quote(rpath) + ": *?(\\d+)";
+
+        final Pattern pattern = Pattern.compile(regex);
+
+        final Matcher matcher = pattern.matcher(du);
+
+        if (matcher.find()) {
+            return Long.parseLong(matcher.group(1));
+        }
+
+        return 0;
+    }
+
+    private boolean remoteFileExists(String rpath) {
+
+        String find = Helpers.runProcess(new String[]{"mega-find", rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+        return !find.trim().startsWith("[API:err:");
+    }
+
     private boolean updateProgress() {
 
-        if (!transferRunning()) {
+        if (!transferRunning() || _prog == 10000) {
             return false;
         }
 
@@ -211,18 +341,32 @@ public class Transference extends javax.swing.JPanel {
 
         if (matcher.find()) {
 
+            int old_prog = _prog;
+
+            long old_timestamp = _prog_timestamp;
+
             _prog = (int) (Float.parseFloat(matcher.group((_action == 0 ? 4 : 8))) * 100);
 
+            _prog_timestamp = System.currentTimeMillis();
+
             Helpers.GUIRun(() -> {
-                local_path.setText("[" + (_size > 0 ? Helpers.formatBytes(_size) : "---") + "] (" + Integer.parseInt(matcher.group((_action == 0 ? 1 : 5))) + " files pending) " + _lpath);
 
                 if (_size > 0) {
+
+                    if (old_timestamp != 0) {
+                        long speed = calculateSpeed(_size, old_prog, _prog, old_timestamp, _prog_timestamp);
+                        action.setText(Helpers.formatBytes(speed) + "/s");
+                    } else {
+                        action.setText("");
+                    }
 
                     local_path.setText("[" + (_size > 0 ? Helpers.formatBytes(_size) : "---") + "] " + _lpath);
 
                     progress.setValue(_prog);
+
                 } else {
-                    local_path.setText("[" + (_size > 0 ? Helpers.formatBytes(_size) : "---") + "] (" + Integer.parseInt(matcher.group((_action == 0 ? 1 : 5))) + " files pending (" + matcher.group((_action == 0 ? 3 : 7)).replaceAll("  *", " ") + ")) " + _lpath);
+
+                    action.setText(Integer.parseInt(matcher.group((_action == 0 ? 1 : 5))) + " files pending (" + matcher.group((_action == 0 ? 3 : 7)).replaceAll("  *", " ") + ")");
 
                 }
             });
@@ -281,12 +425,18 @@ public class Transference extends javax.swing.JPanel {
         ok = new javax.swing.JLabel();
 
         setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
+        addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                formMouseClicked(evt);
+            }
+        });
 
         local_path.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
         local_path.setText("jLabel1");
         local_path.setDoubleBuffered(true);
 
         action.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
+        action.setForeground(new java.awt.Color(0, 153, 255));
         action.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/right-arrow.png"))); // NOI18N
         action.setDoubleBuffered(true);
 
@@ -349,6 +499,20 @@ public class Transference extends javax.swing.JPanel {
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
+
+    private void formMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_formMouseClicked
+        // TODO add your handling code here:
+
+        if (SwingUtilities.isRightMouseButton(evt)) {
+            if (!_canceled && !_finished && Helpers.mostrarMensajeInformativoSINO(Main.MAIN_WINDOW, "Cancel this transference?") == 0) {
+
+                stop();
+
+            } else if (!_canceled && _finished && Helpers.mostrarMensajeInformativoSINO(Main.MAIN_WINDOW, _lpath + "<br><br>Clear this finished transference?") == 0) {
+                clearFinished();
+            }
+        }
+    }//GEN-LAST:event_formMouseClicked
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel action;
