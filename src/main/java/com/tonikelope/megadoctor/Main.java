@@ -45,7 +45,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.53";
+    public final static String VERSION = "0.54";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -61,7 +61,7 @@ public class Main extends javax.swing.JFrame {
     private final static ArrayList<String[]> MEGA_ACCOUNTS_SPACE = new ArrayList<>();
     private final static ArrayList<String> MEGA_ACCOUNTS_LOGIN_ERROR = new ArrayList<>();
     private volatile boolean _running_global_check = false;
-    private volatile boolean _aborting = false;
+    private volatile boolean _closing = false;
     private volatile boolean _firstAccountsTextareaClick = false;
     private volatile MoveNodeToAnotherAccountDialog _email_dialog = null;
     private volatile MoveNodeDialog _move_dialog = null;
@@ -131,7 +131,7 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.threadRun(() -> {
 
-            while (true) {
+            while (!_closing) {
 
                 synchronized (TRANSFERENCES_LOCK) {
                     try {
@@ -431,6 +431,8 @@ public class Main extends javax.swing.JFrame {
 
     public void bye() {
 
+        _closing = true;
+
         if (Helpers.mostrarMensajeInformativoSINO(this, "Do you want to save your MEGA accounts/sessions/transfers to disk to speed up next time?\n\n(If you are using a public computer it is NOT recommended to do so for security reasons).") == 0) {
             saveAccounts();
             saveTransfers();
@@ -454,15 +456,22 @@ public class Main extends javax.swing.JFrame {
 
                     Transference t = (Transference) c;
 
-                    String email = t.getEmail();
+                    if (!t.isFinished() && !t.isCanceled()) {
 
-                    String lpath = t.getLpath();
+                        String email = t.getEmail();
 
-                    String rpath = t.getRpath();
+                        String lpath = t.getLpath();
 
-                    int action = t.getAction();
+                        String rpath = t.getRpath();
 
-                    trans.add(new Object[]{email, lpath, rpath, action});
+                        int action = t.getAction();
+
+                        trans.add(new Object[]{email, lpath, rpath, action});
+
+                        if (t.isRunning() && t.getFileSize() == 0) {
+                            Helpers.runProcess(new String[]{"mega-transfers", "-ca"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+                        }
+                    }
                 }
 
                 try ( FileOutputStream fos = new FileOutputStream(TRANSFERS_FILE);  ObjectOutputStream oos = new ObjectOutputStream(fos)) {
@@ -1451,7 +1460,7 @@ public class Main extends javax.swing.JFrame {
 
                             });
 
-                            if (_aborting) {
+                            if (_closing) {
                                 break;
                             }
 
@@ -1494,7 +1503,7 @@ public class Main extends javax.swing.JFrame {
 
                         });
 
-                        Helpers.mostrarMensajeInformativo(this, _aborting ? "CANCELED!" : "DONE");
+                        Helpers.mostrarMensajeInformativo(this, _closing ? "CANCELED!" : "DONE");
 
                     } else {
                         Helpers.mostrarMensajeInformativo(this, "DONE");
@@ -1512,12 +1521,12 @@ public class Main extends javax.swing.JFrame {
                     });
 
                     _running_global_check = false;
-                    _aborting = false;
+                    _closing = false;
                 });
 
-            } else if (!_aborting) {
+            } else if (!_closing) {
                 if (Helpers.mostrarMensajeInformativoSINO(this, "SURE?") == 0) {
-                    _aborting = true;
+                    _closing = true;
                     Helpers.GUIRun(() -> {
                         vamos_button.setText("CANCELING...");
                         vamos_button.setEnabled(false);
@@ -1566,7 +1575,7 @@ public class Main extends javax.swing.JFrame {
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
         // TODO add your handling code here:
-        if (!_aborting) {
+        if (!_closing) {
             if (_transferences_running || _running_global_check || !"".equals(output_textarea.getText().trim())) {
 
                 if (Helpers.mostrarMensajeInformativoSINO(this, "EXIT NOW?") == 0) {
@@ -1574,17 +1583,17 @@ public class Main extends javax.swing.JFrame {
                     if (_transferences_running) {
 
                         if (Helpers.mostrarMensajeInformativoSINO(this, "All transactions in progress or on hold will be lost. ARE YOU SURE?") == 0) {
-                            _aborting = true;
+
                             bye();
                         }
                     } else {
-                        _aborting = true;
+
                         bye();
                     }
                 }
 
             } else {
-                _aborting = true;
+
                 bye();
             }
         }
