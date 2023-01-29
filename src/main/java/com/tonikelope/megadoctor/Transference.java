@@ -222,41 +222,43 @@ public class Transference extends javax.swing.JPanel {
 
                 Helpers.runProcess(new String[]{"mega-export", "-af", _rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
+                long folder_size = 0;
+
+                if (_size == 0) {
+                    long pre_folder_size = remoteFolderSize(_rpath);
+
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+
+                    while ((folder_size = remoteFolderSize(_rpath)) != pre_folder_size) {
+                        pre_folder_size = folder_size;
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException ex) {
+                            Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+
+                }
+
+                long fsize = folder_size;
+
                 Helpers.GUIRun(() -> {
                     progress.setIndeterminate(false);
                     progress.setStringPainted(true);
                     progress.setValue(progress.getMaximum());
                     ok.setVisible(true);
 
-                    long folder_size = 0;
-
-                    if (_size == 0) {
-                        long pre_folder_size = remoteFolderSize(_rpath);
-
-                        try {
-                            Thread.sleep(1000);
-                        } catch (InterruptedException ex) {
-                            Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-
-                        while ((folder_size = remoteFolderSize(_rpath)) != pre_folder_size) {
-                            pre_folder_size = folder_size;
-                            try {
-                                Thread.sleep(1000);
-                            } catch (InterruptedException ex) {
-                                Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
-                            }
-                        }
-
-                    }
-
-                    local_path.setText("[" + Helpers.formatBytes(_size > 0 ? _size : folder_size) + "] " + _lpath);
+                    local_path.setText("[" + Helpers.formatBytes(_size > 0 ? _size : fsize) + "] " + _lpath);
 
                     if (_size > 0) {
                         long speed = calculateSpeed(_size, 0, 10000, start_timestamp, finish_timestamp);
                         action.setText("(Avg: " + Helpers.formatBytes(speed) + "/s)");
                     } else {
-                        long speed = calculateSpeed(folder_size, 0, 10000, start_timestamp, finish_timestamp);
+                        long speed = calculateSpeed(fsize, 0, 10000, start_timestamp, finish_timestamp);
                         action.setText("(Avg: " + Helpers.formatBytes(speed) + "/s)");
                     }
 
@@ -504,7 +506,7 @@ public class Transference extends javax.swing.JPanel {
         // TODO add your handling code here:
 
         if (SwingUtilities.isRightMouseButton(evt)) {
-            if (!_canceled && !_finished && Helpers.mostrarMensajeInformativoSINO(Main.MAIN_WINDOW, _lpath +"<br><br>CANCEL this transference?") == 0) {
+            if (!_canceled && !_finished && Helpers.mostrarMensajeInformativoSINO(Main.MAIN_WINDOW, _lpath + "<br><br>CANCEL this transference?") == 0) {
 
                 stop();
 

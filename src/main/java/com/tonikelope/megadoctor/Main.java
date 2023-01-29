@@ -39,7 +39,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.47";
+    public final static String VERSION = "0.48";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -1081,7 +1081,7 @@ public class Main extends javax.swing.JFrame {
                 .addComponent(clear_trans_button)
                 .addGap(18, 18, 18)
                 .addComponent(cancel_trans_button)
-                .addContainerGap(710, Short.MAX_VALUE))
+                .addContainerGap(795, Short.MAX_VALUE))
         );
         transferences_control_panelLayout.setVerticalGroup(
             transferences_control_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1155,7 +1155,7 @@ public class Main extends javax.swing.JFrame {
                         .addComponent(logo_label)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(vamos_button, javax.swing.GroupLayout.DEFAULT_SIZE, 727, Short.MAX_VALUE)
+                            .addComponent(vamos_button, javax.swing.GroupLayout.DEFAULT_SIZE, 812, Short.MAX_VALUE)
                             .addComponent(status_label, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                                 .addComponent(upload_button)

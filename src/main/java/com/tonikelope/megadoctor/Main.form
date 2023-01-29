@@ -70,7 +70,7 @@
                       <Component id="logo_label" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="vamos_button" pref="727" max="32767" attributes="0"/>
+                          <Component id="vamos_button" pref="812" max="32767" attributes="0"/>
                           <Component id="status_label" max="32767" attributes="0"/>
                           <Group type="102" alignment="1" attributes="0">
                               <Component id="upload_button" min="-2" max="-2" attributes="0"/>
@@ -292,7 +292,7 @@
                               <Component id="clear_trans_button" min="-2" max="-2" attributes="0"/>
                               <EmptySpace type="separate" max="-2" attributes="0"/>
                               <Component id="cancel_trans_button" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace pref="710" max="32767" attributes="0"/>
+                              <EmptySpace pref="795" max="32767" attributes="0"/>
                           </Group>
                       </Group>
                     </DimensionLayout>
