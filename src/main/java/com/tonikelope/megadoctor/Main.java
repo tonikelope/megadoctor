@@ -45,7 +45,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.52";
+    public final static String VERSION = "0.53";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -1052,10 +1052,20 @@ public class Main extends javax.swing.JFrame {
 
         if (Files.exists(Paths.get(ACCOUNTS_FILE))) {
             try ( FileInputStream fis = new FileInputStream(ACCOUNTS_FILE);  ObjectInputStream ois = new ObjectInputStream(fis)) {
+
                 MEGA_ACCOUNTS = (LinkedHashMap<String, String>) ois.readObject();
 
                 if (!MEGA_ACCOUNTS.isEmpty()) {
-                    Helpers.GUIRun(() -> {
+
+                    ArrayList<String> accounts = new ArrayList<>();
+
+                    for (String k : MEGA_ACCOUNTS.keySet()) {
+                        accounts.add(k + "#" + MEGA_ACCOUNTS.get(k));
+                    }
+
+                    Collections.sort(accounts);
+
+                    Helpers.GUIRunAndWait(() -> {
 
                         if (!_firstAccountsTextareaClick) {
                             _firstAccountsTextareaClick = true;
@@ -1063,8 +1073,8 @@ public class Main extends javax.swing.JFrame {
                             cuentas_textarea.setForeground(null);
                         }
 
-                        for (String k : MEGA_ACCOUNTS.keySet()) {
-                            cuentas_textarea.append(k + "#" + MEGA_ACCOUNTS.get(k) + "\n");
+                        for (String account : accounts) {
+                            cuentas_textarea.append(account + "\n");
                         }
 
                         upload_button.setEnabled(true);
