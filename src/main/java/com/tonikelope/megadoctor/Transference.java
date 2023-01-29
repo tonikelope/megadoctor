@@ -504,7 +504,7 @@ public class Transference extends javax.swing.JPanel {
         // TODO add your handling code here:
 
         if (SwingUtilities.isRightMouseButton(evt)) {
-            if (!_canceled && !_finished && Helpers.mostrarMensajeInformativoSINO(Main.MAIN_WINDOW, "Cancel this transference?") == 0) {
+            if (!_canceled && !_finished && Helpers.mostrarMensajeInformativoSINO(Main.MAIN_WINDOW, _lpath +"<br><br>CANCEL this transference?") == 0) {
 
                 stop();
 
