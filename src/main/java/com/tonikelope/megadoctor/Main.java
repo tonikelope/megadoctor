@@ -45,7 +45,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.51";
+    public final static String VERSION = "0.52";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -1477,8 +1477,6 @@ public class Main extends javax.swing.JFrame {
                                     output_textarea.append("    ERROR: " + errors + "\n");
                                 }
                             }
-
-                            this.saveAccounts();
 
                             output_textarea.append("\nCHECKING END -> " + Helpers.getFechaHoraActual() + "\n");
 
