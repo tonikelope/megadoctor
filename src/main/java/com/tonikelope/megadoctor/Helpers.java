@@ -10,6 +10,7 @@ by tonikelope
  */
 package com.tonikelope.megadoctor;
 
+import static com.tonikelope.megadoctor.Main.MEGA_CMD_WINDOWS_PATH;
 import static com.tonikelope.megadoctor.Main.MEGA_NODES;
 import static com.tonikelope.megadoctor.Main.THREAD_POOL;
 import java.awt.Desktop;
@@ -71,7 +72,8 @@ public class Helpers {
         return df.format(bytes_double) + ' ' + units[pow];
     }
 
-    public static String[] getAccountSpaceData(String email, String df) {
+    public static String[] getAccountSpaceData(String email) {
+        String df = Helpers.runProcess(new String[]{"mega-df"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
         final String regex = "USED STORAGE: *([0-9]+).*?of *([0-9]+)";
         final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
         final Matcher matcher = pattern.matcher(df);

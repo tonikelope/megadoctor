@@ -35,6 +35,10 @@ public class Transference extends javax.swing.JPanel {
     private volatile boolean _canceled = false;
     private volatile long _prog_timestamp = 0;
 
+    public String getEmail() {
+        return _email;
+    }
+
     public boolean isCanceled() {
         return _canceled;
     }

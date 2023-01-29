@@ -18,8 +18,14 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStreamWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -39,15 +45,18 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.49";
+    public final static String VERSION = "0.50";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
+    public final static String SESSIONS_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_sessions";
+    public final static String ACCOUNTS_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_accounts";
+    public final static String TRANSFERS_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_transfers";
     public volatile static String MEGA_CMD_VERSION = null;
     public volatile static Main MAIN_WINDOW;
     public static final Object TRANSFERENCES_LOCK = new Object();
-    public final static LinkedHashMap<String, String> MEGA_ACCOUNTS = new LinkedHashMap<>();
-    public final static HashMap<String, String> MEGA_SESSIONS = new HashMap<>();
+    public static LinkedHashMap<String, String> MEGA_ACCOUNTS = new LinkedHashMap<>();
+    public static HashMap<String, String> MEGA_SESSIONS = new HashMap<>();
     public final static HashMap<String, Object[]> MEGA_NODES = new HashMap<>();
     private final static ArrayList<String[]> MEGA_ACCOUNTS_SPACE = new ArrayList<>();
     private final static ArrayList<String> MEGA_ACCOUNTS_LOGIN_ERROR = new ArrayList<>();
@@ -290,9 +299,7 @@ public class Main extends javax.swing.JFrame {
 
                 login(email);
 
-                String df2 = Helpers.runProcess(new String[]{"mega-df"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
-                String[] account_space = Helpers.getAccountSpaceData(email, df2);
+                String[] account_space = Helpers.getAccountSpaceData(email);
 
                 if (Helpers.getNodeMapTotalSize(nodesToCopy) <= (Long.parseLong(account_space[2]) - Long.parseLong(account_space[1]))) {
 
@@ -415,6 +422,90 @@ public class Main extends javax.swing.JFrame {
         });
 
         _running_global_check = false;
+    }
+
+    public void bye() {
+
+        if (Helpers.mostrarMensajeInformativoSINO(this, "Do you want to save your MEGA accounts/sessions/transfers to disk to speed up next time?\n\n(If you are using a public computer it is NOT recommended to do so for security reasons).") == 0) {
+            saveAccounts();
+            saveTransfers();
+            logout(true);
+        } else {
+            logout(false);
+        }
+
+        System.exit(0);
+
+    }
+
+    public void saveTransfers() {
+
+        ArrayList<Object[]> trans = new ArrayList<>();
+
+        Helpers.GUIRunAndWait(() -> {
+            if (transferences.getComponentCount() > 0) {
+
+                for (Component c : transferences.getComponents()) {
+
+                    Transference t = (Transference) c;
+
+                    String email = t.getEmail();
+
+                    String lpath = t.getLpath();
+
+                    String rpath = t.getRpath();
+
+                    int action = t.getAction();
+
+                    trans.add(new Object[]{email, lpath, rpath, action});
+                }
+
+                try ( FileOutputStream fos = new FileOutputStream(TRANSFERS_FILE);  ObjectOutputStream oos = new ObjectOutputStream(fos)) {
+
+                    oos.writeObject(trans);
+
+                } catch (Exception ex) {
+                    Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        });
+    }
+
+    public void loadTransfers() {
+        if (Files.exists(Paths.get(TRANSFERS_FILE))) {
+            try ( FileInputStream fis = new FileInputStream(TRANSFERS_FILE);  ObjectInputStream ois = new ObjectInputStream(fis)) {
+
+                ArrayList<Object[]> trans = (ArrayList<Object[]>) ois.readObject();
+
+                Helpers.GUIRunAndWait(() -> {
+                    try {
+                        synchronized (TRANSFERENCES_LOCK) {
+                            for (Object[] o : trans) {
+
+                                Transference t = new Transference((String) o[0], (String) o[1], (String) o[2], (int) o[3]);
+                                transferences.add(t);
+                                transferences.revalidate();
+                                transferences.repaint();
+                            }
+                            tabbed_panel.setSelectedIndex(1);
+                            TRANSFERENCES_LOCK.notifyAll();
+                        }
+
+                    } catch (Exception ex) {
+                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                });
+
+            } catch (Exception ex) {
+                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
+            try {
+                Files.deleteIfExists(Paths.get(TRANSFERS_FILE));
+            } catch (IOException ex) {
+                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
 
     public void copyNodesInsideAccount(String text) {
@@ -935,6 +1026,65 @@ public class Main extends javax.swing.JFrame {
         _running_global_check = false;
     }
 
+    private void saveAccounts() {
+
+        try ( FileOutputStream fos = new FileOutputStream(ACCOUNTS_FILE);  ObjectOutputStream oos = new ObjectOutputStream(fos)) {
+            oos.writeObject(MEGA_ACCOUNTS);
+
+        } catch (Exception ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        try ( FileOutputStream fos = new FileOutputStream(SESSIONS_FILE);  ObjectOutputStream oos = new ObjectOutputStream(fos)) {
+            oos.writeObject(MEGA_SESSIONS);
+
+        } catch (Exception ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void loadAccounts() {
+
+        if (Files.exists(Paths.get(ACCOUNTS_FILE))) {
+            try ( FileInputStream fis = new FileInputStream(ACCOUNTS_FILE);  ObjectInputStream ois = new ObjectInputStream(fis)) {
+                MEGA_ACCOUNTS = (LinkedHashMap<String, String>) ois.readObject();
+
+                if (!MEGA_ACCOUNTS.isEmpty()) {
+                    Helpers.GUIRun(() -> {
+
+                        if (!_firstAccountsTextareaClick) {
+                            _firstAccountsTextareaClick = true;
+                            cuentas_textarea.setText("");
+                            cuentas_textarea.setForeground(null);
+                        }
+
+                        for (String k : MEGA_ACCOUNTS.keySet()) {
+                            cuentas_textarea.append(k + "#" + MEGA_ACCOUNTS.get(k) + "\n");
+                        }
+
+                        upload_button.setEnabled(true);
+
+                    });
+                }
+
+            } catch (Exception ex) {
+                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+        if (Files.exists(Paths.get(SESSIONS_FILE))) {
+            try ( FileInputStream fis = new FileInputStream(SESSIONS_FILE);  ObjectInputStream ois = new ObjectInputStream(fis)) {
+                MEGA_SESSIONS = (HashMap<String, String>) ois.readObject();
+
+                if (!MEGA_SESSIONS.isEmpty()) {
+                    loadTransfers();
+                }
+            } catch (Exception ex) {
+                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
     private void parseAccountNodes(String email) {
 
         String ls = Helpers.runProcess(new String[]{"mega-ls", "-lr", "--show-handles"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
@@ -1266,15 +1416,13 @@ public class Main extends javax.swing.JFrame {
 
                                 String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-                                String df2 = Helpers.runProcess(new String[]{"mega-df"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
                                 Helpers.GUIRun(() -> {
 
                                     output_textarea.append("\n[" + email + "]\n\n" + df + "\n" + du + "\n" + ls + "\n\n");
 
                                 });
 
-                                MEGA_ACCOUNTS_SPACE.add(Helpers.getAccountSpaceData(email, df2));
+                                MEGA_ACCOUNTS_SPACE.add(Helpers.getAccountSpaceData(email));
 
                                 parseAccountNodes(email);
                             }
@@ -1324,6 +1472,8 @@ public class Main extends javax.swing.JFrame {
                                     output_textarea.append("    ERROR: " + errors + "\n");
                                 }
                             }
+
+                            this.saveAccounts();
 
                             output_textarea.append("\nCHECKING END -> " + Helpers.getFechaHoraActual() + "\n");
 
@@ -1412,20 +1562,17 @@ public class Main extends javax.swing.JFrame {
 
                         if (Helpers.mostrarMensajeInformativoSINO(this, "All transactions in progress or on hold will be lost. ARE YOU SURE?") == 0) {
                             _aborting = true;
-                            logout(false);
-                            System.exit(0);
+                            bye();
                         }
                     } else {
                         _aborting = true;
-                        logout(false);
-                        System.exit(0);
+                        bye();
                     }
                 }
 
             } else {
                 _aborting = true;
-                logout(false);
-                System.exit(0);
+                bye();
             }
         }
     }//GEN-LAST:event_formWindowClosing
@@ -1574,6 +1721,7 @@ public class Main extends javax.swing.JFrame {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 MAIN_WINDOW = new Main();
+                MAIN_WINDOW.loadAccounts();
                 MAIN_WINDOW.setVisible(true);
             }
         });
