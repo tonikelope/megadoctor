@@ -13,7 +13,12 @@ package com.tonikelope.megadoctor;
 import static com.tonikelope.megadoctor.Main.MEGA_CMD_WINDOWS_PATH;
 import static com.tonikelope.megadoctor.Main.MEGA_NODES;
 import static com.tonikelope.megadoctor.Main.THREAD_POOL;
+import java.awt.Component;
+import java.awt.Container;
 import java.awt.Desktop;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.io.BufferedReader;
 import java.io.File;
@@ -22,8 +27,11 @@ import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -32,11 +40,11 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiSystem;
 import javax.sound.midi.MidiUnavailableException;
@@ -44,6 +52,7 @@ import javax.sound.midi.Sequence;
 import javax.sound.midi.Sequencer;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -73,6 +82,26 @@ public class Helpers {
         DecimalFormat df = new DecimalFormat("#.##");
 
         return df.format(bytes_double) + ' ' + units[pow];
+    }
+
+    public static void setCenterOfParent(JFrame parent, JDialog dialog) {
+        Point parentPosition = parent.getLocation();
+        Dimension parentSize = parent.getSize();
+        Dimension size = dialog.getSize();
+        Point position = new Point(parentPosition.x
+                + (parentSize.width / 2 - size.width / 2), parentPosition.y
+                + (parentSize.height / 2 - size.height / 2));
+        dialog.setLocation(position);/*from w  ww. j av a2 s. com*/
+    }
+
+    public static void setCenterOfParent(JDialog parent, JDialog dialog) {
+        Point parentPosition = parent.getLocation();
+        Dimension parentSize = parent.getSize();
+        Dimension size = dialog.getSize();
+        Point position = new Point(parentPosition.x
+                + (parentSize.width / 2 - size.width / 2), parentPosition.y
+                + (parentSize.height / 2 - size.height / 2));
+        dialog.setLocation(position);
     }
 
     public static String[] getAccountSpaceData(String email) {
@@ -315,33 +344,35 @@ public class Helpers {
         return null;
     }
 
+    public static void setContainerFont(Container container, Font font) {
+        for (Component c : container.getComponents()) {
+            if (c instanceof Container) {
+                setContainerFont((Container) c, font);
+            }
+            try {
+                c.setFont(font);
+            } catch (Exception e) {
+            }//do nothing
+        }
+    }
+
     public static long getDirectorySize(Path path) {
+        AtomicLong size = new AtomicLong(0);
+        try {
 
-        long size = 0;
-
-        // need close Files.walk
-        try ( Stream<Path> walk = Files.walk(path)) {
-
-            size = walk
-                    //.peek(System.out::println) // debug
-                    .filter(Files::isRegularFile)
-                    .mapToLong(p -> {
-                        // ugly, can pretty it with an extract method
-                        try {
-                            return Files.size(p);
-                        } catch (IOException e) {
-                            System.out.printf("Failed to get size of %s%n%s", p, e);
-                            return 0L;
-                        }
-                    })
-                    .sum();
-
-        } catch (IOException e) {
-            System.out.printf("IO errors %s", e);
+            Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                        throws IOException {
+                    size.addAndGet(attrs.size());
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } catch (IOException ex) {
+            Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        return size;
-
+        return size.longValue();
     }
 
     public static HashMap<String, ArrayList<String>> extractNodeMapFromText(String text) {

@@ -65,6 +65,7 @@ public class MoveNodeDialog extends javax.swing.JDialog {
         vamos_button.setText(getTitle());
 
         pack();
+
     }
 
     /**

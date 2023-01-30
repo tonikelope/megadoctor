@@ -60,6 +60,7 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog {
         email_comboboxItemStateChanged(null);
 
         pack();
+
     }
 
     /**

@@ -14,6 +14,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import javax.swing.JFileChooser;
+import javax.swing.JFrame;
 
 /**
  *
@@ -61,6 +62,7 @@ public class UploadFileDialog extends javax.swing.JDialog {
         vamos_button.setEnabled(true);
 
         pack();
+
     }
 
     /**
@@ -195,6 +197,8 @@ public class UploadFileDialog extends javax.swing.JDialog {
         // TODO add your handling code here:
         JFileChooser fileChooser = new JFileChooser();
 
+        Helpers.setContainerFont(fileChooser, remote_path.getFont().deriveFont(14f));
+
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
         int option = fileChooser.showOpenDialog(this);
@@ -207,11 +211,15 @@ public class UploadFileDialog extends javax.swing.JDialog {
         }
 
         pack();
+
+        Helpers.setCenterOfParent((JFrame) getParent(), this);
     }//GEN-LAST:event_local_file_buttonActionPerformed
 
     private void local_folder_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_local_folder_buttonActionPerformed
         // TODO add your handling code here:
         JFileChooser fileChooser = new JFileChooser();
+
+        Helpers.setContainerFont(fileChooser, remote_path.getFont().deriveFont(14f));
 
         fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 
@@ -225,6 +233,8 @@ public class UploadFileDialog extends javax.swing.JDialog {
         }
 
         pack();
+
+        Helpers.setCenterOfParent((JFrame) getParent(), this);
     }//GEN-LAST:event_local_folder_buttonActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

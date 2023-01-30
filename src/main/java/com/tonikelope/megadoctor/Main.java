@@ -20,7 +20,6 @@ import java.util.regex.Pattern;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStreamWriter;
@@ -45,7 +44,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.56";
+    public final static String VERSION = "0.57";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -145,6 +144,9 @@ public class Main extends javax.swing.JFrame {
                     Helpers.GUIRunAndWait(() -> {
 
                         if (transferences.getComponentCount() > 0) {
+
+                            transferences_control_panel.setVisible(true);
+
                             _transferences_running = false;
 
                             for (Component t : transferences.getComponents()) {
@@ -170,8 +172,12 @@ public class Main extends javax.swing.JFrame {
                                 }
                             }
 
+                            cancel_trans_button.setEnabled(_transferences_running);
+
                         } else {
                             _transferences_running = false;
+
+                            transferences_control_panel.setVisible(false);
 
                             if (!_running_global_check) {
                                 vamos_button.setEnabled(true);
@@ -434,16 +440,35 @@ public class Main extends javax.swing.JFrame {
 
         _closing = true;
 
-        if (Helpers.mostrarMensajeInformativoSINO(this, "Do you want to save your MEGA accounts/sessions/transfers to disk to speed up next time?\n\n(If you are using a public computer it is NOT recommended to do so for security reasons).") == 0) {
+        if (session_menu.isSelected() || Helpers.mostrarMensajeInformativoSINO(this, "Do you want to save your MEGA accounts/sessions/transfers to disk to speed up next time?\n\n(If you are using a public computer it is NOT recommended to do so for security reasons).") == 0) {
             saveAccounts();
             saveTransfers();
             logout(true);
         } else {
+            removeSessionFILES();
             logout(false);
         }
 
         System.exit(0);
 
+    }
+
+    public void removeSessionFILES() {
+        try {
+            Files.deleteIfExists(Paths.get(ACCOUNTS_FILE));
+        } catch (Exception ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        try {
+            Files.deleteIfExists(Paths.get(SESSIONS_FILE));
+        } catch (Exception ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        try {
+            Files.deleteIfExists(Paths.get(TRANSFERS_FILE));
+        } catch (Exception ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     public void saveTransfers() {
@@ -469,7 +494,7 @@ public class Main extends javax.swing.JFrame {
 
                         trans.add(new Object[]{email, lpath, rpath, action});
 
-                        if (t.isRunning() && t.getFileSize() == 0) {
+                        if (t.isRunning() && t.isDirectory()) {
                             Helpers.runProcess(new String[]{"mega-transfers", "-ca"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
                         }
                     }
@@ -518,7 +543,7 @@ public class Main extends javax.swing.JFrame {
 
             try {
                 Files.deleteIfExists(Paths.get(TRANSFERS_FILE));
-            } catch (IOException ex) {
+            } catch (Exception ex) {
                 Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
@@ -1089,6 +1114,8 @@ public class Main extends javax.swing.JFrame {
                         }
 
                         upload_button.setEnabled(true);
+                        
+                        session_menu.setSelected(true);
 
                     });
                 }
@@ -1151,6 +1178,8 @@ public class Main extends javax.swing.JFrame {
         transferences = new javax.swing.JPanel();
         upload_button = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
+        jMenu2 = new javax.swing.JMenu();
+        session_menu = new javax.swing.JCheckBoxMenuItem();
         jMenu1 = new javax.swing.JMenu();
         jMenuItem1 = new javax.swing.JMenuItem();
 
@@ -1303,6 +1332,16 @@ public class Main extends javax.swing.JFrame {
         });
 
         jMenuBar1.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
+
+        jMenu2.setText("Options");
+        jMenu2.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
+
+        session_menu.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
+        session_menu.setSelected(true);
+        session_menu.setText("Keep session on disk");
+        jMenu2.add(session_menu);
+
+        jMenuBar1.add(jMenu2);
 
         jMenu1.setText("Help");
         jMenu1.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
@@ -1584,7 +1623,7 @@ public class Main extends javax.swing.JFrame {
 
                     if (_transferences_running) {
 
-                        if (Helpers.mostrarMensajeInformativoSINO(this, "All transactions in progress or on hold will be lost. ARE YOU SURE?") == 0) {
+                        if (Helpers.mostrarMensajeInformativoSINO(this, "All transactions in progress or on hold may be lost. ARE YOU SURE?") == 0) {
 
                             bye();
                         }
@@ -1807,6 +1846,7 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JButton clear_trans_button;
     private javax.swing.JTextArea cuentas_textarea;
     private javax.swing.JMenu jMenu1;
+    private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JPanel jPanel1;
@@ -1816,6 +1856,7 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JTextArea output_textarea;
     private javax.swing.JProgressBar progressbar;
     private javax.swing.JButton save_button;
+    private javax.swing.JCheckBoxMenuItem session_menu;
     private javax.swing.JLabel status_label;
     private javax.swing.JTabbedPane tabbed_panel;
     private javax.swing.JScrollPane transf_scroll;
