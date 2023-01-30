@@ -10,6 +10,7 @@ by tonikelope
  */
 package com.tonikelope.megadoctor;
 
+import java.awt.Color;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,6 +40,8 @@ public class UploadFileDialog extends javax.swing.JDialog {
     }
 
     private boolean _ok = false;
+    private volatile long _local_size = 0;
+    private volatile long _free_space = 0;
 
     public UploadFileDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
@@ -59,10 +62,34 @@ public class UploadFileDialog extends javax.swing.JDialog {
             email_combobox.addItem(email);
         }
 
-        vamos_button.setEnabled(true);
-
         pack();
 
+    }
+
+    private boolean checkFreeSpace() {
+
+        if (_local_size > 0 && _free_space > 0) {
+
+            if (_local_size > _free_space) {
+                Helpers.GUIRun(() -> {
+                    free_space.setForeground(Color.red);
+                    vamos_button.setEnabled(false);
+                });
+                return false;
+            } else {
+                Helpers.GUIRun(() -> {
+                    free_space.setForeground(null);
+                    vamos_button.setEnabled(true);
+                });
+                return true;
+            }
+        } else {
+            Helpers.GUIRun(() -> {
+                vamos_button.setEnabled(false);
+            });
+        }
+
+        return false;
     }
 
     /**
@@ -81,6 +108,9 @@ public class UploadFileDialog extends javax.swing.JDialog {
         jLabel2 = new javax.swing.JLabel();
         remote_path = new javax.swing.JTextField();
         local_folder_button = new javax.swing.JButton();
+        free_space = new javax.swing.JLabel();
+        progress = new javax.swing.JProgressBar();
+        local_size = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle("UPLOAD FILE");
@@ -93,6 +123,11 @@ public class UploadFileDialog extends javax.swing.JDialog {
         email_combobox.setFont(new java.awt.Font("Noto Sans", 0, 24)); // NOI18N
         email_combobox.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         email_combobox.setDoubleBuffered(true);
+        email_combobox.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                email_comboboxItemStateChanged(evt);
+            }
+        });
 
         vamos_button.setBackground(new java.awt.Color(0, 153, 0));
         vamos_button.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
@@ -107,6 +142,7 @@ public class UploadFileDialog extends javax.swing.JDialog {
         });
 
         local_file_button.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
+        local_file_button.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/file.png"))); // NOI18N
         local_file_button.setText("Select FILE");
         local_file_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         local_file_button.addActionListener(new java.awt.event.ActionListener() {
@@ -123,6 +159,7 @@ public class UploadFileDialog extends javax.swing.JDialog {
         remote_path.setFont(new java.awt.Font("Noto Sans", 0, 18)); // NOI18N
 
         local_folder_button.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
+        local_folder_button.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/folder.png"))); // NOI18N
         local_folder_button.setText("Select FOLDER");
         local_folder_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         local_folder_button.addActionListener(new java.awt.event.ActionListener() {
@@ -131,6 +168,12 @@ public class UploadFileDialog extends javax.swing.JDialog {
             }
         });
 
+        free_space.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
+        free_space.setDoubleBuffered(true);
+
+        local_size.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
+        local_size.setDoubleBuffered(true);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -138,20 +181,25 @@ public class UploadFileDialog extends javax.swing.JDialog {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(progress, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
+                        .addComponent(free_space)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(email_combobox, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(vamos_button))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jLabel2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(remote_path, javax.swing.GroupLayout.DEFAULT_SIZE, 468, Short.MAX_VALUE))
+                        .addComponent(remote_path))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(local_file_button)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(local_folder_button)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(local_path, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                        .addComponent(local_size)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(local_path, javax.swing.GroupLayout.DEFAULT_SIZE, 396, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -161,15 +209,20 @@ public class UploadFileDialog extends javax.swing.JDialog {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(local_file_button)
                     .addComponent(local_folder_button)
-                    .addComponent(local_path))
+                    .addComponent(local_path)
+                    .addComponent(local_size))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
                     .addComponent(remote_path, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGap(3, 3, 3)
+                .addComponent(progress, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(4, 4, 4)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                     .addComponent(vamos_button)
-                    .addComponent(email_combobox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(email_combobox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(free_space)))
                 .addContainerGap())
         );
 
@@ -188,7 +241,7 @@ public class UploadFileDialog extends javax.swing.JDialog {
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
         // TODO add your handling code here:
-        if (vamos_button.isEnabled()) {
+        if (!progress.isIndeterminate()) {
             dispose();
         }
     }//GEN-LAST:event_formWindowClosing
@@ -208,6 +261,12 @@ public class UploadFileDialog extends javax.swing.JDialog {
             File file = fileChooser.getSelectedFile();
 
             local_path.setText(file.getAbsolutePath());
+
+            _local_size = file.length();
+
+            local_size.setText(Helpers.formatBytes(_local_size));
+
+            checkFreeSpace();
         }
 
         pack();
@@ -230,6 +289,12 @@ public class UploadFileDialog extends javax.swing.JDialog {
             File file = fileChooser.getSelectedFile();
 
             local_path.setText(file.getAbsolutePath());
+
+            _local_size = Helpers.getDirectorySize(file.toPath());
+
+            local_size.setText(Helpers.formatBytes(_local_size));
+
+            checkFreeSpace();
         }
 
         pack();
@@ -237,12 +302,50 @@ public class UploadFileDialog extends javax.swing.JDialog {
         Helpers.setCenterOfParent((JFrame) getParent(), this);
     }//GEN-LAST:event_local_folder_buttonActionPerformed
 
+    private void email_comboboxItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_email_comboboxItemStateChanged
+        // TODO add your handling code here:
+
+        String email = (String) email_combobox.getSelectedItem();
+
+        if (!email.isBlank()) {
+            progress.setIndeterminate(true);
+            email_combobox.setEnabled(false);
+            local_file_button.setEnabled(false);
+            local_folder_button.setEnabled(false);
+            vamos_button.setEnabled(false);
+
+            Helpers.threadRun(() -> {
+
+                _free_space = Helpers.getAccountFreeSpace(email);
+
+                Helpers.GUIRun(() -> {
+
+                    free_space.setText(Helpers.formatBytes(_free_space));
+                    progress.setIndeterminate(false);
+                    email_combobox.setEnabled(true);
+                    local_file_button.setEnabled(true);
+                    local_folder_button.setEnabled(true);
+                    vamos_button.setEnabled(true);
+                    pack();
+                    Helpers.setCenterOfParent((JFrame) getParent(), this);
+
+                });
+
+                checkFreeSpace();
+
+            });
+        }
+    }//GEN-LAST:event_email_comboboxItemStateChanged
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JComboBox<String> email_combobox;
+    private javax.swing.JLabel free_space;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JButton local_file_button;
     private javax.swing.JButton local_folder_button;
     private javax.swing.JLabel local_path;
+    private javax.swing.JLabel local_size;
+    private javax.swing.JProgressBar progress;
     private javax.swing.JTextField remote_path;
     private javax.swing.JButton vamos_button;
     // End of variables declaration//GEN-END:variables

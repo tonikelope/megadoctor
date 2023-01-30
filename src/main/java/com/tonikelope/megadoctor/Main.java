@@ -44,7 +44,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.57";
+    public final static String VERSION = "0.58";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -234,9 +234,17 @@ public class Main extends javax.swing.JFrame {
 
     public String DUWithHandles() {
 
-        String du = Helpers.runProcess(new String[]{"mega-du", "-h", "--use-pcre", "/.*"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
         String ls = Helpers.runProcess(new String[]{"mega-ls", "/", "--show-handles"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+        int max_path_width = 0;
+
+        for (String s : ls.split("\n")) {
+            if (s.length() > max_path_width) {
+                max_path_width = s.length();
+            }
+        }
+
+        String du = Helpers.runProcess(new String[]{"mega-du", "-h", "--use-pcre", "/.*", "--path-display-size=" + String.valueOf(max_path_width + 1)}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
         if (!du.trim().isEmpty() && !ls.trim().isEmpty()) {
 
@@ -1114,7 +1122,7 @@ public class Main extends javax.swing.JFrame {
                         }
 
                         upload_button.setEnabled(true);
-                        
+
                         session_menu.setSelected(true);
 
                     });
@@ -1216,6 +1224,7 @@ public class Main extends javax.swing.JFrame {
         vamos_button.setBackground(new java.awt.Color(0, 153, 0));
         vamos_button.setFont(new java.awt.Font("Noto Sans", 1, 48)); // NOI18N
         vamos_button.setForeground(new java.awt.Color(255, 255, 255));
+        vamos_button.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/check_accounts.png"))); // NOI18N
         vamos_button.setText("CHECK ACCOUNTS");
         vamos_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         vamos_button.setDoubleBuffered(true);
@@ -1230,6 +1239,7 @@ public class Main extends javax.swing.JFrame {
         status_label.setDoubleBuffered(true);
 
         save_button.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
+        save_button.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/guardar.png"))); // NOI18N
         save_button.setText("SAVE LOG TO FILE");
         save_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         save_button.setDoubleBuffered(true);
@@ -1322,6 +1332,7 @@ public class Main extends javax.swing.JFrame {
         upload_button.setBackground(new java.awt.Color(0, 0, 0));
         upload_button.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
         upload_button.setForeground(new java.awt.Color(255, 255, 255));
+        upload_button.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/new_upload.png"))); // NOI18N
         upload_button.setText("NEW UPLOAD");
         upload_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         upload_button.setDoubleBuffered(true);
