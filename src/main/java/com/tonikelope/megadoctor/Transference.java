@@ -34,6 +34,7 @@ public class Transference extends javax.swing.JPanel {
     private volatile boolean _running = false;
     private volatile boolean _finished = false;
     private volatile boolean _canceled = false;
+    private volatile boolean _paused = false;
     private volatile long _prog_timestamp = 0;
 
     public boolean isDirectory() {
@@ -159,6 +160,52 @@ public class Transference extends javax.swing.JPanel {
         });
     }
 
+    public void pause() {
+
+        _paused = true;
+
+        synchronized (TRANSFERENCES_LOCK) {
+
+            Helpers.runProcess(new String[]{"mega-transfers", "-pa"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+            Helpers.GUIRunAndWait(() -> {
+                action.setText("(--- PAUSED ---)");
+            });
+
+            TRANSFERENCES_LOCK.notifyAll();
+        }
+
+    }
+
+    public boolean isPaused() {
+        return _paused;
+    }
+
+    public void resume() {
+
+        if (_paused && _running) {
+            _paused = false;
+
+            synchronized (TRANSFERENCES_LOCK) {
+
+                if (!Helpers.megaWhoami().equals(_email.toLowerCase())) {
+
+                    Main.MAIN_WINDOW.login(_email);
+
+                }
+
+                Helpers.runProcess(new String[]{"mega-transfers", "-ra"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+                Helpers.GUIRunAndWait(() -> {
+                    action.setText("");
+                });
+
+                TRANSFERENCES_LOCK.notifyAll();
+            }
+
+        }
+    }
+
     public void start() {
         Helpers.threadRun(() -> {
 
@@ -170,11 +217,12 @@ public class Transference extends javax.swing.JPanel {
             _running = true;
 
             Main.MAIN_WINDOW.login(_email);
-
-            if (_action == 0) {
-                Helpers.runProcess(new String[]{"mega-get", "-mq", "--ignore-quota-warn", _rpath, _lpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
-            } else {
-                Helpers.runProcess(new String[]{"mega-put", "-cq", "--ignore-quota-warn", _lpath, _rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+            if (!transferRunning()) {
+                if (_action == 0) {
+                    Helpers.runProcess(new String[]{"mega-get", "-mq", "--ignore-quota-warn", _rpath, _lpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+                } else {
+                    Helpers.runProcess(new String[]{"mega-put", "-cq", "--ignore-quota-warn", _lpath, _rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+                }
             }
 
             long start_timestamp = System.currentTimeMillis();
@@ -338,6 +386,15 @@ public class Transference extends javax.swing.JPanel {
     }
 
     private boolean updateProgress() {
+
+        while (_paused) {
+
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
 
         if (!transferRunning() || _prog == 10000) {
             return false;

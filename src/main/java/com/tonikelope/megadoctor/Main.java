@@ -45,7 +45,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.59";
+    public final static String VERSION = "0.60";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -67,6 +67,7 @@ public class Main extends javax.swing.JFrame {
     private volatile MoveNodeToAnotherAccountDialog _email_dialog = null;
     private volatile MoveNodeDialog _move_dialog = null;
     private volatile boolean _transferences_running = false;
+    private volatile Transference _current_transference = null;
 
     public JTextArea getCuentas_textarea() {
         return cuentas_textarea;
@@ -94,6 +95,10 @@ public class Main extends javax.swing.JFrame {
 
     public JPanel getTransferences() {
         return transferences;
+    }
+
+    public Transference getCurrent_transference() {
+        return _current_transference;
     }
 
     /**
@@ -156,6 +161,7 @@ public class Main extends javax.swing.JFrame {
 
                                 if (trans.isRunning()) {
                                     _transferences_running = true;
+                                    _current_transference = trans;
                                     break;
                                 }
                             }
@@ -167,6 +173,7 @@ public class Main extends javax.swing.JFrame {
 
                                     if (!trans.isRunning() && !trans.isFinished() && !trans.isCanceled()) {
                                         _transferences_running = true;
+                                        _current_transference = trans;
                                         trans.start();
                                         break;
                                     }
@@ -177,6 +184,8 @@ public class Main extends javax.swing.JFrame {
 
                         } else {
                             _transferences_running = false;
+
+                            _current_transference = null;
 
                             transferences_control_panel.setVisible(false);
 
@@ -196,6 +205,10 @@ public class Main extends javax.swing.JFrame {
 
     public boolean login(String email) {
 
+        if (Helpers.megaWhoami().equals(email.toLowerCase())) {
+            return true;
+        }
+
         logout(true);
 
         String session = MEGA_SESSIONS.get(email);
@@ -204,18 +217,26 @@ public class Main extends javax.swing.JFrame {
 
         if (session != null) {
 
+            Helpers.GUIRunAndWait(() -> {
+                status_label.setForeground(new Color(0, 153, 0));
+            });
+
             String login_session_output = Helpers.runProcess(new String[]{"mega-login", MEGA_SESSIONS.get(email)}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
             if (login_session_output.contains("Bad session ID")) {
-                MEGA_SESSIONS.remove(email);
+
+                Helpers.GUIRunAndWait(() -> {
+                    status_label.setForeground(Color.ORANGE);
+                });
 
                 String login = Helpers.runProcess(new String[]{"mega-login", email, Helpers.escapeMEGAPassword(password)}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
                 if (login.contains("failed")) {
+                    Helpers.GUIRunAndWait(() -> {
+                        status_label.setForeground(Color.RED);
+                    });
                     return false;
                 }
-
-                MEGA_SESSIONS.put(email, getCurrentSessionID());
             }
 
         } else {
@@ -223,14 +244,26 @@ public class Main extends javax.swing.JFrame {
             String login = Helpers.runProcess(new String[]{"mega-login", email, Helpers.escapeMEGAPassword(password)}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
             if (login.contains("Login failed")) {
+                Helpers.GUIRunAndWait(() -> {
+                    status_label.setForeground(Color.RED);
+                });
                 return false;
             }
-
-            MEGA_SESSIONS.remove(email);
-            
-            MEGA_SESSIONS.put(email, getCurrentSessionID());
-
         }
+
+        Helpers.runProcess(new String[]{"mega-killsession", "-a"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+        MEGA_SESSIONS.remove(email);
+
+        MEGA_SESSIONS.put(email, getCurrentSessionID());
+
+        if (_transferences_running && _current_transference.getEmail().equals(email) && _current_transference.isPaused()) {
+            _current_transference.pause();
+        }
+
+        Helpers.GUIRunAndWait(() -> {
+            status_label.setForeground(Color.BLACK);
+        });
 
         return true;
     }
@@ -298,6 +331,7 @@ public class Main extends javax.swing.JFrame {
 
             MAIN_WINDOW.getCuentas_textarea().setEnabled(false);
             MAIN_WINDOW.getVamos_button().setEnabled(false);
+            upload_button.setEnabled(false);
             MAIN_WINDOW.getSave_button().setEnabled(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
             MAIN_WINDOW.getStatus_label().setText((move ? "MOVING" : "COPYING") + " SELECTED FOLDERS/FILES. PLEASE WAIT...");
@@ -308,6 +342,10 @@ public class Main extends javax.swing.JFrame {
 
         if (!nodesToCopy.isEmpty() && MEGA_ACCOUNTS.size() > nodesToCopy.keySet().size()) {
 
+            if (_transferences_running) {
+                _current_transference.pause();
+            }
+
             Helpers.GUIRunAndWait(() -> {
                 _email_dialog = new MoveNodeToAnotherAccountDialog(MAIN_WINDOW, true, nodesToCopy.keySet(), move);
 
@@ -315,6 +353,12 @@ public class Main extends javax.swing.JFrame {
 
                 _email_dialog.setVisible(true);
             });
+
+            if (_transferences_running) {
+                Helpers.threadRun(() -> {
+                    _current_transference.resume();
+                });
+            }
 
             String email = _email_dialog.getSelected_email();
 
@@ -438,6 +482,7 @@ public class Main extends javax.swing.JFrame {
 
             MAIN_WINDOW.getCuentas_textarea().setEnabled(true);
             MAIN_WINDOW.getVamos_button().setEnabled(true);
+            upload_button.setEnabled(true);
             MAIN_WINDOW.getSave_button().setEnabled(true);
             MAIN_WINDOW.getProgressbar().setIndeterminate(false);
             MAIN_WINDOW.getStatus_label().setText("");
@@ -504,10 +549,6 @@ public class Main extends javax.swing.JFrame {
                         int action = t.getAction();
 
                         trans.add(new Object[]{email, lpath, rpath, action});
-
-                        if (t.isRunning() && t.isDirectory()) {
-                            Helpers.runProcess(new String[]{"mega-transfers", "-ca"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
-                        }
                     }
                 }
 
@@ -515,6 +556,12 @@ public class Main extends javax.swing.JFrame {
 
                     oos.writeObject(trans);
 
+                } catch (Exception ex) {
+                    Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            } else {
+                try {
+                    Files.deleteIfExists(Paths.get(TRANSFERS_FILE));
                 } catch (Exception ex) {
                     Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -561,6 +608,7 @@ public class Main extends javax.swing.JFrame {
 
             MAIN_WINDOW.getCuentas_textarea().setEnabled(false);
             MAIN_WINDOW.getVamos_button().setEnabled(false);
+            upload_button.setEnabled(false);
             MAIN_WINDOW.getSave_button().setEnabled(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
             MAIN_WINDOW.getStatus_label().setText("COPYING SELECTED FOLDERS/FILES. PLEASE WAIT...");
@@ -649,6 +697,7 @@ public class Main extends javax.swing.JFrame {
 
             MAIN_WINDOW.getCuentas_textarea().setEnabled(true);
             MAIN_WINDOW.getVamos_button().setEnabled(true);
+            upload_button.setEnabled(true);
             MAIN_WINDOW.getSave_button().setEnabled(true);
             MAIN_WINDOW.getProgressbar().setIndeterminate(false);
             MAIN_WINDOW.getStatus_label().setText("");
@@ -664,6 +713,7 @@ public class Main extends javax.swing.JFrame {
 
             MAIN_WINDOW.getCuentas_textarea().setEnabled(false);
             MAIN_WINDOW.getVamos_button().setEnabled(false);
+            upload_button.setEnabled(false);
             MAIN_WINDOW.getSave_button().setEnabled(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
             MAIN_WINDOW.getStatus_label().setText("MOVING SELECTED FOLDERS/FILES. PLEASE WAIT...");
@@ -745,6 +795,7 @@ public class Main extends javax.swing.JFrame {
 
             MAIN_WINDOW.getCuentas_textarea().setEnabled(true);
             MAIN_WINDOW.getVamos_button().setEnabled(true);
+            upload_button.setEnabled(true);
             MAIN_WINDOW.getSave_button().setEnabled(true);
             MAIN_WINDOW.getProgressbar().setIndeterminate(false);
             MAIN_WINDOW.getStatus_label().setText("");
@@ -760,6 +811,7 @@ public class Main extends javax.swing.JFrame {
 
             MAIN_WINDOW.getCuentas_textarea().setEnabled(false);
             MAIN_WINDOW.getVamos_button().setEnabled(false);
+            upload_button.setEnabled(false);
             MAIN_WINDOW.getSave_button().setEnabled(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
             MAIN_WINDOW.getStatus_label().setText("RENAMING SELECTED FOLDERS/FILES. PLEASE WAIT...");
@@ -841,6 +893,7 @@ public class Main extends javax.swing.JFrame {
 
             MAIN_WINDOW.getCuentas_textarea().setEnabled(true);
             MAIN_WINDOW.getVamos_button().setEnabled(true);
+            upload_button.setEnabled(true);
             MAIN_WINDOW.getSave_button().setEnabled(true);
             MAIN_WINDOW.getProgressbar().setIndeterminate(false);
             MAIN_WINDOW.getStatus_label().setText("");
@@ -1610,9 +1663,9 @@ public class Main extends javax.swing.JFrame {
         // TODO add your handling code here:
 
         JFileChooser fileChooser = new JFileChooser();
-        
+
         Helpers.setContainerFont(fileChooser, save_button.getFont().deriveFont(14f).deriveFont(Font.PLAIN));
-        
+
         int retval = fileChooser.showSaveDialog(this);
 
         if (retval == JFileChooser.APPROVE_OPTION) {
@@ -1645,8 +1698,12 @@ public class Main extends javax.swing.JFrame {
 
                     if (_transferences_running) {
 
-                        if (Helpers.mostrarMensajeInformativoSINO(this, "All transactions in progress or on hold may be lost. ARE YOU SURE?") == 0) {
+                        if (!session_menu.isSelected()) {
+                            if (Helpers.mostrarMensajeInformativoSINO(this, "All transactions in progress or on hold will be lost. ARE YOU SURE?") == 0) {
 
+                                bye();
+                            }
+                        } else {
                             bye();
                         }
                     } else {
@@ -1684,59 +1741,59 @@ public class Main extends javax.swing.JFrame {
         // TODO add your handling code here:
 
         if (!Main.MEGA_ACCOUNTS.isEmpty()) {
-            UploadFileDialog dialog = new UploadFileDialog(this, true);
 
-            dialog.setLocationRelativeTo(this);
+            upload_button.setEnabled(false);
 
-            dialog.setVisible(true);
+            Helpers.threadRun(() -> {
 
-            if (dialog.isOk()) {
+                if (_transferences_running) {
+                    _current_transference.pause();
+                }
 
-                upload_button.setEnabled(false);
+                Helpers.GUIRunAndWait(() -> {
+                    UploadFileDialog dialog = new UploadFileDialog(this, true);
 
-                vamos_button.setEnabled(false);
+                    dialog.setLocationRelativeTo(this);
 
-                cuentas_textarea.setEnabled(false);
+                    dialog.setVisible(true);
 
-                Helpers.threadRun(() -> {
-
-                    synchronized (TRANSFERENCES_LOCK) {
-
-                        Helpers.GUIRun(() -> {
-                            status_label.setText("Checking free space in " + dialog.getSelected_email() + "...");
-                            progressbar.setIndeterminate(true);
+                    if (_transferences_running) {
+                        Helpers.threadRun(() -> {
+                            _current_transference.resume();
                         });
+                    }
 
-                        File f = new File(dialog.getLocal_path());
+                    if (dialog.isOk()) {
 
-                        long size = f.isDirectory() ? Helpers.getDirectorySize(f.toPath()) : f.length();
+                        vamos_button.setEnabled(false);
 
-                        if (Helpers.getAccountFreeSpace(dialog.getSelected_email()) >= size) {
+                        cuentas_textarea.setEnabled(false);
 
-                            Helpers.GUIRunAndWait(() -> {
-                                status_label.setText("");
-                                progressbar.setIndeterminate(false);
-                                Transference trans = new Transference(dialog.getSelected_email(), dialog.getLocal_path(), dialog.getRemote_path(), 1);
-                                transferences.add(trans);
-                                transferences.revalidate();
-                                transferences.repaint();
-                                tabbed_panel.setSelectedIndex(1);
-                                upload_button.setEnabled(true);
-                            });
+                        Helpers.threadRun(() -> {
 
-                        } else {
-                            Helpers.mostrarMensajeError(this, "THERE IS NO ENOUGH FREE SPACE IN TARGET ACCOUNT!");
+                            synchronized (TRANSFERENCES_LOCK) {
 
-                            Helpers.GUIRun(() -> {
-                                upload_button.setEnabled(true);
-                                status_label.setText("");
-                                progressbar.setIndeterminate(false);
-                            });
-                        }
-                        TRANSFERENCES_LOCK.notifyAll();
+                                Helpers.GUIRunAndWait(() -> {
+                                    status_label.setText("");
+                                    progressbar.setIndeterminate(false);
+                                    Transference trans = new Transference(dialog.getSelected_email(), dialog.getLocal_path(), dialog.getRemote_path(), 1);
+                                    transferences.add(trans);
+                                    transferences.revalidate();
+                                    transferences.repaint();
+                                    tabbed_panel.setSelectedIndex(1);
+                                    upload_button.setEnabled(true);
+                                });
+
+                                TRANSFERENCES_LOCK.notifyAll();
+                            }
+                        });
+                    } else {
+                        upload_button.setEnabled(true);
                     }
                 });
-            }
+
+            });
+
         } else {
             Helpers.mostrarMensajeError(this, "YOU HAVE TO FIRST ADD SOME ACCOUNTS AND CHECK THEM");
         }

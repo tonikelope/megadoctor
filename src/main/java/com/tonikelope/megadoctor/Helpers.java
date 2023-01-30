@@ -84,6 +84,17 @@ public class Helpers {
         return df.format(bytes_double) + ' ' + units[pow];
     }
 
+    public static String megaWhoami() {
+        String whoami = Helpers.runProcess(new String[]{"mega-whoami"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+        if (!whoami.startsWith("[API:err:")) {
+
+            return whoami.replaceAll("^.+: +(.+)$", "$1").trim();
+        }
+
+        return "";
+    }
+
     public static void setCenterOfParent(JFrame parent, JDialog dialog) {
         Point parentPosition = parent.getLocation();
         Dimension parentSize = parent.getSize();
