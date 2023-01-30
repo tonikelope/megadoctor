@@ -22,6 +22,8 @@ import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -34,6 +36,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiSystem;
 import javax.sound.midi.MidiUnavailableException;
@@ -73,6 +76,8 @@ public class Helpers {
     }
 
     public static String[] getAccountSpaceData(String email) {
+        Main.MAIN_WINDOW.login(email);
+
         String df = Helpers.runProcess(new String[]{"mega-df"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
         final String regex = "USED STORAGE: *([0-9]+).*?of *([0-9]+)";
         final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
@@ -83,6 +88,12 @@ public class Helpers {
         }
 
         return null;
+    }
+
+    public static long getAccountFreeSpace(String email) {
+        String[] space_used = getAccountSpaceData(email);
+
+        return Long.parseLong(space_used[2]) - Long.parseLong(space_used[1]);
     }
 
     public static String getFechaHoraActual() {
@@ -302,6 +313,35 @@ public class Helpers {
         }
 
         return null;
+    }
+
+    public static long getDirectorySize(Path path) {
+
+        long size = 0;
+
+        // need close Files.walk
+        try ( Stream<Path> walk = Files.walk(path)) {
+
+            size = walk
+                    //.peek(System.out::println) // debug
+                    .filter(Files::isRegularFile)
+                    .mapToLong(p -> {
+                        // ugly, can pretty it with an extract method
+                        try {
+                            return Files.size(p);
+                        } catch (IOException e) {
+                            System.out.printf("Failed to get size of %s%n%s", p, e);
+                            return 0L;
+                        }
+                    })
+                    .sum();
+
+        } catch (IOException e) {
+            System.out.printf("IO errors %s", e);
+        }
+
+        return size;
+
     }
 
     public static HashMap<String, ArrayList<String>> extractNodeMapFromText(String text) {

@@ -45,7 +45,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.55";
+    public final static String VERSION = "0.56";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -491,10 +491,10 @@ public class Main extends javax.swing.JFrame {
             try ( FileInputStream fis = new FileInputStream(TRANSFERS_FILE);  ObjectInputStream ois = new ObjectInputStream(fis)) {
 
                 ArrayList<Object[]> trans = (ArrayList<Object[]>) ois.readObject();
+                synchronized (TRANSFERENCES_LOCK) {
+                    Helpers.GUIRunAndWait(() -> {
+                        try {
 
-                Helpers.GUIRunAndWait(() -> {
-                    try {
-                        synchronized (TRANSFERENCES_LOCK) {
                             for (Object[] o : trans) {
 
                                 Transference t = new Transference((String) o[0], (String) o[1], (String) o[2], (int) o[3]);
@@ -503,13 +503,14 @@ public class Main extends javax.swing.JFrame {
                                 transferences.repaint();
                             }
                             tabbed_panel.setSelectedIndex(1);
-                            TRANSFERENCES_LOCK.notifyAll();
-                        }
 
-                    } catch (Exception ex) {
-                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                });
+                        } catch (Exception ex) {
+                            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    });
+
+                    TRANSFERENCES_LOCK.notifyAll();
+                }
 
             } catch (Exception ex) {
                 Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
@@ -1629,16 +1630,51 @@ public class Main extends javax.swing.JFrame {
             dialog.setVisible(true);
 
             if (dialog.isOk()) {
-                synchronized (TRANSFERENCES_LOCK) {
-                    Transference trans = new Transference(dialog.getSelected_email(), dialog.getLocal_path(), dialog.getRemote_path(), 1);
-                    transferences.add(trans);
-                    transferences.revalidate();
-                    transferences.repaint();
-                    tabbed_panel.setSelectedIndex(1);
 
-                    TRANSFERENCES_LOCK.notifyAll();
+                upload_button.setEnabled(false);
 
-                }
+                vamos_button.setEnabled(false);
+
+                cuentas_textarea.setEnabled(false);
+
+                Helpers.threadRun(() -> {
+
+                    synchronized (TRANSFERENCES_LOCK) {
+
+                        Helpers.GUIRun(() -> {
+                            status_label.setText("Checking free space in " + dialog.getSelected_email() + "...");
+                            progressbar.setIndeterminate(true);
+                        });
+
+                        File f = new File(dialog.getLocal_path());
+
+                        long size = f.isDirectory() ? Helpers.getDirectorySize(f.toPath()) : f.length();
+
+                        if (Helpers.getAccountFreeSpace(dialog.getSelected_email()) >= size) {
+
+                            Helpers.GUIRunAndWait(() -> {
+                                status_label.setText("");
+                                progressbar.setIndeterminate(false);
+                                Transference trans = new Transference(dialog.getSelected_email(), dialog.getLocal_path(), dialog.getRemote_path(), 1);
+                                transferences.add(trans);
+                                transferences.revalidate();
+                                transferences.repaint();
+                                tabbed_panel.setSelectedIndex(1);
+                                upload_button.setEnabled(true);
+                            });
+
+                        } else {
+                            Helpers.mostrarMensajeError(this, "THERE IS NO ENOUGH FREE SPACE IN TARGET ACCOUNT!");
+
+                            Helpers.GUIRun(() -> {
+                                upload_button.setEnabled(true);
+                                status_label.setText("");
+                                progressbar.setIndeterminate(false);
+                            });
+                        }
+                        TRANSFERENCES_LOCK.notifyAll();
+                    }
+                });
             }
         } else {
             Helpers.mostrarMensajeError(this, "YOU HAVE TO FIRST ADD SOME ACCOUNTS AND CHECK THEM");
@@ -1648,68 +1684,84 @@ public class Main extends javax.swing.JFrame {
     private void clear_trans_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clear_trans_buttonActionPerformed
         // TODO add your handling code here:
 
-        synchronized (TRANSFERENCES_LOCK) {
+        clear_trans_button.setEnabled(false);
 
-            if (transferences.getComponentCount() > 0) {
-                ArrayList<Component> finished = new ArrayList<>();
+        Helpers.threadRun(() -> {
 
-                for (Component t : transferences.getComponents()) {
+            synchronized (TRANSFERENCES_LOCK) {
 
-                    Transference trans = (Transference) t;
+                Helpers.GUIRunAndWait(() -> {
+                    if (transferences.getComponentCount() > 0) {
 
-                    if (trans.isFinished()) {
-                        finished.add(trans);
+                        ArrayList<Component> finished = new ArrayList<>();
+
+                        for (Component t : transferences.getComponents()) {
+
+                            Transference trans = (Transference) t;
+
+                            if (trans.isFinished()) {
+                                finished.add(trans);
+                            }
+                        }
+
+                        for (Component t : finished) {
+                            transferences.remove(t);
+                        }
+
+                        transferences.revalidate();
+
+                        transferences.repaint();
                     }
-                }
 
-                for (Component t : finished) {
-                    transferences.remove(t);
-                }
-
-                transferences.revalidate();
-
-                transferences.repaint();
+                    clear_trans_button.setEnabled(true);
+                });
             }
-        }
+        });
 
     }//GEN-LAST:event_clear_trans_buttonActionPerformed
 
     private void cancel_trans_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancel_trans_buttonActionPerformed
         // TODO add your handling code here:
-        synchronized (TRANSFERENCES_LOCK) {
+        Helpers.threadRun(() -> {
+            synchronized (TRANSFERENCES_LOCK) {
+                Helpers.GUIRunAndWait(() -> {
+                    if (transferences.getComponentCount() > 0) {
 
-            if (transferences.getComponentCount() > 0) {
+                        if (Helpers.mostrarMensajeInformativoSINO(this, "All transactions in progress or on hold will be lost. ARE YOU SURE?") == 0) {
 
-                if (Helpers.mostrarMensajeInformativoSINO(this, "All transactions in progress or on hold will be lost. ARE YOU SURE?") == 0) {
+                            cancel_trans_button.setEnabled(false);
 
-                    upload_button.setEnabled(false);
+                            upload_button.setEnabled(false);
 
-                    Helpers.threadRun(() -> {
+                            Helpers.threadRun(() -> {
 
-                        synchronized (TRANSFERENCES_LOCK) {
+                                synchronized (TRANSFERENCES_LOCK) {
 
-                            Helpers.runProcess(new String[]{"mega-transfers", "-ca"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+                                    Helpers.runProcess(new String[]{"mega-transfers", "-ca"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-                            _transferences_running = false;
+                                    _transferences_running = false;
 
-                            Helpers.GUIRunAndWait(() -> {
-                                transferences.removeAll();
-                                transferences.revalidate();
-                                transferences.repaint();
-                                upload_button.setEnabled(!MEGA_ACCOUNTS.isEmpty());
-                                vamos_button.setEnabled(true);
-                                cuentas_textarea.setEnabled(true);
+                                    Helpers.GUIRun(() -> {
+                                        transferences.removeAll();
+                                        transferences.revalidate();
+                                        transferences.repaint();
+                                        upload_button.setEnabled(!MEGA_ACCOUNTS.isEmpty());
+                                        vamos_button.setEnabled(true);
+                                        cuentas_textarea.setEnabled(true);
+                                        cancel_trans_button.setEnabled(true);
+                                    });
+
+                                    TRANSFERENCES_LOCK.notifyAll();
+                                }
+
                             });
 
-                            TRANSFERENCES_LOCK.notifyAll();
                         }
+                    }
+                });
 
-                    });
-
-                }
             }
-
-        }
+        });
 
     }//GEN-LAST:event_cancel_trans_buttonActionPerformed
 
