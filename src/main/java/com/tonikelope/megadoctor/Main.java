@@ -45,7 +45,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.54";
+    public final static String VERSION = "0.55";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -61,6 +61,7 @@ public class Main extends javax.swing.JFrame {
     private final static ArrayList<String[]> MEGA_ACCOUNTS_SPACE = new ArrayList<>();
     private final static ArrayList<String> MEGA_ACCOUNTS_LOGIN_ERROR = new ArrayList<>();
     private volatile boolean _running_global_check = false;
+    private volatile boolean _aborting_global_check = false;
     private volatile boolean _closing = false;
     private volatile boolean _firstAccountsTextareaClick = false;
     private volatile MoveNodeToAnotherAccountDialog _email_dialog = null;
@@ -1460,7 +1461,7 @@ public class Main extends javax.swing.JFrame {
 
                             });
 
-                            if (_closing) {
+                            if (_aborting_global_check) {
                                 break;
                             }
 
@@ -1503,7 +1504,7 @@ public class Main extends javax.swing.JFrame {
 
                         });
 
-                        Helpers.mostrarMensajeInformativo(this, _closing ? "CANCELED!" : "DONE");
+                        Helpers.mostrarMensajeInformativo(this, _aborting_global_check ? "CANCELED!" : "DONE");
 
                     } else {
                         Helpers.mostrarMensajeInformativo(this, "DONE");
@@ -1521,12 +1522,12 @@ public class Main extends javax.swing.JFrame {
                     });
 
                     _running_global_check = false;
-                    _closing = false;
+                    _aborting_global_check = false;
                 });
 
-            } else if (!_closing) {
+            } else if (!_aborting_global_check) {
                 if (Helpers.mostrarMensajeInformativoSINO(this, "SURE?") == 0) {
-                    _closing = true;
+                    _aborting_global_check = true;
                     Helpers.GUIRun(() -> {
                         vamos_button.setText("CANCELING...");
                         vamos_button.setEnabled(false);
