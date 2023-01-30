@@ -32,16 +32,18 @@ public class UploadFileDialog extends javax.swing.JDialog {
     }
 
     public String getLocal_path() {
-        return local_path.getText();
+        return _lpath;
     }
 
     public String getRemote_path() {
-        return remote_path.getText();
+        return _rpath;
     }
 
     private boolean _ok = false;
     private volatile long _local_size = 0;
     private volatile long _free_space = 0;
+    private volatile String _lpath = null;
+    private volatile String _rpath = null;
 
     public UploadFileDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
@@ -232,7 +234,8 @@ public class UploadFileDialog extends javax.swing.JDialog {
     private void vamos_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_vamos_buttonActionPerformed
         // TODO add your handling code here:
 
-        if (!local_path.getText().isBlank()) {
+        if (!_lpath.isBlank()) {
+            _rpath = remote_path.getText();
             _ok = true;
         }
 
@@ -259,6 +262,8 @@ public class UploadFileDialog extends javax.swing.JDialog {
         if (option == JFileChooser.APPROVE_OPTION) {
 
             File file = fileChooser.getSelectedFile();
+
+            _lpath = file.getAbsolutePath();
 
             local_path.setText(file.getAbsolutePath());
 
@@ -287,6 +292,8 @@ public class UploadFileDialog extends javax.swing.JDialog {
         if (option == JFileChooser.APPROVE_OPTION) {
 
             File file = fileChooser.getSelectedFile();
+
+            _lpath = file.getAbsolutePath();
 
             local_path.setText(file.getAbsolutePath());
 

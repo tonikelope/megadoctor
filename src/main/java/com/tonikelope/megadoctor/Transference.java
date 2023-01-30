@@ -23,9 +23,11 @@ import javax.swing.SwingUtilities;
  *
  * @author tonikelope
  */
-public class Transference extends javax.swing.JPanel {
+public final class Transference extends javax.swing.JPanel {
 
-    private volatile int _tag;
+    public static final int WAIT_TIMEOUT = 10;
+
+    private volatile int _tag = -1;
     private volatile int _action;
     private volatile int _prog = 0;
     private volatile int _prog_init = 0;
@@ -98,18 +100,47 @@ public class Transference extends javax.swing.JPanel {
         return _finished;
     }
 
-    private void setTransferTag() {
+    private void readTransferTag() {
 
         if (!isDirectory()) {
-            String transfer_data = Helpers.runProcess(new String[]{"mega-transfers", "--col-separator=#_#"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+            String transfer_data = Helpers.runProcess(new String[]{"mega-transfers", "--limit=1", "--output-cols=TAG", _action == 0 ? "--only-downoads" : "--only-uploads"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
             if (!transfer_data.trim().isEmpty()) {
                 String[] transfer_data_lines = transfer_data.split("\n");
+                try {
+                    _tag = Integer.parseInt(transfer_data_lines[transfer_data_lines.length - 1].trim());
+                } catch (NumberFormatException e) {
+                    _tag = -1;
+                }
+            }
+        }
+    }
 
-                if (transfer_data_lines.length >= 2) {
-                    String[] transfer_tokens = transfer_data_lines[1].trim().split("#_#");
+    private void waitCompletedTAG() {
+        if (_tag > 0) {
 
-                    _tag = Integer.parseInt(transfer_tokens[1].trim());
+            int tag = 0;
+
+            int timeout = 0;
+
+            while (tag != _tag && timeout < WAIT_TIMEOUT) {
+
+                try {
+                    Thread.sleep(1000);
+                    timeout++;
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+                String transfer_data = Helpers.runProcess(new String[]{"mega-transfers", "--show-completed", "--limit=1", "--output-cols=TAG", _action == 0 ? "--only-downoads" : "--only-uploads"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+                if (!transfer_data.trim().isEmpty()) {
+                    String[] transfer_data_lines = transfer_data.split("\n");
+
+                    if (transfer_data_lines.length >= 4) {
+                        tag = Integer.parseInt(transfer_data_lines[3].trim());
+                    }
+
                 }
             }
         }
@@ -210,6 +241,8 @@ public class Transference extends javax.swing.JPanel {
     public void start() {
         Helpers.threadRun(() -> {
 
+            int timeout;
+
             Helpers.GUIRun(() -> {
                 Main.MAIN_WINDOW.getVamos_button().setEnabled(false);
                 Main.MAIN_WINDOW.getCuentas_textarea().setEnabled(false);
@@ -218,15 +251,25 @@ public class Transference extends javax.swing.JPanel {
             _running = true;
 
             Main.MAIN_WINDOW.login(_email);
+
+            Helpers.runProcess(new String[]{"mega-transfers", "-pa"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
             if (!transferRunning()) {
+
                 if (_action == 0) {
                     Helpers.runProcess(new String[]{"mega-get", "-mq", "--ignore-quota-warn", _rpath, _lpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
                 } else {
                     Helpers.runProcess(new String[]{"mega-put", "-cq", "--ignore-quota-warn", _lpath, _rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
                 }
+
             } else {
+
                 _prog_init = -1;
             }
+
+            readTransferTag();
+
+            Helpers.runProcess(new String[]{"mega-transfers", "-ra"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
             long start_timestamp = System.currentTimeMillis();
 
@@ -235,10 +278,13 @@ public class Transference extends javax.swing.JPanel {
 
             });
 
+            timeout = 0;
+
             if (isDirectory()) {
-                while (!remoteFileExists(_rpath)) {
+                while (!remoteFileExists(_rpath) && timeout < WAIT_TIMEOUT) {
                     try {
                         Thread.sleep(1000);
+                        timeout++;
                     } catch (InterruptedException ex) {
                         Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
                     }
@@ -253,8 +299,6 @@ public class Transference extends javax.swing.JPanel {
             }
 
             if (transferRunning()) {
-
-                setTransferTag();
 
                 while (updateProgress()) {
                     try {
@@ -274,12 +318,19 @@ public class Transference extends javax.swing.JPanel {
 
                 });
 
-                while (!remoteFileExists(_rpath)) {
+                timeout = 0;
+
+                while (!remoteFileExists(_rpath) && timeout < WAIT_TIMEOUT) {
                     try {
                         Thread.sleep(1000);
+                        timeout++;
                     } catch (InterruptedException ex) {
                         Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
                     }
+                }
+
+                if (timeout == WAIT_TIMEOUT && !isDirectory()) {
+                    waitCompletedTAG();
                 }
 
                 long finish_timestamp = System.currentTimeMillis();
@@ -460,10 +511,11 @@ public class Transference extends javax.swing.JPanel {
     public Transference(String email, String lpath, String rpath, int act) {
         initComponents();
         ok.setVisible(false);
-        _email = email.trim();
-        _lpath = lpath;
 
         rpath = rpath.isBlank() ? "/" : rpath.trim();
+
+        _email = email.trim();
+        _lpath = lpath;
 
         _action = act;
 
@@ -476,7 +528,9 @@ public class Transference extends javax.swing.JPanel {
             _size = new File(lpath).length();
         }
 
-        _rpath = rpath.endsWith("/") ? rpath + new File(_lpath).getName() : rpath;
+        String fname = new File(_lpath).getName();
+
+        _rpath = rpath.endsWith("/") ? rpath + fname : rpath;
 
         local_path.setText("[" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + _lpath);
         remote_path.setText("(" + _email + ") " + _rpath);

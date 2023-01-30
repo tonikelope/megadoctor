@@ -45,7 +45,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.62";
+    public final static String VERSION = "0.63";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -986,7 +986,7 @@ public class Main extends javax.swing.JFrame {
 
         });
 
-        if (Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "CAUTION!! ALL CONTENT INSIDE [" + email + "] WILL BE PERMANENTLY DELETED. ARE YOU SURE?") == 0) {
+        if (Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "CAUTION!! ALL CONTENT INSIDE <b>" + email + "</b> WILL BE PERMANENTLY DELETED. ARE YOU SURE?") == 0) {
 
             login(email);
 
@@ -1089,6 +1089,8 @@ public class Main extends javax.swing.JFrame {
             if (login) {
                 login(email);
             }
+
+            Helpers.runProcess(new String[]{"mega-reload"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
             String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
