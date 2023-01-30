@@ -28,6 +28,7 @@ public class Transference extends javax.swing.JPanel {
     private volatile int _tag;
     private volatile int _action;
     private volatile int _prog = 0;
+    private volatile int _prog_init = 0;
     private volatile long _size;
     private volatile boolean _directory = false;
     private volatile String _lpath, _rpath, _email;
@@ -223,6 +224,8 @@ public class Transference extends javax.swing.JPanel {
                 } else {
                     Helpers.runProcess(new String[]{"mega-put", "-cq", "--ignore-quota-warn", _lpath, _rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
                 }
+            } else {
+                _prog_init = -1;
             }
 
             long start_timestamp = System.currentTimeMillis();
@@ -283,9 +286,8 @@ public class Transference extends javax.swing.JPanel {
 
                 Helpers.runProcess(new String[]{"mega-export", "-af", _rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-                long folder_size = 0;
-
                 if (isDirectory()) {
+                    long folder_size = 0;
                     long pre_folder_size = remoteFolderSize(_rpath);
 
                     try {
@@ -305,8 +307,6 @@ public class Transference extends javax.swing.JPanel {
 
                 }
 
-                long dir_size = folder_size;
-
                 Helpers.GUIRun(() -> {
                     progress.setIndeterminate(false);
 
@@ -316,14 +316,14 @@ public class Transference extends javax.swing.JPanel {
 
                     ok.setVisible(true);
 
-                    local_path.setText("[" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(!isDirectory() ? _size : dir_size)) + "] " + _lpath);
+                    local_path.setText("[" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + _lpath);
 
-                    long speed = calculateSpeed(isDirectory() ? dir_size : _size, 0, 10000, start_timestamp, finish_timestamp);
+                    long speed = calculateSpeed(_size, _prog_init < 0 ? 0 : _prog_init, 10000, start_timestamp, finish_timestamp);
 
                     action.setText("(Avg: " + Helpers.formatBytes(speed) + "/s)");
                 });
 
-                Main.MAIN_WINDOW.forceRefreshAccount(_email, "Refreshed after upload [" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(!isDirectory() ? _size : dir_size)) + "] " + _rpath, false, false);
+                Main.MAIN_WINDOW.forceRefreshAccount(_email, "Refreshed after upload [" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + _rpath, false, false);
 
                 _running = false;
 
@@ -418,6 +418,10 @@ public class Transference extends javax.swing.JPanel {
 
             if (_size > 0) {
                 _prog = (int) (isDirectory() ? (((float) remoteFolderSize(_rpath) / _size) * 10000) : (Float.parseFloat(matcher.group((_action == 0 ? 4 : 8))) * 100));
+            }
+
+            if (_prog_init < 0) {
+                _prog_init = _prog;
             }
 
             _prog_timestamp = System.currentTimeMillis();
