@@ -45,7 +45,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.63";
+    public final static String VERSION = "0.64";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -577,26 +577,28 @@ public class Main extends javax.swing.JFrame {
             try ( FileInputStream fis = new FileInputStream(TRANSFERS_FILE);  ObjectInputStream ois = new ObjectInputStream(fis)) {
 
                 ArrayList<Object[]> trans = (ArrayList<Object[]>) ois.readObject();
-                synchronized (TRANSFERENCES_LOCK) {
-                    Helpers.GUIRunAndWait(() -> {
-                        try {
+                if (!trans.isEmpty()) {
+                    synchronized (TRANSFERENCES_LOCK) {
+                        Helpers.GUIRunAndWait(() -> {
+                            try {
 
-                            for (Object[] o : trans) {
-                                if (MEGA_SESSIONS.containsKey((String) o[0])) {
-                                    Transference t = new Transference((String) o[0], (String) o[1], (String) o[2], (int) o[3]);
-                                    transferences.add(t);
+                                for (Object[] o : trans) {
+                                    if (MEGA_SESSIONS.containsKey((String) o[0])) {
+                                        Transference t = new Transference((String) o[0], (String) o[1], (String) o[2], (int) o[3]);
+                                        transferences.add(t);
+                                    }
                                 }
+                                transferences.revalidate();
+                                transferences.repaint();
+                                tabbed_panel.setSelectedIndex(1);
+
+                            } catch (Exception ex) {
+                                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
                             }
-                            transferences.revalidate();
-                            transferences.repaint();
-                            tabbed_panel.setSelectedIndex(1);
+                        });
 
-                        } catch (Exception ex) {
-                            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                    });
-
-                    TRANSFERENCES_LOCK.notifyAll();
+                        TRANSFERENCES_LOCK.notifyAll();
+                    }
                 }
 
             } catch (Exception ex) {
