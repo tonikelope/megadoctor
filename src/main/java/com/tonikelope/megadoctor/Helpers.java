@@ -352,7 +352,7 @@ public class Helpers {
             try {
                 c.setFont(font);
             } catch (Exception e) {
-            }//do nothing
+            }
         }
     }
 

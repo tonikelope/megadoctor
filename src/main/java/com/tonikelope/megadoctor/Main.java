@@ -12,6 +12,7 @@ package com.tonikelope.megadoctor;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Font;
 import java.util.ArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -44,7 +45,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.58";
+    public final static String VERSION = "0.59";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -225,6 +226,8 @@ public class Main extends javax.swing.JFrame {
                 return false;
             }
 
+            MEGA_SESSIONS.remove(email);
+            
             MEGA_SESSIONS.put(email, getCurrentSessionID());
 
         }
@@ -529,12 +532,13 @@ public class Main extends javax.swing.JFrame {
                         try {
 
                             for (Object[] o : trans) {
-
-                                Transference t = new Transference((String) o[0], (String) o[1], (String) o[2], (int) o[3]);
-                                transferences.add(t);
-                                transferences.revalidate();
-                                transferences.repaint();
+                                if (MEGA_SESSIONS.containsKey((String) o[0])) {
+                                    Transference t = new Transference((String) o[0], (String) o[1], (String) o[2], (int) o[3]);
+                                    transferences.add(t);
+                                }
                             }
+                            transferences.revalidate();
+                            transferences.repaint();
                             tabbed_panel.setSelectedIndex(1);
 
                         } catch (Exception ex) {
@@ -545,12 +549,6 @@ public class Main extends javax.swing.JFrame {
                     TRANSFERENCES_LOCK.notifyAll();
                 }
 
-            } catch (Exception ex) {
-                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-            }
-
-            try {
-                Files.deleteIfExists(Paths.get(TRANSFERS_FILE));
             } catch (Exception ex) {
                 Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -1126,24 +1124,35 @@ public class Main extends javax.swing.JFrame {
                         session_menu.setSelected(true);
 
                     });
+                } else {
+                    Helpers.GUIRun(() -> {
+                        session_menu.setSelected(false);
+                    });
                 }
 
             } catch (Exception ex) {
                 Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
             }
-        }
 
-        if (Files.exists(Paths.get(SESSIONS_FILE))) {
-            try ( FileInputStream fis = new FileInputStream(SESSIONS_FILE);  ObjectInputStream ois = new ObjectInputStream(fis)) {
-                MEGA_SESSIONS = (HashMap<String, String>) ois.readObject();
+            if (Files.exists(Paths.get(SESSIONS_FILE))) {
+                try ( FileInputStream fis = new FileInputStream(SESSIONS_FILE);  ObjectInputStream ois = new ObjectInputStream(fis)) {
+                    MEGA_SESSIONS = (HashMap<String, String>) ois.readObject();
 
-                if (!MEGA_SESSIONS.isEmpty()) {
-                    loadTransfers();
+                    if (!MEGA_SESSIONS.isEmpty()) {
+                        loadTransfers();
+                    }
+
+                } catch (Exception ex) {
+                    Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
                 }
-            } catch (Exception ex) {
-                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
             }
+
+        } else {
+            Helpers.GUIRun(() -> {
+                session_menu.setSelected(false);
+            });
         }
+
     }
 
     private void parseAccountNodes(String email) {
@@ -1601,7 +1610,9 @@ public class Main extends javax.swing.JFrame {
         // TODO add your handling code here:
 
         JFileChooser fileChooser = new JFileChooser();
-
+        
+        Helpers.setContainerFont(fileChooser, save_button.getFont().deriveFont(14f).deriveFont(Font.PLAIN));
+        
         int retval = fileChooser.showSaveDialog(this);
 
         if (retval == JFileChooser.APPROVE_OPTION) {
