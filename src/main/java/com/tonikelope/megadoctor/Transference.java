@@ -26,6 +26,7 @@ import javax.swing.SwingUtilities;
 public final class Transference extends javax.swing.JPanel {
 
     public static final int WAIT_TIMEOUT = 10;
+    public static final int FOLDER_SIZE_WAIT = 1000;
 
     private volatile int _tag = -1;
     private volatile int _action;
@@ -116,7 +117,41 @@ public final class Transference extends javax.swing.JPanel {
         }
     }
 
-    private void waitCompletedTAG() {
+    private boolean waitTransferStart() {
+
+        int timeout = 0;
+
+        while (!transferRunning() && timeout < WAIT_TIMEOUT) {
+
+            try {
+                Thread.sleep(1000);
+                timeout++;
+            } catch (InterruptedException ex) {
+                Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+        return (timeout == WAIT_TIMEOUT);
+    }
+
+    private boolean waitRemoteExists() {
+
+        int timeout = 0;
+
+        while (!remoteFileExists(_rpath) && timeout < WAIT_TIMEOUT) {
+
+            try {
+                Thread.sleep(1000);
+                timeout++;
+            } catch (InterruptedException ex) {
+                Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+        return (timeout == WAIT_TIMEOUT);
+    }
+
+    private boolean waitCompletedTAG() {
         if (_tag > 0) {
 
             int tag = 0;
@@ -143,7 +178,11 @@ public final class Transference extends javax.swing.JPanel {
 
                 }
             }
+
+            return (timeout < WAIT_TIMEOUT);
         }
+
+        return false;
     }
 
     public void clearFinished() {
@@ -220,11 +259,7 @@ public final class Transference extends javax.swing.JPanel {
 
             synchronized (TRANSFERENCES_LOCK) {
 
-                if (!Helpers.megaWhoami().equals(_email.toLowerCase())) {
-
-                    Main.MAIN_WINDOW.login(_email);
-
-                }
+                Main.MAIN_WINDOW.login(_email);
 
                 Helpers.runProcess(new String[]{"mega-transfers", "-ra"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
@@ -238,10 +273,44 @@ public final class Transference extends javax.swing.JPanel {
         }
     }
 
+    public void setCanceled(boolean _canceled) {
+        this._canceled = _canceled;
+    }
+
+    private long readRemoteFolderSize() {
+        long folder_size = -1;
+        if (isDirectory()) {
+
+            try {
+                Thread.sleep(FOLDER_SIZE_WAIT);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
+            long pre_folder_size = remoteFolderSize(_rpath);
+
+            if (pre_folder_size > 0) {
+                try {
+                    Thread.sleep(FOLDER_SIZE_WAIT);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+                while ((folder_size = remoteFolderSize(_rpath)) != pre_folder_size && folder_size < _size) {
+                    pre_folder_size = folder_size;
+                    try {
+                        Thread.sleep(FOLDER_SIZE_WAIT);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            }
+        }
+        return folder_size;
+    }
+
     public void start() {
         Helpers.threadRun(() -> {
-
-            int timeout;
 
             Helpers.GUIRun(() -> {
                 Main.MAIN_WINDOW.getVamos_button().setEnabled(false);
@@ -278,34 +347,23 @@ public final class Transference extends javax.swing.JPanel {
 
             });
 
-            timeout = 0;
+            waitTransferStart();
 
             if (isDirectory()) {
-                while (!remoteFileExists(_rpath) && timeout < WAIT_TIMEOUT) {
-                    try {
-                        Thread.sleep(1000);
-                        timeout++;
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
+
+                waitRemoteExists();
             }
 
-            if (_size > 0) {
-                Helpers.GUIRun(() -> {
-                    progress.setIndeterminate(false);
+            Helpers.GUIRun(() -> {
+                progress.setIndeterminate(false);
 
-                });
-            }
+            });
 
-            if (transferRunning()) {
-
-                while (updateProgress()) {
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
-                    }
+            while (updateProgress()) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
 
@@ -318,47 +376,36 @@ public final class Transference extends javax.swing.JPanel {
 
                 });
 
-                timeout = 0;
+                long finish_timestamp = System.currentTimeMillis();
 
-                while (!remoteFileExists(_rpath) && timeout < WAIT_TIMEOUT) {
+                Helpers.runProcess(new String[]{"mega-reload"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+                int verification_timeout = 0;
+
+                while (!remoteFileExists(_rpath) && verification_timeout < WAIT_TIMEOUT) {
                     try {
                         Thread.sleep(1000);
-                        timeout++;
+                        verification_timeout++;
                     } catch (InterruptedException ex) {
                         Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
 
-                final boolean warning = (timeout == WAIT_TIMEOUT);
+                boolean c_error = false;
 
-                if (warning && !isDirectory()) {
-
-                    waitCompletedTAG();
-                }
-
-                if (isDirectory()) {
-                    long folder_size;
-                    long pre_folder_size = remoteFolderSize(_rpath);
-
-                    if (pre_folder_size > 0) {
-                        try {
-                            Thread.sleep(1000);
-                        } catch (InterruptedException ex) {
-                            Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-
-                        while ((folder_size = remoteFolderSize(_rpath)) != pre_folder_size && folder_size < _size) {
-                            pre_folder_size = folder_size;
-                            try {
-                                Thread.sleep(1000);
-                            } catch (InterruptedException ex) {
-                                Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
-                            }
-                        }
+                if (verification_timeout == WAIT_TIMEOUT && !isDirectory()) {
+                    if (!isDirectory()) {
+                        c_error = waitCompletedTAG();
+                    } else {
+                        c_error = true;
                     }
                 }
 
-                long finish_timestamp = System.currentTimeMillis();
+                final boolean check_error = c_error;
+
+                long folder_size = readRemoteFolderSize();
+
+                final boolean warning_folder_size = (isDirectory() && folder_size != _size);
 
                 Helpers.runProcess(new String[]{"mega-export", "-af", _rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
@@ -377,9 +424,14 @@ public final class Transference extends javax.swing.JPanel {
 
                     action.setText("(Avg: " + Helpers.formatBytes(speed) + "/s)");
 
-                    if (warning) {
+                    if (check_error) {
                         status.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/warning_transference.png")));
-                        this.setToolTipText("Unable to verify that the transfer was completed correctly (check manually)");
+                        this.setToolTipText("Unable to verify that the transfer was completed correctly");
+                    }
+
+                    if (warning_folder_size) {
+                        status.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/warning_transference.png")));
+                        this.setToolTipText("REMOTE FOLDER SIZE IS DIFFERENT FROM LOCAL SIZE");
                     }
 
                 });

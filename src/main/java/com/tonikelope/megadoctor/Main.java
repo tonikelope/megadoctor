@@ -45,7 +45,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.65";
+    public final static String VERSION = "0.66";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -119,9 +119,15 @@ public class Main extends javax.swing.JFrame {
 
             Helpers.GUIRun(() -> {
                 status_label.setText("Checking if MEGACMD is present...");
+                setEnabled(false);
             });
 
             MEGA_CMD_VERSION = Helpers.runProcess(new String[]{"mega-version"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+            Helpers.GUIRun(() -> {
+                setEnabled(true);
+                status_label.setText("");
+            });
 
             if (MEGA_CMD_VERSION == null || "".equals(MEGA_CMD_VERSION)) {
                 Helpers.mostrarMensajeError(this, "MEGA CMD IS REQUIRED");
@@ -129,75 +135,71 @@ public class Main extends javax.swing.JFrame {
                 System.exit(1);
             }
 
-            Helpers.GUIRun(() -> {
-                status_label.setText("");
-            });
+            Helpers.threadRun(() -> {
 
-        });
+                while (!_closing) {
 
-        Helpers.threadRun(() -> {
-
-            while (!_closing) {
-
-                synchronized (TRANSFERENCES_LOCK) {
-                    try {
-                        TRANSFERENCES_LOCK.wait(1000);
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                    synchronized (TRANSFERENCES_LOCK) {
+                        try {
+                            TRANSFERENCES_LOCK.wait(1000);
+                        } catch (InterruptedException ex) {
+                            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                        }
                     }
-                }
-                synchronized (TRANSFERENCES_LOCK) {
-                    Helpers.GUIRunAndWait(() -> {
+                    synchronized (TRANSFERENCES_LOCK) {
+                        Helpers.GUIRunAndWait(() -> {
 
-                        if (transferences.getComponentCount() > 0) {
+                            if (transferences.getComponentCount() > 0) {
 
-                            transferences_control_panel.setVisible(true);
+                                transferences_control_panel.setVisible(true);
 
-                            _transferences_running = false;
+                                _transferences_running = false;
 
-                            for (Component t : transferences.getComponents()) {
-
-                                Transference trans = (Transference) t;
-
-                                if (trans.isRunning()) {
-                                    _transferences_running = true;
-                                    _current_transference = trans;
-                                    break;
-                                }
-                            }
-
-                            if (!_transferences_running) {
                                 for (Component t : transferences.getComponents()) {
 
                                     Transference trans = (Transference) t;
 
-                                    if (!trans.isRunning() && !trans.isFinished() && !trans.isCanceled()) {
+                                    if (trans.isRunning()) {
                                         _transferences_running = true;
                                         _current_transference = trans;
-                                        trans.start();
                                         break;
                                     }
                                 }
+
+                                if (!_transferences_running) {
+                                    for (Component t : transferences.getComponents()) {
+
+                                        Transference trans = (Transference) t;
+
+                                        if (!trans.isRunning() && !trans.isFinished() && !trans.isCanceled()) {
+                                            _transferences_running = true;
+                                            _current_transference = trans;
+                                            trans.start();
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                cancel_trans_button.setEnabled(_transferences_running);
+
+                            } else {
+                                _transferences_running = false;
+
+                                _current_transference = null;
+
+                                transferences_control_panel.setVisible(false);
+
+                                if (!_running_global_check) {
+                                    vamos_button.setEnabled(true);
+                                    cuentas_textarea.setEnabled(true);
+                                }
                             }
 
-                            cancel_trans_button.setEnabled(_transferences_running);
-
-                        } else {
-                            _transferences_running = false;
-
-                            _current_transference = null;
-
-                            transferences_control_panel.setVisible(false);
-
-                            if (!_running_global_check) {
-                                vamos_button.setEnabled(true);
-                                cuentas_textarea.setEnabled(true);
-                            }
-                        }
-
-                    });
+                        });
+                    }
                 }
-            }
+
+            });
 
         });
 
@@ -1862,9 +1864,19 @@ public class Main extends javax.swing.JFrame {
 
                                 synchronized (TRANSFERENCES_LOCK) {
 
+                                    Helpers.GUIRun(() -> {
+                                        progressbar.setIndeterminate(true);
+                                    });
+
                                     Helpers.runProcess(new String[]{"mega-transfers", "-ca"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
+                                    if (_current_transference != null) {
+                                        _current_transference.setCanceled(true);
+                                    }
+
                                     _transferences_running = false;
+
+                                    _current_transference = null;
 
                                     Helpers.GUIRun(() -> {
                                         transferences.removeAll();
@@ -1874,6 +1886,7 @@ public class Main extends javax.swing.JFrame {
                                         vamos_button.setEnabled(true);
                                         cuentas_textarea.setEnabled(true);
                                         cancel_trans_button.setEnabled(true);
+                                        progressbar.setIndeterminate(false);
                                     });
 
                                     TRANSFERENCES_LOCK.notifyAll();

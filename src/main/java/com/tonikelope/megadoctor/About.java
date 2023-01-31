@@ -190,7 +190,7 @@ public class About extends javax.swing.JDialog {
 
     private void cmd_versionMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_cmd_versionMouseClicked
         // TODO add your handling code here:
-         Helpers.openBrowserURLAndWait(MEGA_CMD_URL);
+        Helpers.openBrowserURLAndWait(MEGA_CMD_URL);
     }//GEN-LAST:event_cmd_versionMouseClicked
 
     private void jLabel2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel2MouseClicked
