@@ -10,6 +10,7 @@ by tonikelope
  */
 package com.tonikelope.megadoctor;
 
+import static com.tonikelope.megadoctor.Main.MEGA_CMD_URL;
 import static com.tonikelope.megadoctor.Main.VERSION;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -66,6 +67,7 @@ public class About extends javax.swing.JDialog {
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
         cmd_version = new javax.swing.JLabel();
+        eso = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle("About MegaDoctor");
@@ -84,16 +86,38 @@ public class About extends javax.swing.JDialog {
 
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/megadoctor_about.png"))); // NOI18N
+        jLabel1.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         jLabel1.setDoubleBuffered(true);
+        jLabel1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jLabel1MouseClicked(evt);
+            }
+        });
 
         jLabel2.setFont(new java.awt.Font("Noto Sans", 3, 24)); // NOI18N
         jLabel2.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel2.setText("  Just another MEGA tool from tonikelope Solutions S. L.  ");
+        jLabel2.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        jLabel2.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jLabel2MouseClicked(evt);
+            }
+        });
 
         cmd_version.setFont(new java.awt.Font("Noto Sans", 2, 15)); // NOI18N
         cmd_version.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
         cmd_version.setText("MEGA CMD");
+        cmd_version.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         cmd_version.setDoubleBuffered(true);
+        cmd_version.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                cmd_versionMouseClicked(evt);
+            }
+        });
+
+        eso.setFont(new java.awt.Font("Noto Sans", 2, 15)); // NOI18N
+        eso.setText("Jn 8:32");
+        eso.setDoubleBuffered(true);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -104,7 +128,10 @@ public class About extends javax.swing.JDialog {
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(cmd_version, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                        .addComponent(eso)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(cmd_version)))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
@@ -115,8 +142,10 @@ public class About extends javax.swing.JDialog {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel2)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(cmd_version)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(cmd_version)
+                    .addComponent(eso))
+                .addContainerGap())
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -154,8 +183,24 @@ public class About extends javax.swing.JDialog {
         _exit = true;
     }//GEN-LAST:event_formWindowClosing
 
+    private void jLabel1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel1MouseClicked
+        // TODO add your handling code here:
+        Helpers.openBrowserURLAndWait("https://github.com/tonikelope/megadoctor/releases/latest");
+    }//GEN-LAST:event_jLabel1MouseClicked
+
+    private void cmd_versionMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_cmd_versionMouseClicked
+        // TODO add your handling code here:
+         Helpers.openBrowserURLAndWait(MEGA_CMD_URL);
+    }//GEN-LAST:event_cmd_versionMouseClicked
+
+    private void jLabel2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel2MouseClicked
+        // TODO add your handling code here:
+        Helpers.openBrowserURLAndWait("https://github.com/tonikelope");
+    }//GEN-LAST:event_jLabel2MouseClicked
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel cmd_version;
+    private javax.swing.JLabel eso;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JPanel jPanel1;

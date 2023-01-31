@@ -45,7 +45,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.64";
+    public final static String VERSION = "0.65";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -988,7 +988,7 @@ public class Main extends javax.swing.JFrame {
 
         });
 
-        if (Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "CAUTION!! ALL CONTENT INSIDE <b>" + email + "</b> WILL BE PERMANENTLY DELETED. ARE YOU SURE?") == 0) {
+        if (Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "CAUTION!! ALL CONTENT INSIDE <b>" + email + "</b> WILL BE <b>PERMANENTLY</b> DELETED.<br><br>ARE YOU SURE?") == 0 && Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "Forgive me for insisting... ARE YOU ABSOLUTELY SURE?") == 0) {
 
             login(email);
 
@@ -1031,7 +1031,7 @@ public class Main extends javax.swing.JFrame {
 
         HashMap<String, ArrayList<String>> nodesToRemove = Helpers.extractNodeMapFromText(text);
 
-        if (!nodesToRemove.isEmpty() && Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "CAUTION!! THE FILES WILL BE PERMANENTLY DELETED. ARE YOU SURE?") == 0) {
+        if (!nodesToRemove.isEmpty() && Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "CAUTION!! SELECTED FILES/FOLDERS WILL BE <b>PERMANENTLY</b> DELETED.<br><br>ARE YOU SURE?") == 0) {
 
             for (String email : nodesToRemove.keySet()) {
 
@@ -1627,7 +1627,7 @@ public class Main extends javax.swing.JFrame {
                         Helpers.mostrarMensajeInformativo(this, _aborting_global_check ? "CANCELED!" : "DONE");
 
                     } else {
-                        Helpers.mostrarMensajeInformativo(this, "DONE");
+                        Helpers.mostrarMensajeInformativo(this, "ALL ACCOUNTS REFRESHED");
                     }
 
                     Helpers.GUIRun(() -> {

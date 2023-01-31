@@ -329,34 +329,38 @@ public final class Transference extends javax.swing.JPanel {
                     }
                 }
 
-                if (timeout == WAIT_TIMEOUT && !isDirectory()) {
+                final boolean warning = (timeout == WAIT_TIMEOUT);
+
+                if (warning && !isDirectory()) {
+
                     waitCompletedTAG();
                 }
 
-                long finish_timestamp = System.currentTimeMillis();
-
-                Helpers.runProcess(new String[]{"mega-export", "-af", _rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
-
                 if (isDirectory()) {
-                    long folder_size = 0;
+                    long folder_size;
                     long pre_folder_size = remoteFolderSize(_rpath);
 
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-
-                    while ((folder_size = remoteFolderSize(_rpath)) != pre_folder_size && folder_size < _size) {
-                        pre_folder_size = folder_size;
+                    if (pre_folder_size > 0) {
                         try {
                             Thread.sleep(1000);
                         } catch (InterruptedException ex) {
                             Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
                         }
-                    }
 
+                        while ((folder_size = remoteFolderSize(_rpath)) != pre_folder_size && folder_size < _size) {
+                            pre_folder_size = folder_size;
+                            try {
+                                Thread.sleep(1000);
+                            } catch (InterruptedException ex) {
+                                Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        }
+                    }
                 }
+
+                long finish_timestamp = System.currentTimeMillis();
+
+                Helpers.runProcess(new String[]{"mega-export", "-af", _rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
                 Helpers.GUIRun(() -> {
                     progress.setIndeterminate(false);
@@ -365,13 +369,19 @@ public final class Transference extends javax.swing.JPanel {
 
                     progress.setValue(progress.getMaximum());
 
-                    ok.setVisible(true);
+                    status.setVisible(true);
 
                     local_path.setText("[" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + _lpath);
 
                     long speed = calculateSpeed(_size, _prog_init < 0 ? 0 : _prog_init, 10000, start_timestamp, finish_timestamp);
 
                     action.setText("(Avg: " + Helpers.formatBytes(speed) + "/s)");
+
+                    if (warning) {
+                        status.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/warning_transference.png")));
+                        this.setToolTipText("Unable to verify that the transfer was completed correctly (check manually)");
+                    }
+
                 });
 
                 Main.MAIN_WINDOW.forceRefreshAccount(_email, "Refreshed after upload [" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + _rpath, false, false);
@@ -426,7 +436,7 @@ public final class Transference extends javax.swing.JPanel {
             return Long.parseLong(matcher.group(1));
         }
 
-        return 0;
+        return -1;
     }
 
     private boolean remoteFileExists(String rpath) {
@@ -510,7 +520,7 @@ public final class Transference extends javax.swing.JPanel {
      */
     public Transference(String email, String lpath, String rpath, int act) {
         initComponents();
-        ok.setVisible(false);
+        status.setVisible(false);
 
         rpath = rpath.isBlank() ? "/" : rpath.trim();
 
@@ -553,7 +563,7 @@ public final class Transference extends javax.swing.JPanel {
         action = new javax.swing.JLabel();
         remote_path = new javax.swing.JLabel();
         progress = new javax.swing.JProgressBar();
-        ok = new javax.swing.JLabel();
+        status = new javax.swing.JLabel();
 
         setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
         addMouseListener(new java.awt.event.MouseAdapter() {
@@ -607,7 +617,7 @@ public final class Transference extends javax.swing.JPanel {
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        ok.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/ok.png"))); // NOI18N
+        status.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/ok.png"))); // NOI18N
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -615,7 +625,7 @@ public final class Transference extends javax.swing.JPanel {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(ok)
+                .addComponent(status)
                 .addGap(0, 0, 0)
                 .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addContainerGap())
@@ -626,7 +636,7 @@ public final class Transference extends javax.swing.JPanel {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(ok, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(status, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -635,11 +645,14 @@ public final class Transference extends javax.swing.JPanel {
         // TODO add your handling code here:
 
         if (SwingUtilities.isRightMouseButton(evt)) {
-            if (!_canceled && !_finished && Helpers.mostrarMensajeInformativoSINO(Main.MAIN_WINDOW, _lpath + "<br><br>CANCEL this transference?") == 0) {
+
+            String filename = new File(_lpath).getName();
+
+            if (!_canceled && !_finished && Helpers.mostrarMensajeInformativoSINO(Main.MAIN_WINDOW, "<b>" + filename + "</b><br><br><b>CANCEL</b> this transference?") == 0) {
 
                 stop();
 
-            } else if (!_canceled && _finished && Helpers.mostrarMensajeInformativoSINO(Main.MAIN_WINDOW, _lpath + "<br><br>Clear this finished transference?") == 0) {
+            } else if (!_canceled && _finished && Helpers.mostrarMensajeInformativoSINO(Main.MAIN_WINDOW, "<b>" + filename + "</b><br><br><b>Clear</b> this finished transference?") == 0) {
                 clearFinished();
             }
         }
@@ -649,8 +662,8 @@ public final class Transference extends javax.swing.JPanel {
     private javax.swing.JLabel action;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JLabel local_path;
-    private javax.swing.JLabel ok;
     private javax.swing.JProgressBar progress;
     private javax.swing.JLabel remote_path;
+    private javax.swing.JLabel status;
     // End of variables declaration//GEN-END:variables
 }
