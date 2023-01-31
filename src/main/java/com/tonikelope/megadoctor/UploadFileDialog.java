@@ -297,7 +297,7 @@ public class UploadFileDialog extends javax.swing.JDialog {
 
             local_path.setText(file.getAbsolutePath());
 
-            _local_size = Helpers.getDirectorySize(file.toPath());
+            _local_size = Helpers.getDirectorySize(file);
 
             local_size.setText(Helpers.formatBytes(_local_size));
 

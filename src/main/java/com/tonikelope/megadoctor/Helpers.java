@@ -27,11 +27,6 @@ import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -40,7 +35,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -367,23 +361,22 @@ public class Helpers {
         }
     }
 
-    public static long getDirectorySize(Path path) {
-        AtomicLong size = new AtomicLong(0);
-        try {
+    public static long getDirectorySize(File folder) {
 
-            Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
-                @Override
-                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-                        throws IOException {
-                    size.addAndGet(attrs.size());
-                    return FileVisitResult.CONTINUE;
-                }
-            });
-        } catch (IOException ex) {
-            Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
+        long length = 0;
+        File[] files = folder.listFiles();
+
+        int count = files.length;
+
+        for (int i = 0; i < count; i++) {
+            if (files[i].isFile()) {
+                length += files[i].length();
+            } else {
+                length += getDirectorySize(files[i]);
+            }
         }
+        return length;
 
-        return size.longValue();
     }
 
     public static HashMap<String, ArrayList<String>> extractNodeMapFromText(String text) {

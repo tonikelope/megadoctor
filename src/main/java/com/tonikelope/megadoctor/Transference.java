@@ -27,6 +27,7 @@ public final class Transference extends javax.swing.JPanel {
 
     public static final int WAIT_TIMEOUT = 10;
     public static final int FOLDER_SIZE_WAIT = 1000;
+    public static final int SECURE_PAUSE_WAIT = 2000;
 
     private volatile int _tag = -1;
     private volatile int _action;
@@ -231,15 +232,42 @@ public final class Transference extends javax.swing.JPanel {
         });
     }
 
+    private void securePauseAllTransfers() {
+        Helpers.runProcess(new String[]{"mega-transfers", "-pa"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+        String completed, old_completed = Helpers.runProcess(new String[]{"mega-transfers", "--show-completed", "--output-cols=TAG"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+        try {
+            Thread.sleep(SECURE_PAUSE_WAIT);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        while (!(completed = Helpers.runProcess(new String[]{"mega-transfers", "--show-completed", "--output-cols=TAG"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]).equals(old_completed)) {
+
+            old_completed = completed;
+
+            try {
+                Thread.sleep(SECURE_PAUSE_WAIT);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
     public void pause() {
 
         _paused = true;
 
         synchronized (TRANSFERENCES_LOCK) {
 
-            Helpers.runProcess(new String[]{"mega-transfers", "-pa"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+            Helpers.GUIRun(() -> {
+                action.setText("(--- PAUSING... ---)");
+            });
 
-            Helpers.GUIRunAndWait(() -> {
+            securePauseAllTransfers();
+
+            Helpers.GUIRun(() -> {
                 action.setText("(--- PAUSED ---)");
             });
 
@@ -258,6 +286,10 @@ public final class Transference extends javax.swing.JPanel {
             _paused = false;
 
             synchronized (TRANSFERENCES_LOCK) {
+
+                Helpers.GUIRun(() -> {
+                    action.setText("(--- RESUMING... ---)");
+                });
 
                 Main.MAIN_WINDOW.login(_email);
 
@@ -585,7 +617,7 @@ public final class Transference extends javax.swing.JPanel {
 
         if (local.isDirectory()) {
             _directory = true;
-            _size = Helpers.getDirectorySize(local.toPath());
+            _size = Helpers.getDirectorySize(local);
         } else {
             _size = new File(lpath).length();
         }

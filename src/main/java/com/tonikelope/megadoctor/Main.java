@@ -45,7 +45,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.66";
+    public final static String VERSION = "0.67";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -1752,6 +1752,9 @@ public class Main extends javax.swing.JFrame {
         if (!Main.MEGA_ACCOUNTS.isEmpty()) {
 
             upload_button.setEnabled(false);
+            if (_transferences_running) {
+                upload_button.setText("PAUSING CURRENT TRANSFER...");
+            }
 
             Helpers.threadRun(() -> {
 
@@ -1760,6 +1763,8 @@ public class Main extends javax.swing.JFrame {
                 }
 
                 Helpers.GUIRunAndWait(() -> {
+                    upload_button.setText("NEW UPLOAD");
+
                     UploadFileDialog dialog = new UploadFileDialog(this, true);
 
                     dialog.setLocationRelativeTo(this);
