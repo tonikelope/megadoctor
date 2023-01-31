@@ -338,6 +338,10 @@ public class Main extends javax.swing.JFrame {
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
             MAIN_WINDOW.getStatus_label().setText((move ? "MOVING" : "COPYING") + " SELECTED FOLDERS/FILES. PLEASE WAIT...");
 
+            if (_transferences_running) {
+                upload_button.setText("PAUSING CURRENT TRANSFER...");
+            }
+
         });
 
         HashMap<String, ArrayList<String>> nodesToCopy = Helpers.extractNodeMapFromText(text);
@@ -485,6 +489,7 @@ public class Main extends javax.swing.JFrame {
             MAIN_WINDOW.getCuentas_textarea().setEnabled(true);
             MAIN_WINDOW.getVamos_button().setEnabled(true);
             upload_button.setEnabled(true);
+            upload_button.setText("NEW UPLOAD");
             MAIN_WINDOW.getSave_button().setEnabled(true);
             MAIN_WINDOW.getProgressbar().setIndeterminate(false);
             MAIN_WINDOW.getStatus_label().setText("");
