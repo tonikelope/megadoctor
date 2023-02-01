@@ -349,6 +349,21 @@ public class Helpers {
         return null;
     }
 
+    public static String extractFirstEmailFromtext(String text) {
+
+        final String regex = "[a-zA-Z0-9_!#$%&'*+/=?`{|}~^.\\-]+@[a-zA-Z0-9.\\-]+";
+
+        final Pattern pattern = Pattern.compile(regex);
+
+        final Matcher matcher = pattern.matcher(text);
+
+        if (matcher.find()) {
+            return matcher.group(0);
+        }
+
+        return null;
+    }
+
     public static void setContainerFont(Container container, Font font) {
         for (Component c : container.getComponents()) {
             if (c instanceof Container) {
@@ -435,7 +450,6 @@ public class Helpers {
                 public void actionPerformed(ActionEvent ae) {
                     if (undoManager.canUndo() && txtField.isEditable()) {
                         undoManager.undo();
-                    } else {
                     }
                 }
             };
@@ -509,7 +523,6 @@ public class Helpers {
                 public void actionPerformed(ActionEvent ae) {
                     if (undoManager.canUndo() && txtArea.isEditable()) {
                         undoManager.undo();
-                    } else {
                     }
                 }
             };
@@ -541,7 +554,7 @@ public class Helpers {
             Action copyInsideMEGANodesAction = new AbstractAction("COPY SELECTED MEGA FOLDERS/FILES (INSIDE THE ACCOUNT)") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
-                    if (Main.MAIN_WINDOW.getCuentas_textarea().isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                    if (txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
                         Helpers.threadRun(() -> {
                             Main.MAIN_WINDOW.copyNodesInsideAccount(txtArea.getSelectedText());
                         });
@@ -551,7 +564,7 @@ public class Helpers {
             Action moveInsideMEGANodesAction = new AbstractAction("MOVE SELECTED MEGA FOLDERS/FILES (INSIDE THE ACCOUNT)") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
-                    if (Main.MAIN_WINDOW.getCuentas_textarea().isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                    if (txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
                         Helpers.threadRun(() -> {
                             Main.MAIN_WINDOW.moveNodesInsideAccount(txtArea.getSelectedText());
                         });
@@ -561,7 +574,7 @@ public class Helpers {
             Action removeMEGANodesAction = new AbstractAction("DELETE SELECTED MEGA FOLDERS/FILES") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
-                    if (Main.MAIN_WINDOW.getCuentas_textarea().isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                    if (txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
                         Helpers.threadRun(() -> {
                             Main.MAIN_WINDOW.removeNodes(txtArea.getSelectedText());
                         });
@@ -571,7 +584,7 @@ public class Helpers {
             Action copyMEGANodesAction = new AbstractAction("COPY SELECTED MEGA FOLDERS/FILES TO ANOTHER ACCOUNT") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
-                    if (Main.MAIN_WINDOW.getCuentas_textarea().isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                    if (txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
                         Helpers.threadRun(() -> {
                             Main.MAIN_WINDOW.copyNodesToAnotherAccount(txtArea.getSelectedText(), false);
                         });
@@ -581,7 +594,7 @@ public class Helpers {
             Action moveMEGANodesAction = new AbstractAction("MOVE SELECTED MEGA FOLDERS/FILES TO ANOTHER ACCOUNT") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
-                    if (Main.MAIN_WINDOW.getCuentas_textarea().isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                    if (txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
                         Helpers.threadRun(() -> {
                             Main.MAIN_WINDOW.copyNodesToAnotherAccount(txtArea.getSelectedText(), true);
                         });
@@ -591,7 +604,7 @@ public class Helpers {
             Action renameMEGANodesAction = new AbstractAction("RENAME SELECTED MEGA FOLDERS/FILES") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
-                    if (Main.MAIN_WINDOW.getCuentas_textarea().isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                    if (txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
                         Helpers.threadRun(() -> {
                             Main.MAIN_WINDOW.renameNodes(txtArea.getSelectedText());
                         });
@@ -601,7 +614,7 @@ public class Helpers {
             Action enableExporMEGANodesAction = new AbstractAction("ENABLE PUBLIC LINK ON SELECTED MEGA FOLDERS/FILES") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
-                    if (Main.MAIN_WINDOW.getCuentas_textarea().isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                    if (txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
                         Helpers.threadRun(() -> {
                             Main.MAIN_WINDOW.exportNodes(txtArea.getSelectedText(), true);
                         });
@@ -611,7 +624,7 @@ public class Helpers {
             Action disableExporMEGANodesAction = new AbstractAction("DISABLE PUBLIC LINK ON SELECTED MEGA FOLDERS/FILES") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
-                    if (Main.MAIN_WINDOW.getCuentas_textarea().isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                    if (txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
                         Helpers.threadRun(() -> {
                             Main.MAIN_WINDOW.exportNodes(txtArea.getSelectedText(), false);
                         });
@@ -621,7 +634,7 @@ public class Helpers {
             Action forceRefreshAccountAction = new AbstractAction("REFRESH SELECTED ACCOUNT") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
-                    if (Main.MAIN_WINDOW.getCuentas_textarea().isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                    if (txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
                         Helpers.threadRun(() -> {
                             Main.MAIN_WINDOW.forceRefreshAccount(txtArea.getSelectedText().trim(), "Force refresh", true, true);
                         });
@@ -632,7 +645,7 @@ public class Helpers {
             Action forceRefreshLastAccountAction = new AbstractAction("REFRESH LAST ACCOUNT") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
-                    if (Main.MAIN_WINDOW.getCuentas_textarea().isEnabled() && Main.MAIN_WINDOW.getLast_email_force_refresh() != null) {
+                    if (txtArea.isEnabled() && Main.MAIN_WINDOW.getLast_email_force_refresh() != null) {
                         Helpers.threadRun(() -> {
                             Main.MAIN_WINDOW.forceRefreshAccount(Main.MAIN_WINDOW.getLast_email_force_refresh(), "Force refresh", true, true);
                         });
@@ -643,9 +656,13 @@ public class Helpers {
             Action truncateAccountAction = new AbstractAction("TRUNCATE SELECTED ACCOUNT") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
-                    if (Main.MAIN_WINDOW.getCuentas_textarea().isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                    if (txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
                         Helpers.threadRun(() -> {
-                            Main.MAIN_WINDOW.truncateAccount(txtArea.getSelectedText().trim());
+                            String email = Helpers.extractFirstEmailFromtext(txtArea.getSelectedText());
+
+                            if (email != null) {
+                                Main.MAIN_WINDOW.truncateAccount(email);
+                            }
                         });
                     }
                 }
@@ -749,6 +766,129 @@ public class Helpers {
             popup.add(refreshLastAccount);
 
             refreshLastAccount.setEnabled(false);
+
+            popup.addSeparator();
+
+            JMenuItem truncateAccount = new JMenuItem(truncateAccountAction);
+
+            truncateAccount.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/remove.png")));
+
+            popup.add(truncateAccount);
+
+            txtArea.setComponentPopupMenu(popup);
+        }
+
+        public static void addRefreshableTo(JTextArea txtArea, Refresheable r) {
+            JPopupMenu popup = new JPopupMenu();
+            Refresheable _refresh = r;
+
+            UndoManager undoManager = new UndoManager();
+            txtArea.getDocument().addUndoableEditListener(undoManager);
+            Action undoAction = new AbstractAction("Undo") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    if (undoManager.canUndo() && txtArea.isEditable()) {
+                        undoManager.undo();
+                    }
+                }
+            };
+
+            Action copyAction = new AbstractAction("Copy") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    txtArea.copy();
+                }
+            };
+            Action cutAction = new AbstractAction("Cut") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    txtArea.cut();
+                }
+            };
+            Action pasteAction = new AbstractAction("Paste") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    txtArea.paste();
+                }
+            };
+            Action selectAllAction = new AbstractAction("Sellect all") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    txtArea.selectAll();
+                }
+            };
+
+            Action removeMEGANodesAction = new AbstractAction("DELETE SELECTED MEGA FOLDERS/FILES") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    if (txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                        Helpers.threadRun(() -> {
+                            _refresh.enableR(false);
+                            Main.MAIN_WINDOW.removeNodes(txtArea.getSelectedText());
+                            _refresh.enableR(true);
+                            _refresh.refresh();
+                        });
+                    }
+                }
+            };
+
+            Action truncateAccountAction = new AbstractAction("TRUNCATE SELECTED ACCOUNT") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    if (txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                        Helpers.threadRun(() -> {
+
+                            String email = Helpers.extractFirstEmailFromtext(txtArea.getSelectedText());
+
+                            if (email != null) {
+                                _refresh.enableR(false);
+                                Main.MAIN_WINDOW.truncateAccount(email);
+                                _refresh.enableR(true);
+                                _refresh.refresh();
+                            }
+
+                        });
+                    }
+                }
+            };
+            cutAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control X"));
+            copyAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control C"));
+            pasteAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control V"));
+            selectAllAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control A"));
+
+            if (txtArea.isEditable()) {
+                JMenuItem undo = new JMenuItem(undoAction);
+                undo.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/undo.png")));
+                popup.add(undo);
+
+                popup.addSeparator();
+            }
+
+            JMenuItem cut = new JMenuItem(cutAction);
+            cut.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/cut.png")));
+            popup.add(cut);
+
+            JMenuItem copy = new JMenuItem(copyAction);
+            copy.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/copy.png")));
+            popup.add(copy);
+
+            JMenuItem paste = new JMenuItem(pasteAction);
+            paste.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/paste.png")));
+            popup.add(paste);
+
+            popup.addSeparator();
+
+            JMenuItem selectAll = new JMenuItem(selectAllAction);
+            selectAll.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/select_all.png")));
+            popup.add(selectAll);
+
+            popup.addSeparator();
+
+            JMenuItem removeNodes = new JMenuItem(removeMEGANodesAction);
+
+            removeNodes.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/remove.png")));
+
+            popup.add(removeNodes);
 
             popup.addSeparator();
 

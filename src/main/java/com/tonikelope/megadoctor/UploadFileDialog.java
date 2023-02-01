@@ -22,7 +22,7 @@ import javax.swing.JFrame;
  *
  * @author tonikelope
  */
-public class UploadFileDialog extends javax.swing.JDialog {
+public class UploadFileDialog extends javax.swing.JDialog implements Refresheable {
 
     public String getSelected_email() {
         return (String) email_combobox.getSelectedItem();
@@ -50,6 +50,8 @@ public class UploadFileDialog extends javax.swing.JDialog {
         super(parent, modal);
 
         initComponents();
+
+        Helpers.JTextFieldRegularPopupMenu.addRefreshableTo(account_stats_textarea, this);
 
         vamos_button.setEnabled(false);
 
@@ -131,11 +133,6 @@ public class UploadFileDialog extends javax.swing.JDialog {
         email_combobox.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
                 email_comboboxItemStateChanged(evt);
-            }
-        });
-        email_combobox.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                email_comboboxActionPerformed(evt);
             }
         });
 
@@ -355,6 +352,8 @@ public class UploadFileDialog extends javax.swing.JDialog {
 
                 _free_space = Helpers.getAccountFreeSpace(email);
 
+                Main.MAIN_WINDOW.parseAccountNodes(email);
+
                 Helpers.GUIRun(() -> {
 
                     free_space.setText(Helpers.formatBytes(_free_space));
@@ -376,10 +375,6 @@ public class UploadFileDialog extends javax.swing.JDialog {
         }
     }//GEN-LAST:event_email_comboboxItemStateChanged
 
-    private void email_comboboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_email_comboboxActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_email_comboboxActionPerformed
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextArea account_stats_textarea;
     private javax.swing.JComboBox<String> email_combobox;
@@ -394,4 +389,21 @@ public class UploadFileDialog extends javax.swing.JDialog {
     private javax.swing.JTextField remote_path;
     private javax.swing.JButton vamos_button;
     // End of variables declaration//GEN-END:variables
+
+    @Override
+    public void refresh() {
+        Helpers.GUIRun(() -> {
+            email_comboboxItemStateChanged(null);
+        });
+    }
+
+    @Override
+    public void enableR(boolean enable) {
+        Helpers.GUIRun(() -> {
+
+            progress.setVisible(!enable);
+            email_combobox.setEnabled(enable);
+
+        });
+    }
 }

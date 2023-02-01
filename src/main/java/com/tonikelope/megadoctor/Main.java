@@ -46,7 +46,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.69";
+    public final static String VERSION = "0.70";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -973,6 +973,8 @@ public class Main extends javax.swing.JFrame {
 
         _running_global_check = true;
 
+        String old_status = MAIN_WINDOW.getStatus_label().getText();
+
         Helpers.GUIRun(() -> {
 
             enableButtons(false);
@@ -981,7 +983,7 @@ public class Main extends javax.swing.JFrame {
 
         });
 
-        if (Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "CAUTION!! ALL CONTENT INSIDE <b>" + email + "</b> WILL BE <b>PERMANENTLY</b> DELETED.<br><br>ARE YOU SURE?") == 0 && Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "Forgive me for insisting... ARE YOU ABSOLUTELY SURE?") == 0) {
+        if (MEGA_ACCOUNTS.containsKey(email) && Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "CAUTION!! ALL CONTENT INSIDE <b>" + email + "</b> WILL BE <b>PERMANENTLY</b> DELETED.<br><br>ARE YOU SURE?") == 0 && Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "Forgive me for insisting... ARE YOU ABSOLUTELY SURE?") == 0) {
 
             login(email);
 
@@ -997,8 +999,12 @@ public class Main extends javax.swing.JFrame {
         Helpers.GUIRun(() -> {
 
             enableButtons(true);
-            MAIN_WINDOW.getProgressbar().setIndeterminate(false);
-            MAIN_WINDOW.getStatus_label().setText("");
+
+            if (old_status.isBlank()) {
+                MAIN_WINDOW.getProgressbar().setIndeterminate(false);
+            }
+
+            MAIN_WINDOW.getStatus_label().setText(old_status);
 
         });
 
@@ -1009,6 +1015,8 @@ public class Main extends javax.swing.JFrame {
     public void removeNodes(String text) {
 
         _running_global_check = true;
+
+        String old_status = MAIN_WINDOW.getStatus_label().getText();
 
         Helpers.GUIRun(() -> {
 
@@ -1051,7 +1059,11 @@ public class Main extends javax.swing.JFrame {
         Helpers.GUIRun(() -> {
 
             enableButtons(true);
-            MAIN_WINDOW.getProgressbar().setIndeterminate(false);
+
+            if (old_status.isBlank()) {
+                MAIN_WINDOW.getProgressbar().setIndeterminate(false);
+            }
+
             MAIN_WINDOW.getStatus_label().setText("");
 
         });
@@ -1062,6 +1074,8 @@ public class Main extends javax.swing.JFrame {
     public void forceRefreshAccount(String email, String reason, boolean notification, boolean login) {
 
         _running_global_check = true;
+
+        String old_status = MAIN_WINDOW.getStatus_label().getText();
 
         Helpers.GUIRun(() -> {
 
@@ -1114,7 +1128,11 @@ public class Main extends javax.swing.JFrame {
         Helpers.GUIRun(() -> {
 
             enableButtons(true);
-            MAIN_WINDOW.getProgressbar().setIndeterminate(false);
+
+            if (old_status.isBlank()) {
+                MAIN_WINDOW.getProgressbar().setIndeterminate(false);
+            }
+
             MAIN_WINDOW.getStatus_label().setText("");
 
         });
@@ -1204,7 +1222,7 @@ public class Main extends javax.swing.JFrame {
 
     }
 
-    private void parseAccountNodes(String email) {
+    public void parseAccountNodes(String email) {
 
         String ls = Helpers.runProcess(new String[]{"mega-ls", "-lr", "--show-handles"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 

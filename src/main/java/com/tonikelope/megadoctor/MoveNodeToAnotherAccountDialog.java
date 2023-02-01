@@ -20,7 +20,7 @@ import javax.swing.JFrame;
  *
  * @author tonikelope
  */
-public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog {
+public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog implements Refresheable {
 
     private volatile long _free_space = 0;
 
@@ -39,6 +39,8 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog {
     public MoveNodeToAnotherAccountDialog(java.awt.Frame parent, boolean modal, Set<String> skip_emails, boolean move) {
         super(parent, modal);
         initComponents();
+
+        Helpers.JTextFieldRegularPopupMenu.addRefreshableTo(account_stats_textarea, this);
 
         vamos_button.setEnabled(false);
 
@@ -79,7 +81,7 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog {
         vamos_button = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         account_stats_textarea = new javax.swing.JTextArea();
-        bar = new javax.swing.JProgressBar();
+        progress = new javax.swing.JProgressBar();
         free_space = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
@@ -140,7 +142,7 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog {
                         .addComponent(email_combobox, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(vamos_button))
-                    .addComponent(bar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(progress, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -149,7 +151,7 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog {
                 .addContainerGap()
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 421, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(bar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(progress, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(vamos_button)
@@ -178,8 +180,8 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog {
             vamos_button.setEnabled(false);
             account_stats_textarea.setText("");
             free_space.setText("");
-            bar.setIndeterminate(true);
-            bar.setVisible(true);
+            progress.setIndeterminate(true);
+            progress.setVisible(true);
 
             Helpers.threadRun(() -> {
 
@@ -198,7 +200,7 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog {
                     free_space.setText(Helpers.formatBytes(_free_space));
                     email_combobox.setEnabled(true);
                     vamos_button.setEnabled(true);
-                    bar.setVisible(false);
+                    progress.setVisible(false);
                     pack();
                     Helpers.setCenterOfParent((JFrame) getParent(), this);
                 });
@@ -208,17 +210,34 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog {
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
         // TODO add your handling code here:
-        if (!bar.isVisible()) {
+        if (!progress.isVisible()) {
             dispose();
         }
     }//GEN-LAST:event_formWindowClosing
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextArea account_stats_textarea;
-    private javax.swing.JProgressBar bar;
     private javax.swing.JComboBox<String> email_combobox;
     private javax.swing.JLabel free_space;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JProgressBar progress;
     private javax.swing.JButton vamos_button;
     // End of variables declaration//GEN-END:variables
+
+    @Override
+    public void refresh() {
+        Helpers.GUIRun(() -> {
+            email_comboboxItemStateChanged(null);
+        });
+    }
+
+    @Override
+    public void enableR(boolean enable) {
+        Helpers.GUIRun(() -> {
+
+            progress.setVisible(!enable);
+            email_combobox.setEnabled(enable);
+
+        });
+    }
 }

@@ -38,7 +38,7 @@
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
                       <Component id="vamos_button" min="-2" max="-2" attributes="0"/>
                   </Group>
-                  <Component id="bar" alignment="0" max="32767" attributes="0"/>
+                  <Component id="progress" alignment="0" max="32767" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
           </Group>
@@ -50,7 +50,7 @@
               <EmptySpace max="-2" attributes="0"/>
               <Component id="jScrollPane1" pref="421" max="32767" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
-              <Component id="bar" min="-2" max="-2" attributes="0"/>
+              <Component id="progress" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="1" attributes="0">
                   <Component id="vamos_button" max="-2" attributes="0"/>
@@ -137,7 +137,7 @@
         </Component>
       </SubComponents>
     </Container>
-    <Component class="javax.swing.JProgressBar" name="bar">
+    <Component class="javax.swing.JProgressBar" name="progress">
     </Component>
     <Component class="javax.swing.JLabel" name="free_space">
       <Properties>
