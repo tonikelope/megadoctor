@@ -27,7 +27,7 @@ public final class Transference extends javax.swing.JPanel {
 
     public static final int WAIT_TIMEOUT = 10;
     public static final int FOLDER_SIZE_WAIT = 1000;
-    public static final int SECURE_PAUSE_WAIT = 2000;
+    public static final int SECURE_PAUSE_WAIT = 3000;
 
     private volatile int _tag = -1;
     private volatile int _action;
@@ -246,6 +246,8 @@ public final class Transference extends javax.swing.JPanel {
         while (!(transfers = Helpers.runProcess(new String[]{"mega-transfers", "--show-completed", "--output-cols=TAG"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]).equals(old_transfers)) {
 
             old_transfers = transfers;
+
+            Helpers.runProcess(new String[]{"mega-transfers", "-pa"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
             try {
                 Thread.sleep(SECURE_PAUSE_WAIT);
@@ -663,6 +665,7 @@ public final class Transference extends javax.swing.JPanel {
         action.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
         action.setForeground(new java.awt.Color(0, 153, 255));
         action.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/right-arrow.png"))); // NOI18N
+        action.setText("(QUEUED)");
         action.setDoubleBuffered(true);
 
         remote_path.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
