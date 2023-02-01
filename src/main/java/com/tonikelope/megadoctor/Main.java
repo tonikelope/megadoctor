@@ -46,7 +46,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.73";
+    public final static String VERSION = "0.74";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -61,7 +61,7 @@ public class Main extends javax.swing.JFrame {
     public final static HashMap<String, Object[]> MEGA_NODES = new HashMap<>();
     private final static ArrayList<String[]> MEGA_ACCOUNTS_SPACE = new ArrayList<>();
     private final static ArrayList<String> MEGA_ACCOUNTS_LOGIN_ERROR = new ArrayList<>();
-    private volatile boolean _running_global_check = false;
+    private volatile boolean _running_main_action = false;
     private volatile boolean _aborting_global_check = false;
     private volatile boolean _closing = false;
     private volatile boolean _firstAccountsTextareaClick = false;
@@ -72,11 +72,11 @@ public class Main extends javax.swing.JFrame {
     private volatile String _last_email_force_refresh = null;
 
     public boolean busy() {
-        return Main.MAIN_WINDOW.isRunning_global_check() || Main.MAIN_WINDOW.isTransferences_running();
+        return Main.MAIN_WINDOW.isRunning_main_action() || Main.MAIN_WINDOW.isTransferences_running();
     }
 
-    public boolean isRunning_global_check() {
-        return _running_global_check;
+    public boolean isRunning_main_action() {
+        return _running_main_action;
     }
 
     public boolean isTransferences_running() {
@@ -200,9 +200,9 @@ public class Main extends javax.swing.JFrame {
 
                                 cancel_trans_button.setEnabled(_transferences_running);
 
-                                vamos_button.setEnabled(!_transferences_running);
+                                vamos_button.setEnabled(!busy() || vamos_button.getBackground() == Color.RED);
 
-                                cuentas_textarea.setEnabled(!_transferences_running);
+                                cuentas_textarea.setEnabled(!busy());
 
                             } else {
                                 _transferences_running = false;
@@ -211,9 +211,9 @@ public class Main extends javax.swing.JFrame {
 
                                 transferences_control_panel.setVisible(false);
 
-                                vamos_button.setEnabled(!_transferences_running);
+                                vamos_button.setEnabled(!busy() || vamos_button.getBackground() == Color.RED);
 
-                                cuentas_textarea.setEnabled(!_transferences_running);
+                                cuentas_textarea.setEnabled(!busy());
                             }
 
                         });
@@ -350,7 +350,7 @@ public class Main extends javax.swing.JFrame {
         Helpers.GUIRun(() -> {
             MAIN_WINDOW.getCuentas_textarea().setEnabled(enable);
             clear_log_button.setEnabled(enable);
-            MAIN_WINDOW.getVamos_button().setEnabled(enable);
+            MAIN_WINDOW.getVamos_button().setEnabled(enable || MAIN_WINDOW.getVamos_button().getBackground() == Color.RED);
             upload_button.setEnabled(enable && !MEGA_ACCOUNTS.isEmpty());
             MAIN_WINDOW.getSave_button().setEnabled(enable);
         });
@@ -358,7 +358,7 @@ public class Main extends javax.swing.JFrame {
 
     public void copyNodesToAnotherAccount(String text, final boolean move) {
 
-        _running_global_check = true;
+        _running_main_action = true;
 
         Helpers.GUIRun(() -> {
 
@@ -521,7 +521,7 @@ public class Main extends javax.swing.JFrame {
 
         });
 
-        _running_global_check = false;
+        _running_main_action = false;
     }
 
     public void bye() {
@@ -735,7 +735,7 @@ public class Main extends javax.swing.JFrame {
 
         });
 
-        _running_global_check = false;
+        _running_main_action = false;
     }
 
     public void moveNodesInsideAccount(String text) {
@@ -827,7 +827,7 @@ public class Main extends javax.swing.JFrame {
 
         });
 
-        _running_global_check = false;
+        _running_main_action = false;
     }
 
     public void renameNodes(String text) {
@@ -919,12 +919,12 @@ public class Main extends javax.swing.JFrame {
 
         });
 
-        _running_global_check = false;
+        _running_main_action = false;
     }
 
     public void exportNodes(String text, boolean enable) {
 
-        _running_global_check = true;
+        _running_main_action = true;
 
         Helpers.GUIRun(() -> {
 
@@ -981,12 +981,12 @@ public class Main extends javax.swing.JFrame {
 
         });
 
-        _running_global_check = false;
+        _running_main_action = false;
     }
 
     public void truncateAccount(String email) {
 
-        _running_global_check = true;
+        _running_main_action = true;
 
         String old_status = MAIN_WINDOW.getStatus_label().getText();
 
@@ -1023,13 +1023,13 @@ public class Main extends javax.swing.JFrame {
 
         });
 
-        _running_global_check = false;
+        _running_main_action = false;
 
     }
 
     public void removeNodes(String text) {
 
-        _running_global_check = true;
+        _running_main_action = true;
 
         String old_status = MAIN_WINDOW.getStatus_label().getText();
 
@@ -1083,12 +1083,12 @@ public class Main extends javax.swing.JFrame {
 
         });
 
-        _running_global_check = false;
+        _running_main_action = false;
     }
 
     public void forceRefreshAccount(String email, String reason, boolean notification, boolean login) {
 
-        _running_global_check = true;
+        _running_main_action = true;
 
         String old_status = MAIN_WINDOW.getStatus_label().getText();
 
@@ -1152,7 +1152,7 @@ public class Main extends javax.swing.JFrame {
 
         });
 
-        _running_global_check = false;
+        _running_main_action = false;
     }
 
     private void saveAccounts() {
@@ -1535,7 +1535,7 @@ public class Main extends javax.swing.JFrame {
 
         if (MEGA_CMD_VERSION != null) {
 
-            if (!_running_global_check) {
+            if (!_running_main_action) {
 
                 if (!_firstAccountsTextareaClick) {
                     _firstAccountsTextareaClick = true;
@@ -1543,7 +1543,7 @@ public class Main extends javax.swing.JFrame {
                     cuentas_textarea.setForeground(null);
                 }
 
-                _running_global_check = true;
+                _running_main_action = true;
                 cuentas_textarea.setEnabled(false);
                 vamos_button.setText("STOP");
                 vamos_button.setBackground(Color.red);
@@ -1682,7 +1682,7 @@ public class Main extends javax.swing.JFrame {
                         enableButtons(true);
                     });
 
-                    _running_global_check = false;
+                    _running_main_action = false;
                     _aborting_global_check = false;
                 });
 
@@ -1740,7 +1740,7 @@ public class Main extends javax.swing.JFrame {
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
         // TODO add your handling code here:
         if (!_closing) {
-            if (_transferences_running || _running_global_check || !"".equals(output_textarea.getText().trim())) {
+            if (_transferences_running || _running_main_action || !"".equals(output_textarea.getText().trim())) {
 
                 if (Helpers.mostrarMensajeInformativoSINO(this, "EXIT NOW?") == 0) {
 
@@ -1952,7 +1952,7 @@ public class Main extends javax.swing.JFrame {
 
     private void clear_log_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clear_log_buttonActionPerformed
         // TODO add your handling code here:
-        if (!_running_global_check && Helpers.mostrarMensajeInformativoSINO(this, "SURE?") == 0) {
+        if (!_running_main_action && Helpers.mostrarMensajeInformativoSINO(this, "SURE?") == 0) {
             output_textarea.setText("");
         }
     }//GEN-LAST:event_clear_log_buttonActionPerformed
