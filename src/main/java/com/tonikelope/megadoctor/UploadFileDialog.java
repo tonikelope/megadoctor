@@ -67,7 +67,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
             email_combobox.addItem(email);
         }
 
-        pack();
+        Helpers.smartPack(this);
 
     }
 
@@ -292,7 +292,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
             checkFreeSpace();
         }
 
-        pack();
+        Helpers.smartPack(this);
 
         Helpers.setCenterOfParent((JFrame) getParent(), this);
     }//GEN-LAST:event_local_file_buttonActionPerformed
@@ -322,7 +322,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
             checkFreeSpace();
         }
 
-        pack();
+        Helpers.smartPack(this);
 
         Helpers.setCenterOfParent((JFrame) getParent(), this);
     }//GEN-LAST:event_local_folder_buttonActionPerformed
@@ -364,7 +364,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                     local_file_button.setEnabled(true);
                     local_folder_button.setEnabled(true);
                     vamos_button.setEnabled(true);
-                    pack();
+                    Helpers.smartPack(this);
                     Helpers.setCenterOfParent((JFrame) getParent(), this);
 
                 });

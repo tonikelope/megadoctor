@@ -64,7 +64,7 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog implemen
 
         email_comboboxItemStateChanged(null);
 
-        pack();
+        Helpers.smartPack(this);
 
     }
 
@@ -201,7 +201,7 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog implemen
                     email_combobox.setEnabled(true);
                     vamos_button.setEnabled(true);
                     progress.setVisible(false);
-                    pack();
+                    Helpers.smartPack(this);
                     Helpers.setCenterOfParent((JFrame) getParent(), this);
                 });
             });

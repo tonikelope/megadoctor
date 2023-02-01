@@ -46,7 +46,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.71";
+    public final static String VERSION = "0.72";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -188,6 +188,10 @@ public class Main extends javax.swing.JFrame {
 
                                 cancel_trans_button.setEnabled(_transferences_running);
 
+                                vamos_button.setEnabled(!_transferences_running);
+
+                                cuentas_textarea.setEnabled(!_transferences_running);
+
                             } else {
                                 _transferences_running = false;
 
@@ -195,10 +199,9 @@ public class Main extends javax.swing.JFrame {
 
                                 transferences_control_panel.setVisible(false);
 
-                                if (!_running_global_check) {
-                                    vamos_button.setEnabled(true);
-                                    cuentas_textarea.setEnabled(true);
-                                }
+                                vamos_button.setEnabled(!_transferences_running);
+
+                                cuentas_textarea.setEnabled(!_transferences_running);
                             }
 
                         });

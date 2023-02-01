@@ -19,6 +19,7 @@ import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Point;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.io.BufferedReader;
 import java.io.File;
@@ -62,6 +63,14 @@ import javax.swing.undo.UndoManager;
  * @author tonikelope
  */
 public class Helpers {
+
+    public static void smartPack(Window w) {
+
+        if (w.getPreferredSize().getHeight() > w.getSize().getHeight() || w.getPreferredSize().getWidth() > w.getSize().getWidth()) {
+            w.pack();
+        }
+
+    }
 
     public static String formatBytes(Long bytes) {
 
