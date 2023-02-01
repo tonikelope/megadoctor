@@ -423,6 +423,8 @@ public class Helpers {
 
     public static class JTextFieldRegularPopupMenu {
 
+        public static JMenuItem refreshLastAccount = null;
+
         public static void addTo(JTextField txtField) {
             JPopupMenu popup = new JPopupMenu();
 
@@ -626,6 +628,18 @@ public class Helpers {
                     }
                 }
             };
+
+            Action forceRefreshLastAccountAction = new AbstractAction("REFRESH LAST ACCOUNT") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    if (Main.MAIN_WINDOW.getCuentas_textarea().isEnabled() && Main.MAIN_WINDOW.getLast_email_force_refresh() != null) {
+                        Helpers.threadRun(() -> {
+                            Main.MAIN_WINDOW.forceRefreshAccount(Main.MAIN_WINDOW.getLast_email_force_refresh(), "Force refresh", true, true);
+                        });
+                    }
+                }
+            };
+
             Action truncateAccountAction = new AbstractAction("TRUNCATE SELECTED ACCOUNT") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
@@ -729,6 +743,12 @@ public class Helpers {
             refreshAccount.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/refresh.png")));
 
             popup.add(refreshAccount);
+
+            refreshLastAccount = new JMenuItem(forceRefreshLastAccountAction);
+            refreshLastAccount.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/refresh.png")));
+            popup.add(refreshLastAccount);
+
+            refreshLastAccount.setEnabled(false);
 
             popup.addSeparator();
 

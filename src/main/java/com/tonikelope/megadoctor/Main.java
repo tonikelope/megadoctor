@@ -13,6 +13,7 @@ package com.tonikelope.megadoctor;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -45,7 +46,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.67";
+    public final static String VERSION = "0.68";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -68,6 +69,11 @@ public class Main extends javax.swing.JFrame {
     private volatile MoveNodeDialog _move_dialog = null;
     private volatile boolean _transferences_running = false;
     private volatile Transference _current_transference = null;
+    private volatile String _last_email_force_refresh = null;
+
+    public String getLast_email_force_refresh() {
+        return _last_email_force_refresh;
+    }
 
     public JTextArea getCuentas_textarea() {
         return cuentas_textarea;
@@ -228,7 +234,7 @@ public class Main extends javax.swing.JFrame {
             if (login_session_output.contains("Bad session ID")) {
 
                 Helpers.GUIRunAndWait(() -> {
-                    status_label.setForeground(Color.ORANGE);
+                    status_label.setForeground(Color.WHITE);
                 });
 
                 String login = Helpers.runProcess(new String[]{"mega-login", email, Helpers.escapeMEGAPassword(password)}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
@@ -325,16 +331,23 @@ public class Main extends javax.swing.JFrame {
         return session_output.replaceAll("^.+: +(.+)$", "$1").trim();
     }
 
+    private void enableButtons(boolean enable) {
+        Helpers.GUIRun(() -> {
+            MAIN_WINDOW.getCuentas_textarea().setEnabled(enable);
+            clear_log_button.setEnabled(enable);
+            MAIN_WINDOW.getVamos_button().setEnabled(enable);
+            upload_button.setEnabled(enable && !MEGA_ACCOUNTS.isEmpty());
+            MAIN_WINDOW.getSave_button().setEnabled(enable);
+        });
+    }
+
     public void copyNodesToAnotherAccount(String text, final boolean move) {
 
         _running_global_check = true;
 
         Helpers.GUIRun(() -> {
 
-            MAIN_WINDOW.getCuentas_textarea().setEnabled(false);
-            MAIN_WINDOW.getVamos_button().setEnabled(false);
-            upload_button.setEnabled(false);
-            MAIN_WINDOW.getSave_button().setEnabled(false);
+            enableButtons(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
             MAIN_WINDOW.getStatus_label().setText((move ? "MOVING" : "COPYING") + " SELECTED FOLDERS/FILES. PLEASE WAIT...");
 
@@ -486,11 +499,8 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.GUIRun(() -> {
 
-            MAIN_WINDOW.getCuentas_textarea().setEnabled(true);
-            MAIN_WINDOW.getVamos_button().setEnabled(true);
-            upload_button.setEnabled(true);
+            enableButtons(true);
             upload_button.setText("NEW UPLOAD");
-            MAIN_WINDOW.getSave_button().setEnabled(true);
             MAIN_WINDOW.getProgressbar().setIndeterminate(false);
             MAIN_WINDOW.getStatus_label().setText("");
 
@@ -618,10 +628,7 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.GUIRun(() -> {
 
-            MAIN_WINDOW.getCuentas_textarea().setEnabled(false);
-            MAIN_WINDOW.getVamos_button().setEnabled(false);
-            upload_button.setEnabled(false);
-            MAIN_WINDOW.getSave_button().setEnabled(false);
+            enableButtons(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
             MAIN_WINDOW.getStatus_label().setText("COPYING SELECTED FOLDERS/FILES. PLEASE WAIT...");
 
@@ -707,10 +714,7 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.GUIRun(() -> {
 
-            MAIN_WINDOW.getCuentas_textarea().setEnabled(true);
-            MAIN_WINDOW.getVamos_button().setEnabled(true);
-            upload_button.setEnabled(true);
-            MAIN_WINDOW.getSave_button().setEnabled(true);
+            enableButtons(true);
             MAIN_WINDOW.getProgressbar().setIndeterminate(false);
             MAIN_WINDOW.getStatus_label().setText("");
 
@@ -723,10 +727,7 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.GUIRun(() -> {
 
-            MAIN_WINDOW.getCuentas_textarea().setEnabled(false);
-            MAIN_WINDOW.getVamos_button().setEnabled(false);
-            upload_button.setEnabled(false);
-            MAIN_WINDOW.getSave_button().setEnabled(false);
+            enableButtons(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
             MAIN_WINDOW.getStatus_label().setText("MOVING SELECTED FOLDERS/FILES. PLEASE WAIT...");
 
@@ -805,10 +806,7 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.GUIRun(() -> {
 
-            MAIN_WINDOW.getCuentas_textarea().setEnabled(true);
-            MAIN_WINDOW.getVamos_button().setEnabled(true);
-            upload_button.setEnabled(true);
-            MAIN_WINDOW.getSave_button().setEnabled(true);
+            enableButtons(true);
             MAIN_WINDOW.getProgressbar().setIndeterminate(false);
             MAIN_WINDOW.getStatus_label().setText("");
 
@@ -821,10 +819,7 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.GUIRun(() -> {
 
-            MAIN_WINDOW.getCuentas_textarea().setEnabled(false);
-            MAIN_WINDOW.getVamos_button().setEnabled(false);
-            upload_button.setEnabled(false);
-            MAIN_WINDOW.getSave_button().setEnabled(false);
+            enableButtons(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
             MAIN_WINDOW.getStatus_label().setText("RENAMING SELECTED FOLDERS/FILES. PLEASE WAIT...");
 
@@ -903,10 +898,7 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.GUIRun(() -> {
 
-            MAIN_WINDOW.getCuentas_textarea().setEnabled(true);
-            MAIN_WINDOW.getVamos_button().setEnabled(true);
-            upload_button.setEnabled(true);
-            MAIN_WINDOW.getSave_button().setEnabled(true);
+            enableButtons(true);
             MAIN_WINDOW.getProgressbar().setIndeterminate(false);
             MAIN_WINDOW.getStatus_label().setText("");
 
@@ -921,9 +913,7 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.GUIRun(() -> {
 
-            MAIN_WINDOW.getCuentas_textarea().setEnabled(false);
-            MAIN_WINDOW.getVamos_button().setEnabled(false);
-            MAIN_WINDOW.getSave_button().setEnabled(false);
+            enableButtons(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
             MAIN_WINDOW.getStatus_label().setText((enable ? "ENABLING" : "DISABLING") + " PUBLIC LINK ON SELECTED FOLDERS/FILES. PLEASE WAIT...");
 
@@ -970,9 +960,7 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.GUIRun(() -> {
 
-            MAIN_WINDOW.getCuentas_textarea().setEnabled(true);
-            MAIN_WINDOW.getVamos_button().setEnabled(true);
-            MAIN_WINDOW.getSave_button().setEnabled(true);
+            enableButtons(true);
             MAIN_WINDOW.getProgressbar().setIndeterminate(false);
             MAIN_WINDOW.getStatus_label().setText("");
 
@@ -987,9 +975,7 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.GUIRun(() -> {
 
-            MAIN_WINDOW.getCuentas_textarea().setEnabled(false);
-            MAIN_WINDOW.getVamos_button().setEnabled(false);
-            MAIN_WINDOW.getSave_button().setEnabled(false);
+            enableButtons(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
             MAIN_WINDOW.getStatus_label().setText("TRUNCATING " + email + " PLEASE WAIT...");
 
@@ -1010,9 +996,7 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.GUIRun(() -> {
 
-            MAIN_WINDOW.getCuentas_textarea().setEnabled(true);
-            MAIN_WINDOW.getVamos_button().setEnabled(true);
-            MAIN_WINDOW.getSave_button().setEnabled(true);
+            enableButtons(true);
             MAIN_WINDOW.getProgressbar().setIndeterminate(false);
             MAIN_WINDOW.getStatus_label().setText("");
 
@@ -1028,9 +1012,7 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.GUIRun(() -> {
 
-            MAIN_WINDOW.getCuentas_textarea().setEnabled(false);
-            MAIN_WINDOW.getVamos_button().setEnabled(false);
-            MAIN_WINDOW.getSave_button().setEnabled(false);
+            enableButtons(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
             MAIN_WINDOW.getStatus_label().setText("DELETING FOLDERS/FILES. PLEASE WAIT...");
 
@@ -1068,9 +1050,7 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.GUIRun(() -> {
 
-            MAIN_WINDOW.getCuentas_textarea().setEnabled(true);
-            MAIN_WINDOW.getVamos_button().setEnabled(true);
-            MAIN_WINDOW.getSave_button().setEnabled(true);
+            enableButtons(true);
             MAIN_WINDOW.getProgressbar().setIndeterminate(false);
             MAIN_WINDOW.getStatus_label().setText("");
 
@@ -1085,9 +1065,7 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.GUIRun(() -> {
 
-            MAIN_WINDOW.getCuentas_textarea().setEnabled(false);
-            MAIN_WINDOW.getVamos_button().setEnabled(false);
-            MAIN_WINDOW.getSave_button().setEnabled(false);
+            enableButtons(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
             MAIN_WINDOW.getStatus_label().setText("REFRESHING " + email + " PLEASE WAIT...");
 
@@ -1119,6 +1097,12 @@ public class Main extends javax.swing.JFrame {
                 logout(true);
             }
 
+            _last_email_force_refresh = email;
+
+            Helpers.JTextFieldRegularPopupMenu.refreshLastAccount.setText("REFRESH LAST (" + email + ")");
+
+            Helpers.JTextFieldRegularPopupMenu.refreshLastAccount.setEnabled(true);
+
             if (notification) {
                 Helpers.mostrarMensajeInformativo(MAIN_WINDOW, email + " REFRESHED");
             }
@@ -1129,9 +1113,7 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.GUIRun(() -> {
 
-            MAIN_WINDOW.getCuentas_textarea().setEnabled(true);
-            MAIN_WINDOW.getVamos_button().setEnabled(true);
-            MAIN_WINDOW.getSave_button().setEnabled(true);
+            enableButtons(true);
             MAIN_WINDOW.getProgressbar().setIndeterminate(false);
             MAIN_WINDOW.getStatus_label().setText("");
 
@@ -1245,7 +1227,7 @@ public class Main extends javax.swing.JFrame {
     private void initComponents() {
 
         logo_label = new javax.swing.JLabel();
-        jScrollPane2 = new javax.swing.JScrollPane();
+        cuentas_scrollpanel = new javax.swing.JScrollPane();
         cuentas_textarea = new javax.swing.JTextArea();
         vamos_button = new javax.swing.JButton();
         status_label = new javax.swing.JLabel();
@@ -1261,6 +1243,7 @@ public class Main extends javax.swing.JFrame {
         clear_trans_button = new javax.swing.JButton();
         transferences = new javax.swing.JPanel();
         upload_button = new javax.swing.JButton();
+        clear_log_button = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu2 = new javax.swing.JMenu();
         session_menu = new javax.swing.JCheckBoxMenuItem();
@@ -1295,7 +1278,7 @@ public class Main extends javax.swing.JFrame {
                 cuentas_textareaMouseReleased(evt);
             }
         });
-        jScrollPane2.setViewportView(cuentas_textarea);
+        cuentas_scrollpanel.setViewportView(cuentas_textarea);
 
         vamos_button.setBackground(new java.awt.Color(0, 153, 0));
         vamos_button.setFont(new java.awt.Font("Noto Sans", 1, 48)); // NOI18N
@@ -1326,6 +1309,11 @@ public class Main extends javax.swing.JFrame {
         });
 
         tabbed_panel.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
+        tabbed_panel.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tabbed_panelMouseClicked(evt);
+            }
+        });
 
         output_textarea.setEditable(false);
         output_textarea.setBackground(new java.awt.Color(102, 102, 102));
@@ -1418,6 +1406,17 @@ public class Main extends javax.swing.JFrame {
             }
         });
 
+        clear_log_button.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
+        clear_log_button.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/trash.png"))); // NOI18N
+        clear_log_button.setText("CLEAR LOG");
+        clear_log_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        clear_log_button.setDoubleBuffered(true);
+        clear_log_button.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                clear_log_buttonActionPerformed(evt);
+            }
+        });
+
         jMenuBar1.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
 
         jMenu2.setText("Options");
@@ -1462,8 +1461,10 @@ public class Main extends javax.swing.JFrame {
                             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                                 .addComponent(upload_button)
                                 .addGap(18, 18, 18)
-                                .addComponent(save_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
-                    .addComponent(jScrollPane2)
+                                .addComponent(save_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(clear_log_button))))
+                    .addComponent(cuentas_scrollpanel)
                     .addComponent(progressbar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(tabbed_panel, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
                 .addContainerGap())
@@ -1477,15 +1478,17 @@ public class Main extends javax.swing.JFrame {
                         .addContainerGap()
                         .addComponent(vamos_button)
                         .addGap(18, 18, 18)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(save_button)
-                            .addComponent(upload_button))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(save_button)
+                                .addComponent(upload_button))
+                            .addComponent(clear_log_button, javax.swing.GroupLayout.Alignment.TRAILING))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(status_label)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(progressbar, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 185, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(cuentas_scrollpanel, javax.swing.GroupLayout.PREFERRED_SIZE, 185, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(tabbed_panel)
                 .addContainerGap())
@@ -1509,10 +1512,10 @@ public class Main extends javax.swing.JFrame {
 
                 _running_global_check = true;
                 cuentas_textarea.setEnabled(false);
-                save_button.setEnabled(false);
-                upload_button.setEnabled(false);
                 vamos_button.setText("STOP");
                 vamos_button.setBackground(Color.red);
+
+                enableButtons(false);
 
                 Helpers.threadRun(() -> {
                     final String regex = "(.*?)#(.+)";
@@ -1641,11 +1644,9 @@ public class Main extends javax.swing.JFrame {
                         progressbar.setValue(0);
                         vamos_button.setText("CHECK ACCOUNTS");
                         vamos_button.setBackground(new Color(0, 153, 0));
-                        vamos_button.setEnabled(true);
-                        upload_button.setEnabled(!MEGA_ACCOUNTS.isEmpty());
                         cuentas_textarea.setEnabled(true);
                         status_label.setText("");
-                        save_button.setEnabled(true);
+                        enableButtons(true);
                     });
 
                     _running_global_check = false;
@@ -1913,6 +1914,22 @@ public class Main extends javax.swing.JFrame {
 
     }//GEN-LAST:event_cancel_trans_buttonActionPerformed
 
+    private void tabbed_panelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tabbed_panelMouseClicked
+        // TODO add your handling code here:
+        if (evt.getClickCount() == 2 && evt.getButton() == MouseEvent.BUTTON1) {
+            cuentas_scrollpanel.setVisible(!cuentas_scrollpanel.isVisible());
+            revalidate();
+            repaint();
+        }
+    }//GEN-LAST:event_tabbed_panelMouseClicked
+
+    private void clear_log_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clear_log_buttonActionPerformed
+        // TODO add your handling code here:
+        if (!_running_global_check && Helpers.mostrarMensajeInformativoSINO(this, "SURE?") == 0) {
+            output_textarea.setText("");
+        }
+    }//GEN-LAST:event_clear_log_buttonActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -1952,7 +1969,9 @@ public class Main extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton cancel_trans_button;
+    private javax.swing.JButton clear_log_button;
     private javax.swing.JButton clear_trans_button;
+    private javax.swing.JScrollPane cuentas_scrollpanel;
     private javax.swing.JTextArea cuentas_textarea;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
@@ -1960,7 +1979,6 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JLabel logo_label;
     private javax.swing.JTextArea output_textarea;
     private javax.swing.JProgressBar progressbar;

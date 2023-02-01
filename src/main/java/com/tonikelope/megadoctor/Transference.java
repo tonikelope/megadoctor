@@ -235,7 +235,7 @@ public final class Transference extends javax.swing.JPanel {
     private void securePauseAllTransfers() {
         Helpers.runProcess(new String[]{"mega-transfers", "-pa"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-        String completed, old_completed = Helpers.runProcess(new String[]{"mega-transfers", "--show-completed", "--output-cols=TAG"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+        String transfers, old_transfers = Helpers.runProcess(new String[]{"mega-transfers", "--show-completed", "--output-cols=TAG"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
         try {
             Thread.sleep(SECURE_PAUSE_WAIT);
@@ -243,9 +243,9 @@ public final class Transference extends javax.swing.JPanel {
             Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        while (!(completed = Helpers.runProcess(new String[]{"mega-transfers", "--show-completed", "--output-cols=TAG"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]).equals(old_completed)) {
+        while (!(transfers = Helpers.runProcess(new String[]{"mega-transfers", "--show-completed", "--output-cols=TAG"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]).equals(old_transfers)) {
 
-            old_completed = completed;
+            old_transfers = transfers;
 
             try {
                 Thread.sleep(SECURE_PAUSE_WAIT);
