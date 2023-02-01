@@ -46,7 +46,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.75";
+    public final static String VERSION = "0.76";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -62,6 +62,7 @@ public class Main extends javax.swing.JFrame {
     private final static ArrayList<String[]> MEGA_ACCOUNTS_SPACE = new ArrayList<>();
     private final static ArrayList<String> MEGA_ACCOUNTS_LOGIN_ERROR = new ArrayList<>();
     private volatile boolean _running_main_action = false;
+    private volatile boolean _running_global_check = false;
     private volatile boolean _aborting_global_check = false;
     private volatile boolean _closing = false;
     private volatile boolean _firstAccountsTextareaClick = false;
@@ -72,7 +73,15 @@ public class Main extends javax.swing.JFrame {
     private volatile String _last_email_force_refresh = null;
 
     public boolean busy() {
-        return Main.MAIN_WINDOW.isRunning_main_action() || Main.MAIN_WINDOW.isTransferences_running();
+        return isRunning_global_check() || isRunning_main_action() || isTransferences_running();
+    }
+
+    public boolean isRunning_global_check() {
+        return _running_global_check;
+    }
+
+    public boolean isAborting_global_check() {
+        return _aborting_global_check;
     }
 
     public boolean isRunning_main_action() {
@@ -200,7 +209,7 @@ public class Main extends javax.swing.JFrame {
 
                                 cancel_trans_button.setEnabled(_transferences_running);
 
-                                vamos_button.setEnabled(!busy() || vamos_button.getBackground() == Color.RED);
+                                vamos_button.setEnabled(!busy() || (isRunning_global_check() && !isAborting_global_check()));
 
                                 cuentas_textarea.setEnabled(!busy());
 
@@ -211,7 +220,7 @@ public class Main extends javax.swing.JFrame {
 
                                 transferences_control_panel.setVisible(false);
 
-                                vamos_button.setEnabled(!busy() || vamos_button.getBackground() == Color.RED);
+                                vamos_button.setEnabled(!busy() || (isRunning_global_check() && !isAborting_global_check()));
 
                                 cuentas_textarea.setEnabled(!busy());
                             }
@@ -246,17 +255,17 @@ public class Main extends javax.swing.JFrame {
 
             String login_session_output = Helpers.runProcess(new String[]{"mega-login", MEGA_SESSIONS.get(email)}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-            if (login_session_output.contains("Bad session ID")) {
+            if (login_session_output.startsWith("[API:err:")) {
 
                 Helpers.GUIRunAndWait(() -> {
-                    status_label.setForeground(Color.WHITE);
+                    status_label.setForeground(Color.DARK_GRAY);
                 });
 
                 String login = Helpers.runProcess(new String[]{"mega-login", email, Helpers.escapeMEGAPassword(password)}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-                if (login.contains("failed")) {
+                if (login.startsWith("[API:err:")) {
                     Helpers.GUIRunAndWait(() -> {
-                        status_label.setForeground(Color.RED);
+                        status_label.setForeground(Color.BLACK);
                     });
                     return false;
                 }
@@ -266,9 +275,9 @@ public class Main extends javax.swing.JFrame {
 
             String login = Helpers.runProcess(new String[]{"mega-login", email, Helpers.escapeMEGAPassword(password)}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-            if (login.contains("Login failed")) {
+            if (login.startsWith("[API:err:")) {
                 Helpers.GUIRunAndWait(() -> {
-                    status_label.setForeground(Color.RED);
+                    status_label.setForeground(Color.BLACK);
                 });
                 return false;
             }
@@ -350,7 +359,7 @@ public class Main extends javax.swing.JFrame {
         Helpers.GUIRun(() -> {
             MAIN_WINDOW.getCuentas_textarea().setEnabled(enable);
             clear_log_button.setEnabled(enable);
-            MAIN_WINDOW.getVamos_button().setEnabled(enable || MAIN_WINDOW.getVamos_button().getBackground() == Color.RED);
+            MAIN_WINDOW.getVamos_button().setEnabled(enable || isRunning_global_check());
             upload_button.setEnabled(enable && !MEGA_ACCOUNTS.isEmpty());
             MAIN_WINDOW.getSave_button().setEnabled(enable);
         });
@@ -1537,7 +1546,7 @@ public class Main extends javax.swing.JFrame {
 
         if (MEGA_CMD_VERSION != null) {
 
-            if (!_running_main_action) {
+            if (!isRunning_global_check()) {
 
                 if (!_firstAccountsTextareaClick) {
                     _firstAccountsTextareaClick = true;
@@ -1545,7 +1554,8 @@ public class Main extends javax.swing.JFrame {
                     cuentas_textarea.setForeground(null);
                 }
 
-                _running_main_action = true;
+                _running_global_check = true;
+                _aborting_global_check = false;
                 cuentas_textarea.setEnabled(false);
                 vamos_button.setText("STOP");
                 vamos_button.setBackground(Color.red);
@@ -1626,7 +1636,7 @@ public class Main extends javax.swing.JFrame {
 
                             });
 
-                            if (_aborting_global_check) {
+                            if (isAborting_global_check()) {
                                 break;
                             }
 
@@ -1669,7 +1679,7 @@ public class Main extends javax.swing.JFrame {
 
                         });
 
-                        Helpers.mostrarMensajeInformativo(this, _aborting_global_check ? "CANCELED!" : "DONE");
+                        Helpers.mostrarMensajeInformativo(this, !isRunning_global_check() ? "CANCELED!" : "DONE");
 
                     } else {
                         Helpers.mostrarMensajeInformativo(this, "ALL ACCOUNTS REFRESHED");
@@ -1684,11 +1694,11 @@ public class Main extends javax.swing.JFrame {
                         enableButtons(true);
                     });
 
-                    _running_main_action = false;
+                    _running_global_check = false;
                     _aborting_global_check = false;
                 });
 
-            } else if (!_aborting_global_check) {
+            } else if (isRunning_global_check()) {
                 if (Helpers.mostrarMensajeInformativoSINO(this, "SURE?") == 0) {
                     _aborting_global_check = true;
                     Helpers.GUIRun(() -> {
@@ -1742,7 +1752,7 @@ public class Main extends javax.swing.JFrame {
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
         // TODO add your handling code here:
         if (!_closing) {
-            if (_transferences_running || _running_main_action || !"".equals(output_textarea.getText().trim())) {
+            if (busy() || !"".equals(output_textarea.getText().trim())) {
 
                 if (Helpers.mostrarMensajeInformativoSINO(this, "EXIT NOW?") == 0) {
 
@@ -1954,7 +1964,7 @@ public class Main extends javax.swing.JFrame {
 
     private void clear_log_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clear_log_buttonActionPerformed
         // TODO add your handling code here:
-        if (!_running_main_action && Helpers.mostrarMensajeInformativoSINO(this, "SURE?") == 0) {
+        if (!busy() && Helpers.mostrarMensajeInformativoSINO(this, "SURE?") == 0) {
             output_textarea.setText("");
         }
     }//GEN-LAST:event_clear_log_buttonActionPerformed
