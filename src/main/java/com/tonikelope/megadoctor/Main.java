@@ -46,7 +46,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.74";
+    public final static String VERSION = "0.75";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -623,6 +623,8 @@ public class Main extends javax.swing.JFrame {
                                 transferences.revalidate();
                                 transferences.repaint();
                                 tabbed_panel.setSelectedIndex(1);
+                                vamos_button.setEnabled(false);
+                                cuentas_textarea.setEnabled(false);
 
                             } catch (Exception ex) {
                                 Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
