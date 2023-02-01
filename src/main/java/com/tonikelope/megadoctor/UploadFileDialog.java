@@ -16,7 +16,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import javax.swing.JFileChooser;
-import javax.swing.JFrame;
 
 /**
  *
@@ -67,7 +66,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
             email_combobox.addItem(email);
         }
 
-        Helpers.smartPack(this);
+        pack();
 
     }
 
@@ -293,8 +292,6 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         }
 
         Helpers.smartPack(this);
-
-        Helpers.setCenterOfParent((JFrame) getParent(), this);
     }//GEN-LAST:event_local_file_buttonActionPerformed
 
     private void local_folder_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_local_folder_buttonActionPerformed
@@ -323,8 +320,6 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         }
 
         Helpers.smartPack(this);
-
-        Helpers.setCenterOfParent((JFrame) getParent(), this);
     }//GEN-LAST:event_local_folder_buttonActionPerformed
 
     private void email_comboboxItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_email_comboboxItemStateChanged
@@ -365,7 +360,6 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                     local_folder_button.setEnabled(true);
                     vamos_button.setEnabled(true);
                     Helpers.smartPack(this);
-                    Helpers.setCenterOfParent((JFrame) getParent(), this);
 
                 });
 

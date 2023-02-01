@@ -66,9 +66,15 @@ public class Helpers {
 
     public static void smartPack(Window w) {
 
-        if (w.getPreferredSize().getHeight() > w.getSize().getHeight() || w.getPreferredSize().getWidth() > w.getSize().getWidth()) {
-            w.pack();
-        }
+        Helpers.GUIRun(() -> {
+            if (w.getPreferredSize().getHeight() > w.getSize().getHeight() || w.getPreferredSize().getWidth() > w.getSize().getWidth()) {
+                w.pack();
+            }
+
+            w.revalidate();
+
+            w.repaint();
+        });
 
     }
 
