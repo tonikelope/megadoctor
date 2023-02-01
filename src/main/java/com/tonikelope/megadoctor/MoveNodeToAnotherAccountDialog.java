@@ -14,12 +14,15 @@ import static com.tonikelope.megadoctor.Main.MEGA_CMD_WINDOWS_PATH;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Set;
+import javax.swing.JFrame;
 
 /**
  *
  * @author tonikelope
  */
 public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog {
+
+    private volatile long _free_space = 0;
 
     public String getSelected_email() {
         return selected_email;
@@ -77,6 +80,7 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog {
         jScrollPane1 = new javax.swing.JScrollPane();
         account_stats_textarea = new javax.swing.JTextArea();
         bar = new javax.swing.JProgressBar();
+        free_space = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle("DESTINATION ACCOUNT");
@@ -118,6 +122,10 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog {
         account_stats_textarea.setDoubleBuffered(true);
         jScrollPane1.setViewportView(account_stats_textarea);
 
+        free_space.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
+        free_space.setText("---");
+        free_space.setDoubleBuffered(true);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -127,6 +135,8 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
+                        .addComponent(free_space)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(email_combobox, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(vamos_button))
@@ -137,13 +147,15 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(bar, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 421, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                .addComponent(bar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(vamos_button)
-                    .addComponent(email_combobox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(email_combobox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(free_space)))
                 .addContainerGap())
         );
 
@@ -165,8 +177,9 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog {
             email_combobox.setEnabled(false);
             vamos_button.setEnabled(false);
             account_stats_textarea.setText("");
-            bar.setVisible(true);
+            free_space.setText("");
             bar.setIndeterminate(true);
+            bar.setVisible(true);
 
             Helpers.threadRun(() -> {
 
@@ -176,15 +189,18 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog {
 
                 String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-                Main.MAIN_WINDOW.logout(true);
+                _free_space = Helpers.getAccountFreeSpace(email);
 
-                Helpers.GUIRunAndWait(() -> {
+                Helpers.GUIRun(() -> {
 
                     account_stats_textarea.setText("[" + email + "] \n\n" + df + "\n" + ls + "\n\n");
                     account_stats_textarea.setCaretPosition(0);
+                    free_space.setText(Helpers.formatBytes(_free_space));
                     email_combobox.setEnabled(true);
                     vamos_button.setEnabled(true);
                     bar.setVisible(false);
+                    pack();
+                    Helpers.setCenterOfParent((JFrame) getParent(), this);
                 });
             });
         }
@@ -192,7 +208,7 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog {
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
         // TODO add your handling code here:
-        if (vamos_button.isEnabled()) {
+        if (!bar.isVisible()) {
             dispose();
         }
     }//GEN-LAST:event_formWindowClosing
@@ -201,6 +217,7 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog {
     private javax.swing.JTextArea account_stats_textarea;
     private javax.swing.JProgressBar bar;
     private javax.swing.JComboBox<String> email_combobox;
+    private javax.swing.JLabel free_space;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JButton vamos_button;
     // End of variables declaration//GEN-END:variables

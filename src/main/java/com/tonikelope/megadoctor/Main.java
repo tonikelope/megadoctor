@@ -46,7 +46,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.68";
+    public final static String VERSION = "0.69";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -1831,19 +1831,13 @@ public class Main extends javax.swing.JFrame {
                 Helpers.GUIRunAndWait(() -> {
                     if (transferences.getComponentCount() > 0) {
 
-                        ArrayList<Component> finished = new ArrayList<>();
-
                         for (Component t : transferences.getComponents()) {
 
                             Transference trans = (Transference) t;
 
                             if (trans.isFinished()) {
-                                finished.add(trans);
+                                transferences.remove(t);
                             }
-                        }
-
-                        for (Component t : finished) {
-                            transferences.remove(t);
                         }
 
                         transferences.revalidate();
