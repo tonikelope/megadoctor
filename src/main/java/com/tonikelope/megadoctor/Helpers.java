@@ -636,7 +636,13 @@ public class Helpers {
                 public void actionPerformed(ActionEvent ae) {
                     if (txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
                         Helpers.threadRun(() -> {
-                            Main.MAIN_WINDOW.forceRefreshAccount(txtArea.getSelectedText().trim(), "Force refresh", true, true);
+
+                            String email = Helpers.extractFirstEmailFromtext(txtArea.getSelectedText());
+
+                            if (email != null) {
+
+                                Main.MAIN_WINDOW.forceRefreshAccount(email, "Force refresh", true, true);
+                            }
                         });
                     }
                 }
