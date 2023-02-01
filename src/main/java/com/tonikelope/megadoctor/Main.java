@@ -46,7 +46,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.72";
+    public final static String VERSION = "0.73";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -70,6 +70,18 @@ public class Main extends javax.swing.JFrame {
     private volatile boolean _transferences_running = false;
     private volatile Transference _current_transference = null;
     private volatile String _last_email_force_refresh = null;
+
+    public boolean busy() {
+        return Main.MAIN_WINDOW.isRunning_global_check() || Main.MAIN_WINDOW.isTransferences_running();
+    }
+
+    public boolean isRunning_global_check() {
+        return _running_global_check;
+    }
+
+    public boolean isTransferences_running() {
+        return _transferences_running;
+    }
 
     public String getLast_email_force_refresh() {
         return _last_email_force_refresh;
@@ -956,7 +968,7 @@ public class Main extends javax.swing.JFrame {
 
             logout(true);
 
-            Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL SELECTED FOLDERS/FILES" + (enable ? " PUBLIC LINKS GENERATED" : "PUBLIC LINKS REMOVED"));
+            Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL SELECTED FOLDERS/FILES " + (enable ? "PUBLIC LINKS GENERATED" : "PUBLIC LINKS REMOVED"));
         } else if (nodesToExport.isEmpty()) {
             Helpers.mostrarMensajeError(MAIN_WINDOW, "NO FOLDERS/FILES SELECTED (you must select with your mouse text that contains some H:xxxxxxxx MEGA NODE)");
         }

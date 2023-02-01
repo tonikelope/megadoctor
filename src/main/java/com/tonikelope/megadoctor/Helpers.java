@@ -563,7 +563,7 @@ public class Helpers {
             Action copyInsideMEGANodesAction = new AbstractAction("COPY SELECTED MEGA FOLDERS/FILES (INSIDE THE ACCOUNT)") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
-                    if (txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                    if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
                         Helpers.threadRun(() -> {
                             Main.MAIN_WINDOW.copyNodesInsideAccount(txtArea.getSelectedText());
                         });
@@ -573,7 +573,7 @@ public class Helpers {
             Action moveInsideMEGANodesAction = new AbstractAction("MOVE SELECTED MEGA FOLDERS/FILES (INSIDE THE ACCOUNT)") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
-                    if (txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                    if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
                         Helpers.threadRun(() -> {
                             Main.MAIN_WINDOW.moveNodesInsideAccount(txtArea.getSelectedText());
                         });
@@ -583,7 +583,7 @@ public class Helpers {
             Action removeMEGANodesAction = new AbstractAction("DELETE SELECTED MEGA FOLDERS/FILES") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
-                    if (txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                    if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
                         Helpers.threadRun(() -> {
                             Main.MAIN_WINDOW.removeNodes(txtArea.getSelectedText());
                         });
@@ -593,7 +593,7 @@ public class Helpers {
             Action copyMEGANodesAction = new AbstractAction("COPY SELECTED MEGA FOLDERS/FILES TO ANOTHER ACCOUNT") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
-                    if (txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                    if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
                         Helpers.threadRun(() -> {
                             Main.MAIN_WINDOW.copyNodesToAnotherAccount(txtArea.getSelectedText(), false);
                         });
@@ -603,7 +603,7 @@ public class Helpers {
             Action moveMEGANodesAction = new AbstractAction("MOVE SELECTED MEGA FOLDERS/FILES TO ANOTHER ACCOUNT") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
-                    if (txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                    if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
                         Helpers.threadRun(() -> {
                             Main.MAIN_WINDOW.copyNodesToAnotherAccount(txtArea.getSelectedText(), true);
                         });
@@ -613,7 +613,7 @@ public class Helpers {
             Action renameMEGANodesAction = new AbstractAction("RENAME SELECTED MEGA FOLDERS/FILES") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
-                    if (txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                    if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
                         Helpers.threadRun(() -> {
                             Main.MAIN_WINDOW.renameNodes(txtArea.getSelectedText());
                         });
@@ -623,7 +623,7 @@ public class Helpers {
             Action enableExporMEGANodesAction = new AbstractAction("ENABLE PUBLIC LINK ON SELECTED MEGA FOLDERS/FILES") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
-                    if (txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                    if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
                         Helpers.threadRun(() -> {
                             Main.MAIN_WINDOW.exportNodes(txtArea.getSelectedText(), true);
                         });
@@ -633,7 +633,7 @@ public class Helpers {
             Action disableExporMEGANodesAction = new AbstractAction("DISABLE PUBLIC LINK ON SELECTED MEGA FOLDERS/FILES") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
-                    if (txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                    if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
                         Helpers.threadRun(() -> {
                             Main.MAIN_WINDOW.exportNodes(txtArea.getSelectedText(), false);
                         });
@@ -643,7 +643,7 @@ public class Helpers {
             Action forceRefreshAccountAction = new AbstractAction("REFRESH SELECTED ACCOUNT") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
-                    if (txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                    if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
                         Helpers.threadRun(() -> {
 
                             String email = Helpers.extractFirstEmailFromtext(txtArea.getSelectedText());
@@ -660,7 +660,7 @@ public class Helpers {
             Action forceRefreshLastAccountAction = new AbstractAction("REFRESH LAST ACCOUNT") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
-                    if (txtArea.isEnabled() && Main.MAIN_WINDOW.getLast_email_force_refresh() != null) {
+                    if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && Main.MAIN_WINDOW.getLast_email_force_refresh() != null) {
                         Helpers.threadRun(() -> {
                             Main.MAIN_WINDOW.forceRefreshAccount(Main.MAIN_WINDOW.getLast_email_force_refresh(), "Force refresh", true, true);
                         });
@@ -671,7 +671,7 @@ public class Helpers {
             Action truncateAccountAction = new AbstractAction("TRUNCATE SELECTED ACCOUNT") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
-                    if (txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                    if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
                         Helpers.threadRun(() -> {
                             String email = Helpers.extractFirstEmailFromtext(txtArea.getSelectedText());
 
