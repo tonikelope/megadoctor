@@ -262,7 +262,7 @@ public final class Transference extends javax.swing.JPanel {
         synchronized (TRANSFERENCES_LOCK) {
 
             Helpers.GUIRun(() -> {
-                action.setText("(--- PAUSING... ---)");
+                action.setText("(PAUSING...)");
             });
 
             securePauseAllTransfers();

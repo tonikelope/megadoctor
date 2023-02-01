@@ -45,8 +45,8 @@ import javax.swing.JTextArea;
  * @author tonikelope
  */
 public class Main extends javax.swing.JFrame {
-
-    public final static String VERSION = "0.77";
+    
+    public final static String VERSION = "0.78";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -71,59 +71,59 @@ public class Main extends javax.swing.JFrame {
     private volatile boolean _transferences_running = false;
     private volatile Transference _current_transference = null;
     private volatile String _last_email_force_refresh = null;
-
+    
     public boolean busy() {
         return isRunning_global_check() || isRunning_main_action() || isTransferences_running();
     }
-
+    
     public boolean isRunning_global_check() {
         return _running_global_check;
     }
-
+    
     public boolean isAborting_global_check() {
         return _aborting_global_check;
     }
-
+    
     public boolean isRunning_main_action() {
         return _running_main_action;
     }
-
+    
     public boolean isTransferences_running() {
         return _transferences_running;
     }
-
+    
     public String getLast_email_force_refresh() {
         return _last_email_force_refresh;
     }
-
+    
     public JTextArea getCuentas_textarea() {
         return cuentas_textarea;
     }
-
+    
     public JTextArea getOutput_textarea() {
         return output_textarea;
     }
-
+    
     public JProgressBar getProgressbar() {
         return progressbar;
     }
-
+    
     public JButton getSave_button() {
         return save_button;
     }
-
+    
     public JLabel getStatus_label() {
         return status_label;
     }
-
+    
     public JButton getVamos_button() {
         return vamos_button;
     }
-
+    
     public JPanel getTransferences() {
         return transferences;
     }
-
+    
     public Transference getCurrent_transference() {
         return _current_transference;
     }
@@ -139,33 +139,33 @@ public class Main extends javax.swing.JFrame {
         upload_button.setEnabled(false);
         transf_scroll.getVerticalScrollBar().setUnitIncrement(20);
         setTitle("MegaDoctor " + VERSION);
-
+        
         pack();
-
+        
         Helpers.threadRun(() -> {
-
+            
             Helpers.GUIRun(() -> {
                 status_label.setText("Checking if MEGACMD is present...");
                 setEnabled(false);
             });
-
+            
             MEGA_CMD_VERSION = Helpers.runProcess(new String[]{"mega-version"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
+            
             Helpers.GUIRun(() -> {
                 setEnabled(true);
                 status_label.setText("");
             });
-
+            
             if (MEGA_CMD_VERSION == null || "".equals(MEGA_CMD_VERSION)) {
                 Helpers.mostrarMensajeError(this, "MEGA CMD IS REQUIRED");
                 Helpers.openBrowserURLAndWait(MEGA_CMD_URL);
                 System.exit(1);
             }
-
+            
             Helpers.threadRun(() -> {
-
+                
                 while (!_closing) {
-
+                    
                     synchronized (TRANSFERENCES_LOCK) {
                         try {
                             TRANSFERENCES_LOCK.wait(1000);
@@ -175,29 +175,29 @@ public class Main extends javax.swing.JFrame {
                     }
                     synchronized (TRANSFERENCES_LOCK) {
                         Helpers.GUIRunAndWait(() -> {
-
+                            
                             if (transferences.getComponentCount() > 0) {
-
+                                
                                 transferences_control_panel.setVisible(true);
-
+                                
                                 _transferences_running = false;
-
+                                
                                 for (Component t : transferences.getComponents()) {
-
+                                    
                                     Transference trans = (Transference) t;
-
+                                    
                                     if (trans.isRunning()) {
                                         _transferences_running = true;
                                         _current_transference = trans;
                                         break;
                                     }
                                 }
-
+                                
                                 if (!_transferences_running) {
                                     for (Component t : transferences.getComponents()) {
-
+                                        
                                         Transference trans = (Transference) t;
-
+                                        
                                         if (!trans.isRunning() && !trans.isFinished() && !trans.isCanceled()) {
                                             _transferences_running = true;
                                             _current_transference = trans;
@@ -206,63 +206,63 @@ public class Main extends javax.swing.JFrame {
                                         }
                                     }
                                 }
-
+                                
                                 cancel_trans_button.setEnabled(_transferences_running);
-
+                                
                                 vamos_button.setEnabled(!busy() || (isRunning_global_check() && !isAborting_global_check()));
-
+                                
                                 cuentas_textarea.setEnabled(!busy());
-
+                                
                             } else {
                                 _transferences_running = false;
-
+                                
                                 _current_transference = null;
-
+                                
                                 transferences_control_panel.setVisible(false);
-
+                                
                                 vamos_button.setEnabled(!busy() || (isRunning_global_check() && !isAborting_global_check()));
-
+                                
                                 cuentas_textarea.setEnabled(!busy());
                             }
-
+                            
                         });
                     }
                 }
-
+                
             });
-
+            
         });
-
+        
     }
-
+    
     public boolean login(String email) {
-
+        
         if (Helpers.megaWhoami().equals(email.toLowerCase())) {
             return true;
         }
-
+        
         logout(true);
-
+        
         String session = MEGA_SESSIONS.get(email);
-
+        
         String password = MEGA_ACCOUNTS.get(email);
-
+        
         if (session != null) {
-
+            
             Helpers.GUIRunAndWait(() -> {
                 status_label.setForeground(new Color(0, 153, 0));
             });
-
+            
             String login_session_output = Helpers.runProcess(new String[]{"mega-login", MEGA_SESSIONS.get(email)}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
+            
             if (login_session_output.startsWith("[API:err:")) {
-
+                
                 Helpers.GUIRunAndWait(() -> {
                     status_label.setForeground(Color.DARK_GRAY);
                 });
-
+                
                 String login = Helpers.runProcess(new String[]{"mega-login", email, Helpers.escapeMEGAPassword(password)}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
+                
                 if (login.startsWith("[API:err:")) {
                     Helpers.GUIRunAndWait(() -> {
                         status_label.setForeground(Color.BLACK);
@@ -270,11 +270,11 @@ public class Main extends javax.swing.JFrame {
                     return false;
                 }
             }
-
+            
         } else {
-
+            
             String login = Helpers.runProcess(new String[]{"mega-login", email, Helpers.escapeMEGAPassword(password)}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
+            
             if (login.startsWith("[API:err:")) {
                 Helpers.GUIRunAndWait(() -> {
                     status_label.setForeground(Color.BLACK);
@@ -282,64 +282,64 @@ public class Main extends javax.swing.JFrame {
                 return false;
             }
         }
-
+        
         Helpers.runProcess(new String[]{"mega-killsession", "-a"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
-
+        
         MEGA_SESSIONS.remove(email);
-
+        
         MEGA_SESSIONS.put(email, getCurrentSessionID());
-
+        
         if (_transferences_running && _current_transference.getEmail().equals(email) && _current_transference.isPaused()) {
             _current_transference.pause();
         }
-
+        
         Helpers.GUIRunAndWait(() -> {
             status_label.setForeground(Color.BLACK);
         });
-
+        
         return true;
     }
-
+    
     public String DUWithHandles() {
-
+        
         String ls = Helpers.runProcess(new String[]{"mega-ls", "/", "--show-handles"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
+        
         int max_path_width = 0;
-
+        
         for (String s : ls.split("\n")) {
             if (s.length() > max_path_width) {
                 max_path_width = s.length();
             }
         }
-
+        
         String du = Helpers.runProcess(new String[]{"mega-du", "-h", "--use-pcre", "/.*", "--path-display-size=" + String.valueOf(max_path_width + 1)}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
+        
         if (!du.trim().isEmpty() && !ls.trim().isEmpty()) {
-
+            
             final String regex = "(.+) <H:[^>]+>";
-
+            
             final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
-
+            
             final Matcher matcher = pattern.matcher(ls);
-
+            
             while (matcher.find()) {
                 du = du.replace(matcher.group(1), matcher.group(0));
             }
-
+            
             String[] du_lines = du.split("\n");
-
+            
             du_lines[du_lines.length - 2] += "-------------";
-
+            
             du_lines[0] = du_lines[0].replaceAll("( +)", "$1             ");
-
+            
             du_lines[du_lines.length - 1] = du_lines[du_lines.length - 1].replaceAll("(used:)( +)(\\d)", "$1             $2$3");
-
+            
             return String.join("\n", du_lines);
         } else {
             return "";
         }
     }
-
+    
     public void logout(boolean keep_session) {
         if (keep_session) {
             Helpers.runProcess(new String[]{"mega-logout", "--keep-session"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
@@ -347,14 +347,14 @@ public class Main extends javax.swing.JFrame {
             Helpers.runProcess(new String[]{"mega-logout"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
         }
     }
-
+    
     private String getCurrentSessionID() {
-
+        
         String session_output = Helpers.runProcess(new String[]{"mega-session"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
+        
         return session_output.replaceAll("^.+: +(.+)$", "$1").trim();
     }
-
+    
     private void enableButtons(boolean enable) {
         Helpers.GUIRun(() -> {
             MAIN_WINDOW.getCuentas_textarea().setEnabled(enable);
@@ -364,149 +364,149 @@ public class Main extends javax.swing.JFrame {
             MAIN_WINDOW.getSave_button().setEnabled(enable);
         });
     }
-
+    
     public void copyNodesToAnotherAccount(String text, final boolean move) {
-
+        
         _running_main_action = true;
-
+        
         Helpers.GUIRun(() -> {
-
+            
             enableButtons(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
             MAIN_WINDOW.getStatus_label().setText((move ? "MOVING" : "COPYING") + " SELECTED FOLDERS/FILES. PLEASE WAIT...");
-
+            
             if (_transferences_running) {
                 upload_button.setText("PAUSING CURRENT TRANSFER...");
             }
-
+            
         });
-
+        
         HashMap<String, ArrayList<String>> nodesToCopy = Helpers.extractNodeMapFromText(text);
-
+        
         if (!nodesToCopy.isEmpty() && MEGA_ACCOUNTS.size() > nodesToCopy.keySet().size()) {
-
+            
             if (_transferences_running) {
                 _current_transference.pause();
             }
-
+            
             Helpers.GUIRunAndWait(() -> {
                 _email_dialog = new MoveNodeToAnotherAccountDialog(MAIN_WINDOW, true, nodesToCopy.keySet(), move);
-
+                
                 _email_dialog.setLocationRelativeTo(MAIN_WINDOW);
-
+                
                 _email_dialog.setVisible(true);
             });
-
+            
             if (_transferences_running) {
                 Helpers.threadRun(() -> {
                     _current_transference.resume();
                 });
             }
-
+            
             String email = _email_dialog.getSelected_email();
-
+            
             if (_email_dialog.isOk() && email != null && !email.isBlank()) {
-
+                
                 login(email);
-
+                
                 String[] account_space = Helpers.getAccountSpaceData(email);
-
+                
                 if (Helpers.getNodeMapTotalSize(nodesToCopy) <= (Long.parseLong(account_space[2]) - Long.parseLong(account_space[1]))) {
-
+                    
                     ArrayList<String[]> exported_links = new ArrayList<>();
-
+                    
                     for (String e : nodesToCopy.keySet()) {
-
+                        
                         ArrayList<String> node_list = nodesToCopy.get(e);
-
+                        
                         ArrayList<String> export_command = new ArrayList<>();
-
+                        
                         export_command.add("mega-export");
-
+                        
                         export_command.add("-fa");
-
+                        
                         export_command.addAll(node_list);
-
+                        
                         login(e);
-
+                        
                         String exported_links_output = Helpers.runProcess(export_command.toArray(String[]::new), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
+                        
                         final String regex2 = "Exported +(.*?): +(https://.+)";
-
+                        
                         final Pattern pattern2 = Pattern.compile(regex2, Pattern.MULTILINE);
-
+                        
                         final Matcher matcher2 = pattern2.matcher(exported_links_output);
-
+                        
                         while (matcher2.find()) {
-
+                            
                             exported_links.add(new String[]{matcher2.group(1), matcher2.group(2)});
-
+                            
                         }
-
+                        
                     }
-
+                    
                     login(email);
-
+                    
                     for (String[] s : exported_links) {
-
+                        
                         String folder = s[0].replaceAll("^(.*/)[^/]*$", "$1");
-
+                        
                         Helpers.runProcess(new String[]{"mega-mkdir", "-p", folder}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
-
+                        
                         Helpers.runProcess(new String[]{"mega-import", s[1], folder}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
                     }
-
+                    
                     String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
+                    
                     String du = DUWithHandles();
-
+                    
                     String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
+                    
                     parseAccountNodes(email);
-
+                    
                     logout(true);
-
+                    
                     Helpers.GUIRun(() -> {
-
+                        
                         output_textarea.append("\n[" + email + "] (Refreshed after insertion)\n\n" + df + "\n" + du + "\n" + ls + "\n\n");
-
+                        
                     });
-
+                    
                     if (move) {
-
+                        
                         for (String email_rm : nodesToCopy.keySet()) {
-
+                            
                             ArrayList<String> node_list = nodesToCopy.get(email_rm);
-
+                            
                             ArrayList<String> delete_command = new ArrayList<>();
-
+                            
                             delete_command.add("mega-rm");
-
+                            
                             delete_command.add("-rf");
-
+                            
                             delete_command.addAll(node_list);
-
+                            
                             login(email_rm);
-
+                            
                             Helpers.runProcess(delete_command.toArray(String[]::new), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
-
+                            
                             String ls_rm = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
+                            
                             String du_rm = DUWithHandles();
-
+                            
                             String df_rm = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
+                            
                             parseAccountNodes(email_rm);
-
+                            
                             Helpers.GUIRun(() -> {
-
+                                
                                 output_textarea.append("\n[" + email_rm + "] (Refreshed after deletion)\n\n" + df_rm + "\n" + du_rm + "\n" + ls_rm + "\n\n");
-
+                                
                             });
                         }
-
+                        
                         logout(true);
-
+                        
                         Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL SELECTED FOLDERS/FILES MOVED");
                     } else {
                         Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL SELECTED FOLDERS/FILES COPIED");
@@ -514,45 +514,53 @@ public class Main extends javax.swing.JFrame {
                 } else {
                     Helpers.mostrarMensajeError(MAIN_WINDOW, "THERE IS NO ENOUGH FREE SPACE IN DESTINATION ACCOUNT");
                 }
-
+                
             }
-
+            
         } else if (nodesToCopy.isEmpty()) {
             Helpers.mostrarMensajeError(MAIN_WINDOW, "NO FOLDERS/FILES SELECTED (you must select with your mouse text that contains some H:XXXXXXXX MEGA NODE)");
         }
-
+        
         Helpers.GUIRun(() -> {
-
+            
             enableButtons(true);
             upload_button.setText("NEW UPLOAD");
             MAIN_WINDOW.getProgressbar().setIndeterminate(false);
             MAIN_WINDOW.getStatus_label().setText("");
-
+            
         });
-
+        
         _running_main_action = false;
     }
-
+    
     public void bye() {
-
+        
         _closing = true;
-
-        Helpers.runProcess(new String[]{"mega-transfers", "-pa"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
-
-        if (session_menu.isSelected() || Helpers.mostrarMensajeInformativoSINO(this, "Do you want to save your MEGA accounts/sessions/transfers to disk to speed up next time?\n\n(If you are using a public computer it is NOT recommended to do so for security reasons).") == 0) {
-            saveAccounts();
-            saveTransfers();
-
-            logout(true);
-        } else {
-            removeSessionFILES();
-            logout(false);
-        }
-
-        System.exit(0);
-
+        
+        Helpers.threadRun(() -> {
+            
+            if (_transferences_running) {
+                Helpers.GUIRun(() -> {
+                    setEnabled(false);
+                });
+                _current_transference.pause();
+            }
+            
+            if (session_menu.isSelected() || Helpers.mostrarMensajeInformativoSINO(this, "Do you want to save your MEGA accounts/sessions/transfers to disk to speed up next time?\n\n(If you are using a public computer it is NOT recommended to do so for security reasons).") == 0) {
+                saveAccounts();
+                saveTransfers();
+                logout(true);
+            } else {
+                removeSessionFILES();
+                logout(false);
+            }
+            
+            System.exit(0);
+            
+        });
+        
     }
-
+    
     public void removeSessionFILES() {
         try {
             Files.deleteIfExists(Paths.get(ACCOUNTS_FILE));
@@ -570,36 +578,36 @@ public class Main extends javax.swing.JFrame {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
+    
     public void saveTransfers() {
-
+        
         ArrayList<Object[]> trans = new ArrayList<>();
-
+        
         Helpers.GUIRunAndWait(() -> {
             if (transferences.getComponentCount() > 0) {
-
+                
                 for (Component c : transferences.getComponents()) {
-
+                    
                     Transference t = (Transference) c;
-
+                    
                     if (!t.isFinished() && !t.isCanceled()) {
-
+                        
                         String email = t.getEmail();
-
+                        
                         String lpath = t.getLpath();
-
+                        
                         String rpath = t.getRpath();
-
+                        
                         int action = t.getAction();
-
+                        
                         trans.add(new Object[]{email, lpath, rpath, action});
                     }
                 }
-
+                
                 try ( FileOutputStream fos = new FileOutputStream(TRANSFERS_FILE);  ObjectOutputStream oos = new ObjectOutputStream(fos)) {
-
+                    
                     oos.writeObject(trans);
-
+                    
                 } catch (Exception ex) {
                     Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -612,17 +620,17 @@ public class Main extends javax.swing.JFrame {
             }
         });
     }
-
+    
     public void loadTransfers() {
         if (Files.exists(Paths.get(TRANSFERS_FILE))) {
             try ( FileInputStream fis = new FileInputStream(TRANSFERS_FILE);  ObjectInputStream ois = new ObjectInputStream(fis)) {
-
+                
                 ArrayList<Object[]> trans = (ArrayList<Object[]>) ois.readObject();
                 if (!trans.isEmpty()) {
                     synchronized (TRANSFERENCES_LOCK) {
                         Helpers.GUIRunAndWait(() -> {
                             try {
-
+                                
                                 for (Object[] o : trans) {
                                     if (MEGA_SESSIONS.containsKey((String) o[0])) {
                                         Transference t = new Transference((String) o[0], (String) o[1], (String) o[2], (int) o[3]);
@@ -634,628 +642,628 @@ public class Main extends javax.swing.JFrame {
                                 tabbed_panel.setSelectedIndex(1);
                                 vamos_button.setEnabled(false);
                                 cuentas_textarea.setEnabled(false);
-
+                                
                             } catch (Exception ex) {
                                 Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
                             }
                         });
-
+                        
                         TRANSFERENCES_LOCK.notifyAll();
                     }
                 }
-
+                
             } catch (Exception ex) {
                 Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
-
+    
     public void copyNodesInsideAccount(String text) {
-
+        
         Helpers.GUIRun(() -> {
-
+            
             enableButtons(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
             MAIN_WINDOW.getStatus_label().setText("COPYING SELECTED FOLDERS/FILES. PLEASE WAIT...");
-
+            
         });
-
+        
         HashMap<String, ArrayList<String>> nodesToCopy = Helpers.extractNodeMapFromText(text);
-
+        
         boolean cancel = false;
-
+        
         if (!nodesToCopy.isEmpty()) {
-
+            
             for (String email : nodesToCopy.keySet()) {
-
+                
                 login(email);
                 ArrayList<String> node_list = nodesToCopy.get(email);
-
+                
                 int conta = 0;
-
+                
                 for (String node : node_list) {
-
+                    
                     String old_full_path = Helpers.getNodePathFromFindCommandOutput(node, Helpers.runProcess(new String[]{"mega-find", "--show-handles", node}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]);
-
+                    
                     Helpers.GUIRunAndWait(() -> {
                         _move_dialog = new MoveNodeDialog(MAIN_WINDOW, true, old_full_path, 1, "[" + email + "]\n" + Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]);
-
+                        
                         _move_dialog.setLocationRelativeTo(MAIN_WINDOW);
-
+                        
                         _move_dialog.setVisible(true);
                     });
-
+                    
                     String new_full_path = _move_dialog.getNew_name().getText().trim();
-
+                    
                     if (_move_dialog.isOk() && !old_full_path.equals(new_full_path) && !new_full_path.isBlank()) {
-
+                        
                         String folder = new_full_path.replaceAll("^(.*/)[^/]*$", "$1");
-
+                        
                         Helpers.runProcess(new String[]{"mega-mkdir", "-p", folder}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
-
+                        
                         Helpers.runProcess(new String[]{"mega-cp", node, new_full_path}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
-
+                        
                         conta++;
-
+                        
                     } else if (!_move_dialog.isOk()) {
                         cancel = true;
                         break;
                     }
                 }
-
+                
                 if (conta > 0) {
-
+                    
                     String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
+                    
                     String du = DUWithHandles();
-
+                    
                     String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
+                    
                     parseAccountNodes(email);
-
+                    
                     Helpers.GUIRun(() -> {
-
+                        
                         output_textarea.append("\n[" + email + "] (Refreshed after copying)\n\n" + df + "\n" + du + "\n" + ls + "\n\n");
-
+                        
                     });
-
+                    
                 }
-
+                
                 if (cancel) {
                     Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "CANCELED (SOME FOLDERS/FILES WERE NOT MOVED)");
                     break;
                 }
-
+                
             }
-
+            
             logout(true);
-
+            
             if (_move_dialog.isOk()) {
                 Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL FOLDERS/FILES COPIED");
             }
-
+            
         } else if (nodesToCopy.isEmpty()) {
             Helpers.mostrarMensajeError(MAIN_WINDOW, "NO FOLDERS/FILES SELECTED (you must select with your mouse text that contains some H:xxxxxxxx MEGA NODE)");
         }
-
+        
         Helpers.GUIRun(() -> {
-
+            
             enableButtons(true);
             MAIN_WINDOW.getProgressbar().setIndeterminate(false);
             MAIN_WINDOW.getStatus_label().setText("");
-
+            
         });
-
+        
         _running_main_action = false;
     }
-
+    
     public void moveNodesInsideAccount(String text) {
-
+        
         Helpers.GUIRun(() -> {
-
+            
             enableButtons(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
             MAIN_WINDOW.getStatus_label().setText("MOVING SELECTED FOLDERS/FILES. PLEASE WAIT...");
-
+            
         });
-
+        
         HashMap<String, ArrayList<String>> nodesToMove = Helpers.extractNodeMapFromText(text);
-
+        
         if (!nodesToMove.isEmpty()) {
-
+            
             for (String email : nodesToMove.keySet()) {
-
+                
                 login(email);
                 ArrayList<String> node_list = nodesToMove.get(email);
-
+                
                 int conta = 0;
-
+                
                 for (String node : node_list) {
-
+                    
                     String old_full_path = Helpers.getNodePathFromFindCommandOutput(node, Helpers.runProcess(new String[]{"mega-find", "--show-handles", node}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]);
-
+                    
                     Helpers.GUIRunAndWait(() -> {
                         _move_dialog = new MoveNodeDialog(MAIN_WINDOW, true, old_full_path, 2, "[" + email + "]\n" + Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]);
-
+                        
                         _move_dialog.setLocationRelativeTo(MAIN_WINDOW);
-
+                        
                         _move_dialog.setVisible(true);
                     });
-
+                    
                     String new_full_path = _move_dialog.getNew_name().getText().trim();
-
+                    
                     if (_move_dialog.isOk() && !old_full_path.equals(new_full_path) && !new_full_path.isBlank()) {
-
+                        
                         String folder = new_full_path.replaceAll("^(.*/)[^/]*$", "$1");
-
+                        
                         Helpers.runProcess(new String[]{"mega-mkdir", "-p", folder}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
-
+                        
                         Helpers.runProcess(new String[]{"mega-mv", node, new_full_path}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
-
+                        
                         conta++;
-
+                        
                     } else if (!_move_dialog.isOk()) {
                         Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "CANCELED (SOME FOLDERS/FILES WERE NOT MOVED)");
                         break;
                     }
                 }
-
+                
                 if (conta > 0) {
-
+                    
                     String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
+                    
                     String du = DUWithHandles();
-
+                    
                     String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
+                    
                     parseAccountNodes(email);
-
+                    
                     Helpers.GUIRun(() -> {
-
+                        
                         output_textarea.append("\n[" + email + "] (Refreshed after moving)\n\n" + df + "\n" + du + "\n" + ls + "\n\n");
-
+                        
                     });
-
+                    
                 }
-
+                
             }
-
+            
             logout(true);
-
+            
             if (_move_dialog.isOk()) {
                 Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL FOLDERS/FILES RENAMED");
             }
-
+            
         } else if (nodesToMove.isEmpty()) {
             Helpers.mostrarMensajeError(MAIN_WINDOW, "NO FOLDERS/FILES SELECTED (you must select with your mouse text that contains some H:xxxxxxxx MEGA NODE)");
         }
-
+        
         Helpers.GUIRun(() -> {
-
+            
             enableButtons(true);
             MAIN_WINDOW.getProgressbar().setIndeterminate(false);
             MAIN_WINDOW.getStatus_label().setText("");
-
+            
         });
-
+        
         _running_main_action = false;
     }
-
+    
     public void renameNodes(String text) {
-
+        
         Helpers.GUIRun(() -> {
-
+            
             enableButtons(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
             MAIN_WINDOW.getStatus_label().setText("RENAMING SELECTED FOLDERS/FILES. PLEASE WAIT...");
-
+            
         });
-
+        
         HashMap<String, ArrayList<String>> nodesToRename = Helpers.extractNodeMapFromText(text);
-
+        
         if (!nodesToRename.isEmpty()) {
-
+            
             for (String email : nodesToRename.keySet()) {
-
+                
                 login(email);
                 ArrayList<String> node_list = nodesToRename.get(email);
-
+                
                 int conta = 0;
-
+                
                 for (String node : node_list) {
-
+                    
                     String old_full_path = Helpers.getNodePathFromFindCommandOutput(node, Helpers.runProcess(new String[]{"mega-find", "--show-handles", node}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]);
-
+                    
                     String old_name = old_full_path.replaceAll("^.*/([^/]*)$", "$1");
-
+                    
                     String old_path = old_full_path.replaceAll("^(.*/)[^/]*$", "$1");
-
+                    
                     Helpers.GUIRunAndWait(() -> {
                         _move_dialog = new MoveNodeDialog(MAIN_WINDOW, true, old_full_path, 0, "[" + email + "]\n" + Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]);
-
+                        
                         _move_dialog.setLocationRelativeTo(MAIN_WINDOW);
-
+                        
                         _move_dialog.setVisible(true);
                     });
-
+                    
                     String new_name = _move_dialog.getNew_name().getText().trim();
-
+                    
                     if (_move_dialog.isOk() && !old_name.equals(new_name) && !new_name.isBlank()) {
-
+                        
                         Helpers.runProcess(new String[]{"mega-mv", node, old_path + new_name}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
-
+                        
                         conta++;
-
+                        
                     } else if (!_move_dialog.isOk()) {
                         Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "CANCELED (SOME FOLDERS/FILES WERE NOT RENAMED)");
                         break;
                     }
                 }
-
+                
                 if (conta > 0) {
-
+                    
                     String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
+                    
                     String du = DUWithHandles();
-
+                    
                     String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
+                    
                     parseAccountNodes(email);
-
+                    
                     Helpers.GUIRun(() -> {
-
+                        
                         output_textarea.append("\n[" + email + "] (Refreshed after rename)\n\n" + df + "\n" + du + "\n" + ls + "\n\n");
-
+                        
                     });
-
+                    
                 }
-
+                
             }
-
+            
             logout(true);
-
+            
             if (_move_dialog.isOk()) {
                 Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL FOLDERS/FILES RENAMED");
             }
-
+            
         } else if (nodesToRename.isEmpty()) {
             Helpers.mostrarMensajeError(MAIN_WINDOW, "NO FOLDERS/FILES SELECTED (you must select with your mouse text that contains some H:xxxxxxxx MEGA NODE)");
         }
-
+        
         Helpers.GUIRun(() -> {
-
+            
             enableButtons(true);
             MAIN_WINDOW.getProgressbar().setIndeterminate(false);
             MAIN_WINDOW.getStatus_label().setText("");
-
+            
         });
-
+        
         _running_main_action = false;
     }
-
+    
     public void exportNodes(String text, boolean enable) {
-
+        
         _running_main_action = true;
-
+        
         Helpers.GUIRun(() -> {
-
+            
             enableButtons(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
             MAIN_WINDOW.getStatus_label().setText((enable ? "ENABLING" : "DISABLING") + " PUBLIC LINK ON SELECTED FOLDERS/FILES. PLEASE WAIT...");
-
+            
         });
-
+        
         HashMap<String, ArrayList<String>> nodesToExport = Helpers.extractNodeMapFromText(text);
-
+        
         if (!nodesToExport.isEmpty()) {
-
+            
             for (String email : nodesToExport.keySet()) {
-
+                
                 ArrayList<String> node_list = nodesToExport.get(email);
-
+                
                 ArrayList<String> export_command = new ArrayList<>();
-
+                
                 export_command.add("mega-export");
-
+                
                 export_command.add(enable ? "-af" : "-d");
-
+                
                 export_command.addAll(node_list);
-
+                
                 login(email);
                 Helpers.runProcess(export_command.toArray(String[]::new), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
-
+                
                 String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
+                
                 String du = DUWithHandles();
-
+                
                 String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
+                
                 Helpers.GUIRun(() -> {
-
+                    
                     output_textarea.append("\n[" + email + "] (Refreshed after public links generated/removed)\n\n" + df + "\n" + du + "\n" + ls + "\n\n");
-
+                    
                 });
             }
-
+            
             logout(true);
-
+            
             Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL SELECTED FOLDERS/FILES " + (enable ? "PUBLIC LINKS GENERATED" : "PUBLIC LINKS REMOVED"));
         } else if (nodesToExport.isEmpty()) {
             Helpers.mostrarMensajeError(MAIN_WINDOW, "NO FOLDERS/FILES SELECTED (you must select with your mouse text that contains some H:xxxxxxxx MEGA NODE)");
         }
-
+        
         Helpers.GUIRun(() -> {
-
+            
             enableButtons(true);
             MAIN_WINDOW.getProgressbar().setIndeterminate(false);
             MAIN_WINDOW.getStatus_label().setText("");
-
+            
         });
-
+        
         _running_main_action = false;
     }
-
+    
     public void truncateAccount(String email) {
-
+        
         _running_main_action = true;
-
+        
         String old_status = MAIN_WINDOW.getStatus_label().getText();
-
+        
         Helpers.GUIRun(() -> {
-
+            
             enableButtons(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
             MAIN_WINDOW.getStatus_label().setText("TRUNCATING " + email + " PLEASE WAIT...");
-
+            
         });
-
+        
         if (MEGA_ACCOUNTS.containsKey(email) && Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "CAUTION!! ALL CONTENT INSIDE <b>" + email + "</b> WILL BE <b>PERMANENTLY</b> DELETED.<br><br>ARE YOU SURE?") == 0 && Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "Forgive me for insisting... ARE YOU ABSOLUTELY SURE?") == 0) {
-
+            
             login(email);
-
+            
             Helpers.runProcess(new String[]{"mega-rm", "-rf", "'/*'"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
             Helpers.runProcess(new String[]{"mega-rm", "-rf", "'//in/*'"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
             Helpers.runProcess(new String[]{"mega-rm", "-rf", "'//bin/*'"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
-
+            
             forceRefreshAccount(email, "Refreshed after account truncate", false, false);
-
+            
             Helpers.mostrarMensajeInformativo(MAIN_WINDOW, email + " TRUNCATED");
         }
-
+        
         Helpers.GUIRun(() -> {
-
+            
             enableButtons(true);
-
+            
             if (old_status.isBlank()) {
                 MAIN_WINDOW.getProgressbar().setIndeterminate(false);
             }
-
+            
             MAIN_WINDOW.getStatus_label().setText(old_status);
-
+            
         });
-
+        
         _running_main_action = false;
-
+        
     }
-
+    
     public void removeNodes(String text) {
-
+        
         _running_main_action = true;
-
+        
         String old_status = MAIN_WINDOW.getStatus_label().getText();
-
+        
         Helpers.GUIRun(() -> {
-
+            
             enableButtons(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
             MAIN_WINDOW.getStatus_label().setText("DELETING FOLDERS/FILES. PLEASE WAIT...");
-
+            
         });
-
+        
         HashMap<String, ArrayList<String>> nodesToRemove = Helpers.extractNodeMapFromText(text);
-
+        
         if (!nodesToRemove.isEmpty() && Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "CAUTION!! SELECTED FILES/FOLDERS WILL BE <b>PERMANENTLY</b> DELETED.<br><br>ARE YOU SURE?") == 0) {
-
+            
             for (String email : nodesToRemove.keySet()) {
-
+                
                 ArrayList<String> node_list = nodesToRemove.get(email);
-
+                
                 ArrayList<String> delete_command = new ArrayList<>();
-
+                
                 delete_command.add("mega-rm");
-
+                
                 delete_command.add("-rf");
-
+                
                 delete_command.addAll(node_list);
-
+                
                 login(email);
-
+                
                 Helpers.runProcess(delete_command.toArray(String[]::new), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
-
+                
                 forceRefreshAccount(email, "Refreshed after deletion", false, false);
             }
-
+            
             logout(true);
-
+            
             Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL SELECTED FOLDERS/FILES DELETED");
         } else if (nodesToRemove.isEmpty()) {
             Helpers.mostrarMensajeError(MAIN_WINDOW, "NO FOLDERS/FILES SELECTED (you must select with your mouse text that contains some H:xxxxxxxx MEGA NODE)");
         }
-
+        
         Helpers.GUIRun(() -> {
-
+            
             enableButtons(true);
-
+            
             if (old_status.isBlank()) {
                 MAIN_WINDOW.getProgressbar().setIndeterminate(false);
             }
-
+            
             MAIN_WINDOW.getStatus_label().setText("");
-
+            
         });
-
+        
         _running_main_action = false;
     }
-
+    
     public void forceRefreshAccount(String email, String reason, boolean notification, boolean login) {
-
+        
         _running_main_action = true;
-
+        
         String old_status = MAIN_WINDOW.getStatus_label().getText();
-
+        
         Helpers.GUIRun(() -> {
-
+            
             enableButtons(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
             MAIN_WINDOW.getStatus_label().setText("REFRESHING " + email + " PLEASE WAIT...");
-
+            
         });
-
+        
         if (MEGA_ACCOUNTS.containsKey(email)) {
-
+            
             if (login) {
                 login(email);
             }
-
+            
             Helpers.runProcess(new String[]{"mega-reload"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
-
+            
             String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
+            
             String du = DUWithHandles();
-
+            
             String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
+            
             parseAccountNodes(email);
-
+            
             Helpers.GUIRun(() -> {
-
+                
                 output_textarea.append("\n[" + email + "] (" + reason + ")\n\n" + df + "\n" + du + "\n" + ls + "\n\n");
-
+                
             });
-
+            
             if (login) {
                 logout(true);
             }
-
+            
             _last_email_force_refresh = email;
-
+            
             Helpers.JTextFieldRegularPopupMenu.refreshLastAccount.setText("REFRESH LAST (" + email + ")");
-
+            
             Helpers.JTextFieldRegularPopupMenu.refreshLastAccount.setEnabled(true);
-
+            
             if (notification) {
                 Helpers.mostrarMensajeInformativo(MAIN_WINDOW, email + " REFRESHED");
             }
-
+            
         } else {
             Helpers.mostrarMensajeError(MAIN_WINDOW, "YOU MUST SELECT AN ALREADY CHECKED ACCOUNT");
         }
-
+        
         Helpers.GUIRun(() -> {
-
+            
             enableButtons(true);
-
+            
             if (old_status.isBlank()) {
                 MAIN_WINDOW.getProgressbar().setIndeterminate(false);
             }
-
+            
             MAIN_WINDOW.getStatus_label().setText("");
-
+            
         });
-
+        
         _running_main_action = false;
     }
-
+    
     private void saveAccounts() {
-
+        
         try ( FileOutputStream fos = new FileOutputStream(ACCOUNTS_FILE);  ObjectOutputStream oos = new ObjectOutputStream(fos)) {
             oos.writeObject(MEGA_ACCOUNTS);
-
+            
         } catch (Exception ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-
+        
         try ( FileOutputStream fos = new FileOutputStream(SESSIONS_FILE);  ObjectOutputStream oos = new ObjectOutputStream(fos)) {
             oos.writeObject(MEGA_SESSIONS);
-
+            
         } catch (Exception ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
+    
     private void loadAccounts() {
-
+        
         if (Files.exists(Paths.get(ACCOUNTS_FILE))) {
             try ( FileInputStream fis = new FileInputStream(ACCOUNTS_FILE);  ObjectInputStream ois = new ObjectInputStream(fis)) {
-
+                
                 MEGA_ACCOUNTS = (LinkedHashMap<String, String>) ois.readObject();
-
+                
                 if (!MEGA_ACCOUNTS.isEmpty()) {
-
+                    
                     ArrayList<String> accounts = new ArrayList<>();
-
+                    
                     for (String k : MEGA_ACCOUNTS.keySet()) {
                         accounts.add(k + "#" + MEGA_ACCOUNTS.get(k));
                     }
-
+                    
                     Collections.sort(accounts);
-
+                    
                     Helpers.GUIRunAndWait(() -> {
-
+                        
                         if (!_firstAccountsTextareaClick) {
                             _firstAccountsTextareaClick = true;
                             cuentas_textarea.setText("");
                             cuentas_textarea.setForeground(null);
                         }
-
+                        
                         for (String account : accounts) {
                             cuentas_textarea.append(account + "\n");
                         }
-
+                        
                         upload_button.setEnabled(true);
-
+                        
                         session_menu.setSelected(true);
-
+                        
                     });
                 } else {
                     Helpers.GUIRun(() -> {
                         session_menu.setSelected(false);
                     });
                 }
-
+                
             } catch (Exception ex) {
                 Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
             }
-
+            
             if (Files.exists(Paths.get(SESSIONS_FILE))) {
                 try ( FileInputStream fis = new FileInputStream(SESSIONS_FILE);  ObjectInputStream ois = new ObjectInputStream(fis)) {
                     MEGA_SESSIONS = (HashMap<String, String>) ois.readObject();
-
+                    
                     if (!MEGA_SESSIONS.isEmpty()) {
                         loadTransfers();
                     }
-
+                    
                 } catch (Exception ex) {
                     Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
-
+            
         } else {
             Helpers.GUIRun(() -> {
                 session_menu.setSelected(false);
             });
         }
-
+        
     }
-
+    
     public void parseAccountNodes(String email) {
-
+        
         String ls = Helpers.runProcess(new String[]{"mega-ls", "-lr", "--show-handles"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
+        
         final String regex = "([0-9]+|-) +[^ ]+ +[^ ]+ +(H:[^ ]+) (.+)";
         final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
         final Matcher matcher = pattern.matcher(ls);
-
+        
         while (matcher.find()) {
             MEGA_NODES.put(matcher.group(2), new Object[]{Long.parseLong(matcher.group(1).equals("-") ? "0" : matcher.group(1)), email, matcher.group(3)});
         }
@@ -1545,39 +1553,39 @@ public class Main extends javax.swing.JFrame {
         // TODO add your handling code here:
 
         if (MEGA_CMD_VERSION != null) {
-
+            
             if (!isRunning_global_check()) {
-
+                
                 if (!_firstAccountsTextareaClick) {
                     _firstAccountsTextareaClick = true;
                     cuentas_textarea.setText("");
                     cuentas_textarea.setForeground(null);
                 }
-
+                
                 _running_global_check = true;
                 _aborting_global_check = false;
                 cuentas_textarea.setEnabled(false);
                 vamos_button.setText("STOP");
                 vamos_button.setBackground(Color.red);
-
+                
                 enableButtons(false);
-
+                
                 Helpers.threadRun(() -> {
                     final String regex = "(.*?)#(.+)";
                     final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
                     final Matcher matcher = pattern.matcher(cuentas_textarea.getText());
-
+                    
                     LinkedHashMap<String, String> mega_accounts = new LinkedHashMap<>();
-
+                    
                     MEGA_ACCOUNTS_SPACE.clear();
-
+                    
                     MEGA_ACCOUNTS_LOGIN_ERROR.clear();
-
+                    
                     while (matcher.find()) {
                         MEGA_ACCOUNTS.put(matcher.group(1), matcher.group(2));
                         mega_accounts.put(matcher.group(1), matcher.group(2));
                     }
-
+                    
                     if (!mega_accounts.isEmpty()) {
                         Helpers.GUIRun(() -> {
                             progressbar.setMaximum(mega_accounts.size());
@@ -1589,69 +1597,69 @@ public class Main extends javax.swing.JFrame {
                                     + "             |___/                                      \n\nCHECKING START -> " + Helpers.getFechaHoraActual() + "\n");
                         });
                         int i = 0;
-
+                        
                         for (String email : mega_accounts.keySet()) {
-
+                            
                             Helpers.GUIRun(() -> {
                                 status_label.setText("Login " + email + " ...");
                             });
-
+                            
                             boolean login_ok = login(email);
-
+                            
                             if (!login_ok) {
                                 MEGA_ACCOUNTS_LOGIN_ERROR.add(email + "#" + mega_accounts.get(email));
                                 Helpers.GUIRun(() -> {
                                     output_textarea.append("\n[" + email + "] LOGIN ERROR\n\n");
                                 });
-
+                                
                             } else {
-
+                                
                                 Helpers.GUIRun(() -> {
                                     status_label.setText("Reading " + email + " info...");
                                 });
-
+                                
                                 String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
+                                
                                 String du = DUWithHandles();
-
+                                
                                 String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
+                                
                                 Helpers.GUIRun(() -> {
-
+                                    
                                     output_textarea.append("\n[" + email + "]\n\n" + df + "\n" + du + "\n" + ls + "\n\n");
-
+                                    
                                 });
-
+                                
                                 MEGA_ACCOUNTS_SPACE.add(Helpers.getAccountSpaceData(email));
-
+                                
                                 parseAccountNodes(email);
                             }
-
+                            
                             i++;
-
+                            
                             int j = i;
-
+                            
                             Helpers.GUIRun(() -> {
                                 progressbar.setValue(j);
-
+                                
                             });
-
+                            
                             if (isAborting_global_check()) {
                                 break;
                             }
-
+                            
                         }
-
+                        
                         logout(true);
-
+                        
                         Collections.sort(MEGA_ACCOUNTS_SPACE, new Comparator<String[]>() {
                             @Override
                             public int compare(String[] o1, String[] o2) {
-
+                                
                                 return Long.compare(Long.parseLong(o2[2]) - Long.parseLong(o2[1]), Long.parseLong(o1[2]) - Long.parseLong(o1[1]));
                             }
                         });
-
+                        
                         Helpers.GUIRun(() -> {
                             output_textarea.append("--------------------------------------\n");
                             output_textarea.append("ACCOUNTS ORDERED BY FREE SPACE (DESC):\n");
@@ -1663,28 +1671,28 @@ public class Main extends javax.swing.JFrame {
                                 total_space += Long.parseLong(account[2]);
                                 output_textarea.append(account[0] + " [" + Helpers.formatBytes(Long.parseLong(account[2]) - Long.parseLong(account[1])) + " FREE] (of " + Helpers.formatBytes(Long.parseLong(account[2])) + ")\n\n");
                             }
-
+                            
                             output_textarea.append("TOTAL FREE SPACE: " + Helpers.formatBytes(total_space - total_space_used) + " (of " + Helpers.formatBytes(total_space) + ")\n\n");
-
+                            
                             if (!MEGA_ACCOUNTS_LOGIN_ERROR.isEmpty()) {
                                 output_textarea.append("(WARNING) LOGIN ERRORS: " + String.valueOf(MEGA_ACCOUNTS_LOGIN_ERROR.size()) + "\n");
                                 for (String errors : MEGA_ACCOUNTS_LOGIN_ERROR) {
                                     output_textarea.append("    ERROR: " + errors + "\n");
                                 }
                             }
-
+                            
                             output_textarea.append("\nCHECKING END -> " + Helpers.getFechaHoraActual() + "\n");
-
+                            
                             upload_button.setEnabled(true);
-
+                            
                         });
-
+                        
                         Helpers.mostrarMensajeInformativo(this, !isRunning_global_check() ? "CANCELED!" : "DONE");
-
+                        
                     } else {
                         Helpers.mostrarMensajeInformativo(this, "ALL ACCOUNTS REFRESHED");
                     }
-
+                    
                     Helpers.GUIRun(() -> {
                         progressbar.setValue(0);
                         vamos_button.setText("CHECK ACCOUNTS");
@@ -1693,11 +1701,11 @@ public class Main extends javax.swing.JFrame {
                         status_label.setText("");
                         enableButtons(true);
                     });
-
+                    
                     _running_global_check = false;
                     _aborting_global_check = false;
                 });
-
+                
             } else if (isRunning_global_check()) {
                 if (Helpers.mostrarMensajeInformativoSINO(this, "SURE?") == 0) {
                     _aborting_global_check = true;
@@ -1707,78 +1715,78 @@ public class Main extends javax.swing.JFrame {
                     });
                 }
             }
-
+            
         }
-
+        
     }//GEN-LAST:event_vamos_buttonActionPerformed
-
+    
     private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
         // TODO add your handling code here:
         About about = new About(this, true);
         about.setLocationRelativeTo(this);
         about.setVisible(true);
     }//GEN-LAST:event_jMenuItem1ActionPerformed
-
+    
     private void save_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_save_buttonActionPerformed
         // TODO add your handling code here:
 
         JFileChooser fileChooser = new JFileChooser();
-
+        
         Helpers.setContainerFont(fileChooser, save_button.getFont().deriveFont(14f).deriveFont(Font.PLAIN));
-
+        
         int retval = fileChooser.showSaveDialog(this);
-
+        
         if (retval == JFileChooser.APPROVE_OPTION) {
-
+            
             File file = fileChooser.getSelectedFile();
-
+            
             if (file == null) {
                 return;
             }
-
+            
             if (!file.getName().toLowerCase().endsWith(".txt")) {
                 file = new File(file.getParentFile(), file.getName() + ".txt");
             }
-
+            
             try {
                 output_textarea.write(new OutputStreamWriter(new FileOutputStream(file), "utf-8"));
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-
+        
     }//GEN-LAST:event_save_buttonActionPerformed
-
+    
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
         // TODO add your handling code here:
         if (!_closing) {
             if (busy() || !"".equals(output_textarea.getText().trim())) {
-
+                
                 if (Helpers.mostrarMensajeInformativoSINO(this, "EXIT NOW?") == 0) {
-
+                    
                     if (_transferences_running) {
-
+                        
                         if (!session_menu.isSelected()) {
                             if (Helpers.mostrarMensajeInformativoSINO(this, "All transactions in progress or on hold will be lost. ARE YOU SURE?") == 0) {
-
+                                
                                 bye();
                             }
                         } else {
                             bye();
                         }
                     } else {
-
+                        
                         bye();
                     }
                 }
-
+                
             } else {
-
+                
                 bye();
             }
         }
     }//GEN-LAST:event_formWindowClosing
-
+    
     private void cuentas_textareaFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_cuentas_textareaFocusGained
         // TODO add your handling code here:
         if (!_firstAccountsTextareaClick) {
@@ -1787,7 +1795,7 @@ public class Main extends javax.swing.JFrame {
             cuentas_textarea.setForeground(null);
         }
     }//GEN-LAST:event_cuentas_textareaFocusGained
-
+    
     private void cuentas_textareaMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_cuentas_textareaMouseReleased
         // TODO add your handling code here:
         if (!_firstAccountsTextareaClick) {
@@ -1796,48 +1804,48 @@ public class Main extends javax.swing.JFrame {
             cuentas_textarea.setForeground(null);
         }
     }//GEN-LAST:event_cuentas_textareaMouseReleased
-
+    
     private void upload_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_upload_buttonActionPerformed
         // TODO add your handling code here:
 
         if (!Main.MEGA_ACCOUNTS.isEmpty()) {
-
+            
             upload_button.setEnabled(false);
             if (_transferences_running) {
                 upload_button.setText("PAUSING CURRENT TRANSFER...");
             }
-
+            
             Helpers.threadRun(() -> {
-
+                
                 if (_transferences_running) {
                     _current_transference.pause();
                 }
-
+                
                 Helpers.GUIRunAndWait(() -> {
                     upload_button.setText("NEW UPLOAD");
-
+                    
                     UploadFileDialog dialog = new UploadFileDialog(this, true);
-
+                    
                     dialog.setLocationRelativeTo(this);
-
+                    
                     dialog.setVisible(true);
-
+                    
                     if (_transferences_running) {
                         Helpers.threadRun(() -> {
                             _current_transference.resume();
                         });
                     }
-
+                    
                     if (dialog.isOk()) {
-
+                        
                         vamos_button.setEnabled(false);
-
+                        
                         cuentas_textarea.setEnabled(false);
-
+                        
                         Helpers.threadRun(() -> {
-
+                            
                             synchronized (TRANSFERENCES_LOCK) {
-
+                                
                                 Helpers.GUIRunAndWait(() -> {
                                     status_label.setText("");
                                     progressbar.setIndeterminate(false);
@@ -1848,7 +1856,7 @@ public class Main extends javax.swing.JFrame {
                                     tabbed_panel.setSelectedIndex(1);
                                     upload_button.setEnabled(true);
                                 });
-
+                                
                                 TRANSFERENCES_LOCK.notifyAll();
                             }
                         });
@@ -1856,78 +1864,78 @@ public class Main extends javax.swing.JFrame {
                         upload_button.setEnabled(true);
                     }
                 });
-
+                
             });
-
+            
         } else {
             Helpers.mostrarMensajeError(this, "YOU HAVE TO FIRST ADD SOME ACCOUNTS AND CHECK THEM");
         }
     }//GEN-LAST:event_upload_buttonActionPerformed
-
+    
     private void clear_trans_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clear_trans_buttonActionPerformed
         // TODO add your handling code here:
 
         clear_trans_button.setEnabled(false);
-
+        
         Helpers.threadRun(() -> {
-
+            
             synchronized (TRANSFERENCES_LOCK) {
-
+                
                 Helpers.GUIRunAndWait(() -> {
                     if (transferences.getComponentCount() > 0) {
-
+                        
                         for (Component t : transferences.getComponents()) {
-
+                            
                             Transference trans = (Transference) t;
-
+                            
                             if (trans.isFinished()) {
                                 transferences.remove(t);
                             }
                         }
-
+                        
                         transferences.revalidate();
-
+                        
                         transferences.repaint();
                     }
-
+                    
                     clear_trans_button.setEnabled(true);
                 });
             }
         });
-
+        
     }//GEN-LAST:event_clear_trans_buttonActionPerformed
-
+    
     private void cancel_trans_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancel_trans_buttonActionPerformed
         // TODO add your handling code here:
         Helpers.threadRun(() -> {
             synchronized (TRANSFERENCES_LOCK) {
                 Helpers.GUIRunAndWait(() -> {
                     if (transferences.getComponentCount() > 0) {
-
+                        
                         if (Helpers.mostrarMensajeInformativoSINO(this, "All transactions in progress or on hold will be lost. ARE YOU SURE?") == 0) {
-
+                            
                             cancel_trans_button.setEnabled(false);
-
+                            
                             upload_button.setEnabled(false);
-
+                            
                             Helpers.threadRun(() -> {
-
+                                
                                 synchronized (TRANSFERENCES_LOCK) {
-
+                                    
                                     Helpers.GUIRun(() -> {
                                         progressbar.setIndeterminate(true);
                                     });
-
+                                    
                                     Helpers.runProcess(new String[]{"mega-transfers", "-ca"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
-
+                                    
                                     if (_current_transference != null) {
                                         _current_transference.setCanceled(true);
                                     }
-
+                                    
                                     _transferences_running = false;
-
+                                    
                                     _current_transference = null;
-
+                                    
                                     Helpers.GUIRun(() -> {
                                         transferences.removeAll();
                                         transferences.revalidate();
@@ -1938,21 +1946,21 @@ public class Main extends javax.swing.JFrame {
                                         cancel_trans_button.setEnabled(true);
                                         progressbar.setIndeterminate(false);
                                     });
-
+                                    
                                     TRANSFERENCES_LOCK.notifyAll();
                                 }
-
+                                
                             });
-
+                            
                         }
                     }
                 });
-
+                
             }
         });
-
+        
     }//GEN-LAST:event_cancel_trans_buttonActionPerformed
-
+    
     private void tabbed_panelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tabbed_panelMouseClicked
         // TODO add your handling code here:
         if (evt.getClickCount() == 2 && evt.getButton() == MouseEvent.BUTTON1) {
@@ -1961,7 +1969,7 @@ public class Main extends javax.swing.JFrame {
             repaint();
         }
     }//GEN-LAST:event_tabbed_panelMouseClicked
-
+    
     private void clear_log_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clear_log_buttonActionPerformed
         // TODO add your handling code here:
         if (!busy() && Helpers.mostrarMensajeInformativoSINO(this, "SURE?") == 0) {
