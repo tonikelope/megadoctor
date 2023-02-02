@@ -46,7 +46,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.85";
+    public final static String VERSION = "0.86";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -71,6 +71,10 @@ public class Main extends javax.swing.JFrame {
     private volatile boolean _transferences_running = false;
     private volatile Transference _current_transference = null;
     private volatile String _last_email_force_refresh = null;
+
+    public JButton getCancel_trans_button() {
+        return cancel_trans_button;
+    }
 
     public boolean busy() {
         return isRunning_global_check() || isRunning_main_action() || isTransferences_running();
@@ -206,6 +210,7 @@ public class Main extends javax.swing.JFrame {
                                     if (!trans.isRunning() && !trans.isFinished() && !trans.isCanceled()) {
                                         _transferences_running = true;
                                         _current_transference = trans;
+                                        pause_button.setText("PAUSE");
                                         trans.start();
                                         break;
                                     }
@@ -213,6 +218,8 @@ public class Main extends javax.swing.JFrame {
                             }
 
                             cancel_trans_button.setEnabled(_transferences_running);
+                            
+                            pause_button.setEnabled(_transferences_running);
 
                             vamos_button.setEnabled(!busy() || (isRunning_global_check() && !isAborting_global_check()));
 

@@ -349,6 +349,7 @@ public final class Transference extends javax.swing.JPanel {
             Helpers.GUIRun(() -> {
                 Main.MAIN_WINDOW.getVamos_button().setEnabled(false);
                 Main.MAIN_WINDOW.getCuentas_textarea().setEnabled(false);
+                action.setText("(STARTING...)");
             });
 
             _running = true;
@@ -581,7 +582,7 @@ public final class Transference extends javax.swing.JPanel {
                         long speed = calculateSpeed(_size, old_prog, _prog, old_timestamp, _prog_timestamp);
                         action.setText(Helpers.formatBytes(speed) + "/s");
                     } else {
-                        action.setText("");
+                        action.setText("----");
                     }
 
                 } else {
@@ -754,9 +755,11 @@ public final class Transference extends javax.swing.JPanel {
 
             String filename = new File(_lpath).getName();
 
-            if (!_canceled && !_finished && Helpers.mostrarMensajeInformativoSINO(Main.MAIN_WINDOW, "<b>" + filename + "</b><br><br><b>CANCEL</b> this transference?") == 0) {
+            if (!_canceled && !_finished) {
 
-                stop();
+                if (Main.MAIN_WINDOW.getCancel_trans_button().isEnabled() && Helpers.mostrarMensajeInformativoSINO(Main.MAIN_WINDOW, "<b>" + filename + "</b><br><br><b>CANCEL</b> this transference?") == 0) {
+                    stop();
+                }
 
             } else if (!_canceled && _finished && Helpers.mostrarMensajeInformativoSINO(Main.MAIN_WINDOW, "<b>" + filename + "</b><br><br><b>Clear</b> this finished transference?") == 0) {
                 clearFinished();
