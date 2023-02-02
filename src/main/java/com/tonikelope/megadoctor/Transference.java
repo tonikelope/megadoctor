@@ -241,15 +241,18 @@ public final class Transference extends javax.swing.JPanel {
     private void securePauseTransfer() {
         Helpers.runProcess(new String[]{"mega-transfers", "-pa"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-        String transfers, old_transfers = Helpers.runProcess(new String[]{"mega-transfers", "--show-completed", "--output-cols=TAG"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+        String transfers, old_transfers;
 
-        try {
-            Thread.sleep(isDirectory() ? SECURE_PAUSE_WAIT_FOLDER : SECURE_PAUSE_WAIT_FILE);
-        } catch (InterruptedException ex) {
-            Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
+        while ((old_transfers = Helpers.runProcess(new String[]{"mega-transfers", "--limit=1000000", "--output-cols=STATE"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]).contains("COMPLETING")) {
+
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
 
-        while (!(transfers = Helpers.runProcess(new String[]{"mega-transfers", "--show-completed", "--output-cols=TAG"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]).equals(old_transfers)) {
+        while (!(transfers = Helpers.runProcess(new String[]{"mega-transfers", "--limit=1000000", "--output-cols=TAG,STATE"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]).equals(old_transfers)) {
 
             old_transfers = transfers;
 

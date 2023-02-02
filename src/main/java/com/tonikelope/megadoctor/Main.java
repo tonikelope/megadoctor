@@ -1862,7 +1862,11 @@ public class Main extends javax.swing.JFrame {
             upload_button.setEnabled(false);
 
             if (_transferences_running) {
-                upload_button.setText("PAUSING CURRENT TRANSFER...");
+
+                if (!_current_transference.isPaused()) {
+                    upload_button.setText("PAUSING CURRENT TRANSFER...");
+                }
+
                 getPause_button().setEnabled(false);
                 getCancel_trans_button().setEnabled(false);
             }
