@@ -69,11 +69,12 @@ public class Helpers {
         Helpers.GUIRun(() -> {
             if (w.getPreferredSize().getHeight() > w.getSize().getHeight() || w.getPreferredSize().getWidth() > w.getSize().getWidth()) {
                 w.pack();
+                setCenterOfParent((Window) w.getParent(), w);
             }
 
             w.revalidate();
-
             w.repaint();
+            
         });
 
     }
@@ -102,6 +103,16 @@ public class Helpers {
         }
 
         return "";
+    }
+
+    public static void setCenterOfParent(Window parent, Window dialog) {
+        Point parentPosition = parent.getLocation();
+        Dimension parentSize = parent.getSize();
+        Dimension size = dialog.getSize();
+        Point position = new Point(parentPosition.x
+                + (parentSize.width / 2 - size.width / 2), parentPosition.y
+                + (parentSize.height / 2 - size.height / 2));
+        dialog.setLocation(position);/*from w  ww. j av a2 s. com*/
     }
 
     public static void setCenterOfParent(JFrame parent, JDialog dialog) {

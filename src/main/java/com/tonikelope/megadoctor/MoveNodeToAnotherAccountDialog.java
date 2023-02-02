@@ -14,7 +14,6 @@ import static com.tonikelope.megadoctor.Main.MEGA_CMD_WINDOWS_PATH;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Set;
-import javax.swing.JFrame;
 
 /**
  *
@@ -202,7 +201,7 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog implemen
                     vamos_button.setEnabled(true);
                     progress.setVisible(false);
                     Helpers.smartPack(this);
-                    Helpers.setCenterOfParent((JFrame) getParent(), this);
+
                 });
             });
         }

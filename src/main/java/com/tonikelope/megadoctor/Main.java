@@ -46,7 +46,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.80";
+    public final static String VERSION = "0.81";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -140,25 +140,28 @@ public class Main extends javax.swing.JFrame {
         transf_scroll.getVerticalScrollBar().setUnitIncrement(20);
         setTitle("MegaDoctor " + VERSION);
         status_label.setText("Checking if MEGACMD is present...");
-        setEnabled(false);
-
         pack();
+        setEnabled(false);
 
     }
 
     private void runMEGACMDCHecker() {
 
-        MEGA_CMD_VERSION = Helpers.runProcess(new String[]{"mega-version"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+        Helpers.threadRun(() -> {
 
-        if (MEGA_CMD_VERSION == null || "".equals(MEGA_CMD_VERSION)) {
-            Helpers.mostrarMensajeError(MAIN_WINDOW, "MEGA CMD IS REQUIRED");
-            Helpers.openBrowserURLAndWait(MEGA_CMD_URL);
-            System.exit(1);
-        }
+            MEGA_CMD_VERSION = Helpers.runProcess(new String[]{"mega-version"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-        Helpers.GUIRun(() -> {
-            MAIN_WINDOW.setEnabled(true);
-            MAIN_WINDOW.status_label.setText("");
+            if (MEGA_CMD_VERSION == null || "".equals(MEGA_CMD_VERSION)) {
+                Helpers.mostrarMensajeError(this, "MEGA CMD IS REQUIRED");
+                Helpers.openBrowserURLAndWait(MEGA_CMD_URL);
+                System.exit(1);
+            }
+
+            Helpers.GUIRun(() -> {
+                setEnabled(true);
+                status_label.setText("");
+            });
+
         });
 
     }
@@ -232,6 +235,12 @@ public class Main extends javax.swing.JFrame {
             }
 
         });
+    }
+
+    public void init() {
+        runMEGACMDCHecker();
+        runTransferenceWatchdog();
+        loadAccounts();
     }
 
     public boolean login(String email) {
@@ -2027,9 +2036,7 @@ public class Main extends javax.swing.JFrame {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 MAIN_WINDOW = new Main();
-                MAIN_WINDOW.runMEGACMDCHecker();
-                MAIN_WINDOW.runTransferenceWatchdog();
-                MAIN_WINDOW.loadAccounts();
+                MAIN_WINDOW.init();
                 MAIN_WINDOW.setVisible(true);
             }
         });
