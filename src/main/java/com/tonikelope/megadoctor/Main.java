@@ -46,7 +46,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.86";
+    public final static String VERSION = "0.87";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -71,6 +71,10 @@ public class Main extends javax.swing.JFrame {
     private volatile boolean _transferences_running = false;
     private volatile Transference _current_transference = null;
     private volatile String _last_email_force_refresh = null;
+
+    public JButton getPause_button() {
+        return pause_button;
+    }
 
     public JButton getCancel_trans_button() {
         return cancel_trans_button;
@@ -218,7 +222,7 @@ public class Main extends javax.swing.JFrame {
                             }
 
                             cancel_trans_button.setEnabled(_transferences_running);
-                            
+
                             pause_button.setEnabled(_transferences_running);
 
                             vamos_button.setEnabled(!busy() || (isRunning_global_check() && !isAborting_global_check()));
@@ -1859,6 +1863,8 @@ public class Main extends javax.swing.JFrame {
 
             if (_transferences_running) {
                 upload_button.setText("PAUSING CURRENT TRANSFER...");
+                getPause_button().setEnabled(false);
+                getCancel_trans_button().setEnabled(false);
             }
 
             Helpers.threadRun(() -> {
@@ -1877,7 +1883,12 @@ public class Main extends javax.swing.JFrame {
                 boolean r = resume;
 
                 Helpers.GUIRunAndWait(() -> {
+
                     upload_button.setText("NEW UPLOAD");
+
+                    getPause_button().setEnabled(true);
+
+                    getCancel_trans_button().setEnabled(true);
 
                     UploadFileDialog dialog = new UploadFileDialog(this, true);
 
@@ -1912,7 +1923,9 @@ public class Main extends javax.swing.JFrame {
                                     transferences.repaint();
                                     tabbed_panel.setSelectedIndex(1);
                                     upload_button.setEnabled(true);
-                                    upload_button.setText("NEW UPLOAD");
+                                    getPause_button().setEnabled(true);
+                                    getCancel_trans_button().setEnabled(true);
+
                                 });
 
                                 TRANSFERENCES_LOCK.notifyAll();
@@ -1920,7 +1933,8 @@ public class Main extends javax.swing.JFrame {
                         });
                     } else {
                         upload_button.setEnabled(true);
-                        upload_button.setText("NEW UPLOAD");
+                        getPause_button().setEnabled(true);
+                        getCancel_trans_button().setEnabled(true);
                     }
                 });
 
