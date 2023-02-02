@@ -252,7 +252,7 @@ public final class Transference extends javax.swing.JPanel {
             }
         }
 
-        while (!(transfers = Helpers.runProcess(new String[]{"mega-transfers", "--limit=1000000", "--output-cols=TAG,STATE"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]).equals(old_transfers)) {
+        while (!(transfers = Helpers.runProcess(new String[]{"mega-transfers", "--show-completed", "--limit=1000000", "--output-cols=TAG,STATE"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]).equals(old_transfers)) {
 
             old_transfers = transfers;
 
@@ -270,13 +270,13 @@ public final class Transference extends javax.swing.JPanel {
 
         synchronized (TRANSFERENCES_LOCK) {
 
-            Helpers.GUIRun(() -> {
+            Helpers.GUIRunAndWait(() -> {
                 action.setText("(PAUSING...)");
             });
 
             securePauseTransfer();
 
-            Helpers.GUIRun(() -> {
+            Helpers.GUIRunAndWait(() -> {
                 action.setText("(PAUSED)");
             });
 
@@ -298,11 +298,18 @@ public final class Transference extends javax.swing.JPanel {
 
                 Helpers.GUIRun(() -> {
                     action.setText("(RESUMING...)");
+                    Main.MAIN_WINDOW.getPause_button().setEnabled(false);
+                    Main.MAIN_WINDOW.getCancel_trans_button().setEnabled(false);
                 });
 
                 Main.MAIN_WINDOW.login(_email);
 
                 Helpers.runProcess(new String[]{"mega-transfers", "-ra"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+                Helpers.GUIRun(() -> {
+                    Main.MAIN_WINDOW.getPause_button().setEnabled(true);
+                    Main.MAIN_WINDOW.getCancel_trans_button().setEnabled(true);
+                });
 
                 TRANSFERENCES_LOCK.notifyAll();
             }

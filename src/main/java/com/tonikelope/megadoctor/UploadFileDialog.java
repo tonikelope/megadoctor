@@ -377,7 +377,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
         String email = (String) email_combobox.getSelectedItem();
 
-        if (!email.isBlank()) {
+        if (!email.isBlank() && email_combobox.isEnabled()) {
             progress.setVisible(true);
             email_combobox.setEnabled(false);
             local_file_button.setEnabled(false);

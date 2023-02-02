@@ -171,9 +171,9 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog implemen
 
     private void email_comboboxItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_email_comboboxItemStateChanged
         // TODO add your handling code here:
+        String email = (String) email_combobox.getSelectedItem();
+        if (!email.isBlank() && email_combobox.isEnabled()) {
 
-        if (vamos_button.isEnabled()) {
-            String email = (String) email_combobox.getSelectedItem();
             email_combobox.setEnabled(false);
             vamos_button.setEnabled(false);
             account_stats_textarea.setText("");
@@ -188,6 +188,8 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog implemen
                 String stats = Main.MAIN_WINDOW.currentAccountStats();
 
                 _free_space = Helpers.getAccountFreeSpace(email);
+
+                Main.MAIN_WINDOW.parseAccountNodes(email);
 
                 Helpers.GUIRun(() -> {
 
