@@ -46,7 +46,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.84";
+    public final static String VERSION = "0.85";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -1315,6 +1315,7 @@ public class Main extends javax.swing.JFrame {
         transferences_control_panel = new javax.swing.JPanel();
         cancel_trans_button = new javax.swing.JButton();
         clear_trans_button = new javax.swing.JButton();
+        pause_button = new javax.swing.JButton();
         transferences = new javax.swing.JPanel();
         upload_button = new javax.swing.JButton();
         clear_log_button = new javax.swing.JButton();
@@ -1426,6 +1427,17 @@ public class Main extends javax.swing.JFrame {
             }
         });
 
+        pause_button.setBackground(new java.awt.Color(255, 204, 0));
+        pause_button.setFont(new java.awt.Font("Noto Sans", 1, 14)); // NOI18N
+        pause_button.setText("PAUSE");
+        pause_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        pause_button.setDoubleBuffered(true);
+        pause_button.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                pause_buttonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout transferences_control_panelLayout = new javax.swing.GroupLayout(transferences_control_panel);
         transferences_control_panel.setLayout(transferences_control_panelLayout);
         transferences_control_panelLayout.setHorizontalGroup(
@@ -1433,6 +1445,8 @@ public class Main extends javax.swing.JFrame {
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, transferences_control_panelLayout.createSequentialGroup()
                 .addGap(0, 0, 0)
                 .addComponent(clear_trans_button)
+                .addGap(18, 18, 18)
+                .addComponent(pause_button)
                 .addGap(18, 18, 18)
                 .addComponent(cancel_trans_button)
                 .addContainerGap(835, Short.MAX_VALUE))
@@ -1443,7 +1457,8 @@ public class Main extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(transferences_control_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(cancel_trans_button)
-                    .addComponent(clear_trans_button))
+                    .addComponent(clear_trans_button)
+                    .addComponent(pause_button))
                 .addContainerGap())
         );
 
@@ -1841,9 +1856,18 @@ public class Main extends javax.swing.JFrame {
 
             Helpers.threadRun(() -> {
 
+                boolean resume = true;
+
                 if (_transferences_running) {
-                    _current_transference.pause();
+
+                    if (!_current_transference.isPaused()) {
+                        _current_transference.pause();
+                    } else {
+                        resume = false;
+                    }
                 }
+
+                boolean r = resume;
 
                 Helpers.GUIRunAndWait(() -> {
                     upload_button.setText("NEW UPLOAD");
@@ -1856,7 +1880,7 @@ public class Main extends javax.swing.JFrame {
 
                     upload_button.setText("PREPARING UPLOAD...");
 
-                    if (_transferences_running) {
+                    if (_transferences_running && r) {
                         Helpers.threadRun(() -> {
                             _current_transference.resume();
                         });
@@ -2005,6 +2029,52 @@ public class Main extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_clear_log_buttonActionPerformed
 
+    private void pause_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pause_buttonActionPerformed
+        // TODO add your handling code here:
+        pause_button.setEnabled(false);
+        cancel_trans_button.setEnabled(false);
+        upload_button.setEnabled(false);
+
+        Helpers.threadRun(() -> {
+            synchronized (TRANSFERENCES_LOCK) {
+
+                if (_transferences_running) {
+
+                    if (!_current_transference.isPaused()) {
+
+                        _current_transference.pause();
+
+                        Helpers.GUIRun(() -> {
+                            pause_button.setText("RESUME");
+                            pause_button.setEnabled(true);
+                            upload_button.setEnabled(true);
+                            cancel_trans_button.setEnabled(true);
+                        });
+
+                    } else {
+
+                        _current_transference.resume();
+
+                        Helpers.GUIRun(() -> {
+                            pause_button.setText("PAUSE");
+                            pause_button.setEnabled(true);
+                            upload_button.setEnabled(true);
+                            cancel_trans_button.setEnabled(true);
+                        });
+
+                    }
+
+                } else {
+                    Helpers.GUIRun(() -> {
+                        pause_button.setEnabled(true);
+                        upload_button.setEnabled(true);
+                        cancel_trans_button.setEnabled(true);
+                    });
+                }
+            }
+        });
+    }//GEN-LAST:event_pause_buttonActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -2056,6 +2126,7 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JLabel logo_label;
     private javax.swing.JTextArea output_textarea;
+    private javax.swing.JButton pause_button;
     private javax.swing.JProgressBar progressbar;
     private javax.swing.JButton save_button;
     private javax.swing.JCheckBoxMenuItem session_menu;

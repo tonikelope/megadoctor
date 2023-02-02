@@ -326,6 +326,8 @@
                               <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
                               <Component id="clear_trans_button" min="-2" max="-2" attributes="0"/>
                               <EmptySpace type="separate" max="-2" attributes="0"/>
+                              <Component id="pause_button" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace type="separate" max="-2" attributes="0"/>
                               <Component id="cancel_trans_button" min="-2" max="-2" attributes="0"/>
                               <EmptySpace pref="835" max="32767" attributes="0"/>
                           </Group>
@@ -338,6 +340,7 @@
                               <Group type="103" groupAlignment="3" attributes="0">
                                   <Component id="cancel_trans_button" alignment="3" min="-2" max="-2" attributes="0"/>
                                   <Component id="clear_trans_button" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="pause_button" alignment="3" min="-2" max="-2" attributes="0"/>
                               </Group>
                               <EmptySpace max="-2" attributes="0"/>
                           </Group>
@@ -385,6 +388,24 @@
                       </Properties>
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="clear_trans_buttonActionPerformed"/>
+                      </Events>
+                    </Component>
+                    <Component class="javax.swing.JButton" name="pause_button">
+                      <Properties>
+                        <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
+                          <Color blue="0" green="cc" red="ff" type="rgb"/>
+                        </Property>
+                        <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                          <Font name="Noto Sans" size="14" style="1"/>
+                        </Property>
+                        <Property name="text" type="java.lang.String" value="PAUSE"/>
+                        <Property name="cursor" type="java.awt.Cursor" editor="org.netbeans.modules.form.editors2.CursorEditor">
+                          <Color id="Cursor de Mano"/>
+                        </Property>
+                        <Property name="doubleBuffered" type="boolean" value="true"/>
+                      </Properties>
+                      <Events>
+                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="pause_buttonActionPerformed"/>
                       </Events>
                     </Component>
                   </SubComponents>

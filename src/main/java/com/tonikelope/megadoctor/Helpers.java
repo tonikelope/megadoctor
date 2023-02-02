@@ -73,48 +73,48 @@ import javax.swing.undo.UndoManager;
  * @author tonikelope
  */
 public class Helpers {
-    
+
     public static void smartPack(Window w) {
-        
+
         Helpers.GUIRun(() -> {
             if (w.getPreferredSize().getHeight() > w.getSize().getHeight() || w.getPreferredSize().getWidth() > w.getSize().getWidth()) {
                 w.pack();
                 setCenterOfParent((Window) w.getParent(), w);
             }
-            
+
             w.revalidate();
             w.repaint();
-            
+
         });
-        
+
     }
-    
+
     public static String formatBytes(Long bytes) {
-        
+
         String[] units = {"B", "KB", "MB", "GB", "TB"};
-        
+
         bytes = Math.max(bytes, 0L);
-        
+
         int pow = Math.min((int) ((bytes > 0L ? Math.log(bytes) : 0) / Math.log(1024)), units.length - 1);
-        
+
         Double bytes_double = (double) bytes / (1L << (10 * pow));
-        
+
         DecimalFormat df = new DecimalFormat("#.##");
-        
+
         return df.format(bytes_double) + ' ' + units[pow];
     }
-    
+
     public static String megaWhoami() {
         String whoami = Helpers.runProcess(new String[]{"mega-whoami"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-        
+
         if (!whoami.startsWith("[API:err:")) {
-            
+
             return whoami.replaceAll("^.+: +(.+)$", "$1").trim();
         }
-        
+
         return "";
     }
-    
+
     public static void setCenterOfParent(Window parent, Window dialog) {
         Point parentPosition = parent.getLocation();
         Dimension parentSize = parent.getSize();
@@ -124,7 +124,7 @@ public class Helpers {
                 + (parentSize.height / 2 - size.height / 2));
         dialog.setLocation(position);/*from w  ww. j av a2 s. com*/
     }
-    
+
     public static void setCenterOfParent(JFrame parent, JDialog dialog) {
         Point parentPosition = parent.getLocation();
         Dimension parentSize = parent.getSize();
@@ -134,7 +134,7 @@ public class Helpers {
                 + (parentSize.height / 2 - size.height / 2));
         dialog.setLocation(position);/*from w  ww. j av a2 s. com*/
     }
-    
+
     public static void setCenterOfParent(JDialog parent, JDialog dialog) {
         Point parentPosition = parent.getLocation();
         Dimension parentSize = parent.getSize();
@@ -144,44 +144,44 @@ public class Helpers {
                 + (parentSize.height / 2 - size.height / 2));
         dialog.setLocation(position);
     }
-    
+
     public static String[] getAccountSpaceData(String email) {
         Main.MAIN_WINDOW.login(email);
-        
+
         String df = Helpers.runProcess(new String[]{"mega-df"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
         final String regex = "USED STORAGE: *([0-9]+).*?of *([0-9]+)";
         final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
         final Matcher matcher = pattern.matcher(df);
-        
+
         if (matcher.find()) {
             return new String[]{email, matcher.group(1), matcher.group(2)};
         }
-        
+
         return null;
     }
-    
+
     public static long getAccountFreeSpace(String email) {
         String[] space_used = getAccountSpaceData(email);
-        
+
         return Long.parseLong(space_used[2]) - Long.parseLong(space_used[1]);
     }
-    
+
     public static String getFechaHoraActual() {
-        
+
         String format = "dd-MM-yyyy HH:mm:ss";
-        
+
         return getFechaHoraActual(format);
     }
-    
+
     public static String getFechaHoraActual(String format) {
-        
+
         Date currentDate = new Date(System.currentTimeMillis());
-        
+
         DateFormat df = new SimpleDateFormat(format);
-        
+
         return df.format(currentDate);
     }
-    
+
     public static Sequencer midiLoopPlay(String midi) {
         try {
             Sequencer sequencer = MidiSystem.getSequencer(); // Get the default Sequencer
@@ -201,19 +201,19 @@ public class Helpers {
         }
         return null;
     }
-    
+
     public static void GUIRun(Runnable r) {
-        
+
         if (!SwingUtilities.isEventDispatchThread()) {
             SwingUtilities.invokeLater(r);
         } else {
             r.run();
         }
-        
+
     }
-    
+
     public static void GUIRunAndWait(Runnable r) {
-        
+
         try {
             if (!SwingUtilities.isEventDispatchThread()) {
                 SwingUtilities.invokeAndWait(r);
@@ -223,39 +223,39 @@ public class Helpers {
         } catch (InterruptedException | InvocationTargetException ex) {
             Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
     }
-    
+
     public static Future threadRun(Runnable r) {
-        
+
         return THREAD_POOL.submit(r);
-        
+
     }
-    
+
     public static long getNodeMapTotalSize(HashMap<String, ArrayList<String>> map) {
-        
+
         long total = 0L;
-        
+
         for (String email : map.keySet()) {
-            
+
             ArrayList<String> node_list = map.get(email);
-            
+
             for (String node : node_list) {
                 total += (long) ((Object[]) Main.MEGA_NODES.get(node))[0];
             }
         }
-        
+
         return total;
     }
-    
+
     public static void mostrarMensajeInformativo(JFrame frame, String m) {
-        
+
         final String msg = m.replace("\n", "<br>");
-        
+
         if (SwingUtilities.isEventDispatchThread()) {
-            
+
             JOptionPane.showMessageDialog(frame, "<html><div align='center' style='font-size:1.2em'>" + msg + "</div></html>");
-            
+
         } else {
             Helpers.GUIRunAndWait(new Runnable() {
                 @Override
@@ -268,41 +268,41 @@ public class Helpers {
 
     // 0=yes, 1=no, 2=cancel
     public static int mostrarMensajeInformativoSINO(JFrame frame, String m) {
-        
+
         final String msg = m.replace("\n", "<br>");
-        
+
         if (SwingUtilities.isEventDispatchThread()) {
-            
+
             return JOptionPane.showConfirmDialog(frame, "<html><div align='center' style='font-size:1.2em'>" + msg + "</div></html>", "Info", JOptionPane.YES_NO_OPTION);
-            
+
         } else {
-            
+
             final int[] res = new int[1];
-            
+
             Helpers.GUIRunAndWait(new Runnable() {
                 @Override
                 public void run() {
-                    
+
                     res[0] = JOptionPane.showConfirmDialog(frame, "<html><div align='center' style='font-size:1.2em'>" + msg + "</div></html>", "Info", JOptionPane.YES_NO_OPTION);
                 }
             });
-            
+
             return res[0];
-            
+
         }
-        
+
     }
-    
+
     public static void mostrarMensajeError(JFrame frame, String m) {
-        
+
         final String msg = m.replace("\n", "<br>");
-        
+
         if (SwingUtilities.isEventDispatchThread()) {
-            
+
             JOptionPane.showMessageDialog(frame, "<html><div align='center' style='font-size:1.2em'>" + msg + "</div></html>", "ERROR", JOptionPane.ERROR_MESSAGE);
-            
+
         } else {
-            
+
             Helpers.GUIRunAndWait(new Runnable() {
                 @Override
                 public void run() {
@@ -310,96 +310,96 @@ public class Helpers {
                 }
             });
         }
-        
+
     }
-    
+
     public static void openBrowserURLAndWait(final String url) {
-        
+
         try {
             Desktop.getDesktop().browse(new URI(url));
-            
+
         } catch (URISyntaxException | IOException ex) {
             Logger.getLogger(Helpers.class
                     .getName()).log(Level.SEVERE, null, ex.getMessage());
         }
-        
+
     }
-    
+
     public static boolean isWindows() {
-        
+
         return System.getProperty("os.name").toLowerCase().contains("win");
     }
-    
+
     public static String[] buildCommand(String[] command) {
-        
+
         String[] c = Helpers.isWindows() ? new String[]{"cmd.exe", "/c"} : new String[]{};
-        
+
         String[] result = Arrays.copyOf(c, c.length + command.length);
-        
+
         System.arraycopy(command, 0, result, c.length, command.length);
-        
+
         return result;
     }
-    
+
     public static String escapeMEGAPassword(String password) {
-        
+
         return password.contains(" ") ? password : "\"" + password + "\"";
     }
-    
+
     public static String[] runProcess(String[] command, String path) {
         try {
-            
+
             ProcessBuilder processbuilder = new ProcessBuilder(Helpers.buildCommand(command));
-            
+
             if (path != null && !"".equals(path)) {
-                
+
                 processbuilder.environment().put("PATH", path + File.pathSeparator + System.getenv("PATH"));
-                
+
             }
-            
+
             Process process = processbuilder.start();
-            
+
             long pid = process.pid();
-            
+
             StringBuilder sb = new StringBuilder();
-            
+
             try {
                 BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                
+
                 String line;
-                
+
                 while ((line = br.readLine()) != null) {
                     sb.append(line).append("\n");
                 }
             } catch (Exception ex) {
                 Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
             }
-            
+
             process.waitFor();
-            
+
             return new String[]{String.valueOf(pid), sb.toString()};
-            
+
         } catch (Exception ex) {
         }
-        
+
         return null;
     }
-    
+
     public static String extractFirstEmailFromtext(String text) {
-        
+
         final String regex = "[a-zA-Z0-9_!#$%&'*+/=?`{|}~^.\\-]+@[a-zA-Z0-9.\\-]+";
-        
+
         final Pattern pattern = Pattern.compile(regex);
-        
+
         final Matcher matcher = pattern.matcher(text);
-        
+
         if (matcher.find()) {
             return matcher.group(0);
         }
-        
+
         return null;
     }
-    
+
     public static void setContainerFont(Container container, Font font) {
         for (Component c : container.getComponents()) {
             if (c instanceof Container) {
@@ -414,39 +414,39 @@ public class Helpers {
 
     //Thanks -> https://stackoverflow.com/a/19877372 https://stackoverflow.com/a/1385498
     public static long getDirectorySize(final File folder, final AtomicBoolean terminate) {
-        
+
         Path path = folder.toPath();
-        
+
         final AtomicLong size = new AtomicLong(0);
-        
+
         EnumSet<FileVisitOption> opts = EnumSet.of(FOLLOW_LINKS);
-        
+
         try {
             Files.walkFileTree(path, opts, Integer.MAX_VALUE, new SimpleFileVisitor<Path>() {
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-                    
+
                     if (terminate.get()) {
                         System.out.println("WALKTREEE" + folder.getAbsolutePath() + " TERMINATED!");
                         size.set(-1);
                         return FileVisitResult.TERMINATE;
                     }
-                    
+
                     size.addAndGet(attrs.size());
                     return FileVisitResult.CONTINUE;
                 }
-                
+
                 @Override
                 public FileVisitResult visitFileFailed(Path file, IOException exc) {
-                    
+
                     System.out.println("skipped: " + file + " (" + exc + ")");
                     // Skip folders that can't be traversed
                     return FileVisitResult.CONTINUE;
                 }
-                
+
                 @Override
                 public FileVisitResult postVisitDirectory(Path dir, IOException exc) {
-                    
+
                     if (exc != null) {
                         System.out.println("had trouble traversing: " + dir + " (" + exc + ")");
                     }
@@ -457,60 +457,60 @@ public class Helpers {
         } catch (IOException e) {
             throw new AssertionError("walkFileTree will not throw IOException if the FileVisitor does not");
         }
-        
+
         return size.get();
-        
+
     }
-    
+
     public static HashMap<String, ArrayList<String>> extractNodeMapFromText(String text) {
-        
+
         final String regex = "H:[^> ]+";
-        
+
         final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
         final Matcher matcher = pattern.matcher(text);
-        
+
         HashMap<String, ArrayList<String>> nodesMAP = new HashMap<>();
-        
+
         while (matcher.find()) {
-            
+
             String node = matcher.group(0);
-            
+
             if (MEGA_NODES.containsKey(node)) {
-                
+
                 String email = (String) ((Object[]) MEGA_NODES.get(node))[1];
-                
+
                 if (!nodesMAP.containsKey(email)) {
                     nodesMAP.put(email, new ArrayList<>());
                 }
-                
+
                 nodesMAP.get(email).add(node);
             }
-            
+
         }
-        
+
         return nodesMAP;
     }
-    
+
     public static String getNodePathFromFindCommandOutput(String node, String find) {
-        
+
         final String regex = "(.+) <" + node + ">";
         final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
         final Matcher matcher = pattern.matcher(find);
-        
+
         if (matcher.find()) {
             return "/" + matcher.group(1).trim();
         }
-        
+
         return null;
     }
-    
+
     public static class JTextFieldRegularPopupMenu {
-        
+
         public static JMenuItem refreshLastAccount = null;
-        
+
         public static void addTo(JTextField txtField) {
             JPopupMenu popup = new JPopupMenu();
-            
+
             UndoManager undoManager = new UndoManager();
             txtField.getDocument().addUndoableEditListener(undoManager);
             Action undoAction = new AbstractAction("Undo") {
@@ -521,7 +521,7 @@ public class Helpers {
                     }
                 }
             };
-            
+
             Action copyAction = new AbstractAction("Copy") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
@@ -546,44 +546,44 @@ public class Helpers {
                     txtField.selectAll();
                 }
             };
-            
+
             cutAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control X"));
             copyAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control C"));
             pasteAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control V"));
             selectAllAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control A"));
-            
+
             if (txtField.isEditable()) {
                 JMenuItem undo = new JMenuItem(undoAction);
                 undo.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/undo.png")));
                 popup.add(undo);
-                
+
                 popup.addSeparator();
             }
-            
+
             JMenuItem cut = new JMenuItem(cutAction);
             cut.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/cut.png")));
             popup.add(cut);
-            
+
             JMenuItem copy = new JMenuItem(copyAction);
             copy.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/copy.png")));
             popup.add(copy);
-            
+
             JMenuItem paste = new JMenuItem(pasteAction);
             paste.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/paste.png")));
             popup.add(paste);
-            
+
             popup.addSeparator();
-            
+
             JMenuItem selectAll = new JMenuItem(selectAllAction);
             selectAll.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/select_all.png")));
             popup.add(selectAll);
-            
+
             txtField.setComponentPopupMenu(popup);
         }
-        
+
         public static void addTo(JTextArea txtArea) {
             JPopupMenu popup = new JPopupMenu();
-            
+
             UndoManager undoManager = new UndoManager();
             txtArea.getDocument().addUndoableEditListener(undoManager);
             Action undoAction = new AbstractAction("Undo") {
@@ -594,7 +594,7 @@ public class Helpers {
                     }
                 }
             };
-            
+
             Action copyAction = new AbstractAction("Copy") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
@@ -704,18 +704,18 @@ public class Helpers {
                 public void actionPerformed(ActionEvent ae) {
                     if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
                         Helpers.threadRun(() -> {
-                            
+
                             String email = Helpers.extractFirstEmailFromtext(txtArea.getSelectedText());
-                            
+
                             if (email != null) {
-                                
+
                                 Main.MAIN_WINDOW.forceRefreshAccount(email, "Force refresh", true, true);
                             }
                         });
                     }
                 }
             };
-            
+
             Action forceRefreshLastAccountAction = new AbstractAction("REFRESH LAST ACCOUNT") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
@@ -726,14 +726,14 @@ public class Helpers {
                     }
                 }
             };
-            
+
             Action truncateAccountAction = new AbstractAction("TRUNCATE SELECTED ACCOUNT") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
                     if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
                         Helpers.threadRun(() -> {
                             String email = Helpers.extractFirstEmailFromtext(txtArea.getSelectedText());
-                            
+
                             if (email != null) {
                                 Main.MAIN_WINDOW.truncateAccount(email);
                             }
@@ -745,117 +745,117 @@ public class Helpers {
             copyAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control C"));
             pasteAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control V"));
             selectAllAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control A"));
-            
+
             if (txtArea.isEditable()) {
                 JMenuItem undo = new JMenuItem(undoAction);
                 undo.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/undo.png")));
                 popup.add(undo);
-                
+
                 popup.addSeparator();
             }
-            
+
             JMenuItem cut = new JMenuItem(cutAction);
             cut.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/cut.png")));
             popup.add(cut);
-            
+
             JMenuItem copy = new JMenuItem(copyAction);
             copy.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/copy.png")));
             popup.add(copy);
-            
+
             JMenuItem paste = new JMenuItem(pasteAction);
             paste.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/paste.png")));
             popup.add(paste);
-            
+
             popup.addSeparator();
-            
+
             JMenuItem selectAll = new JMenuItem(selectAllAction);
             selectAll.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/select_all.png")));
             popup.add(selectAll);
-            
+
             popup.addSeparator();
-            
+
             JMenuItem renameNodes = new JMenuItem(renameMEGANodesAction);
             renameNodes.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/rename.png")));
-            
+
             popup.add(renameNodes);
-            
+
             popup.addSeparator();
-            
+
             JMenuItem copyInsideNodes = new JMenuItem(copyInsideMEGANodesAction);
             copyInsideNodes.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/copy.png")));
-            
+
             popup.add(copyInsideNodes);
-            
+
             popup.addSeparator();
-            
+
             JMenuItem moveInsideNodes = new JMenuItem(moveInsideMEGANodesAction);
             moveInsideNodes.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/move.png")));
-            
+
             popup.add(moveInsideNodes);
-            
+
             popup.addSeparator();
-            
+
             JMenuItem removeNodes = new JMenuItem(removeMEGANodesAction);
             removeNodes.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/remove.png")));
-            
+
             popup.add(removeNodes);
-            
+
             popup.addSeparator();
-            
+
             JMenuItem copyNodes = new JMenuItem(copyMEGANodesAction);
             copyNodes.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/copy.png")));
-            
+
             popup.add(copyNodes);
-            
+
             popup.addSeparator();
-            
+
             JMenuItem moveNodes = new JMenuItem(moveMEGANodesAction);
             moveNodes.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/move.png")));
-            
+
             popup.add(moveNodes);
-            
+
             popup.addSeparator();
-            
+
             JMenuItem publicONNodes = new JMenuItem(enableExporMEGANodesAction);
             publicONNodes.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/export_on.png")));
-            
+
             popup.add(publicONNodes);
-            
+
             popup.addSeparator();
-            
+
             JMenuItem publicOFFNodes = new JMenuItem(disableExporMEGANodesAction);
             publicOFFNodes.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/export_off.png")));
-            
+
             popup.add(publicOFFNodes);
-            
+
             popup.addSeparator();
-            
+
             JMenuItem refreshAccount = new JMenuItem(forceRefreshAccountAction);
             refreshAccount.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/refresh.png")));
-            
+
             popup.add(refreshAccount);
-            
+
             refreshLastAccount = new JMenuItem(forceRefreshLastAccountAction);
             refreshLastAccount.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/refresh.png")));
             popup.add(refreshLastAccount);
-            
+
             refreshLastAccount.setEnabled(false);
-            
+
             popup.addSeparator();
-            
+
             JMenuItem truncateAccount = new JMenuItem(truncateAccountAction);
-            
+
             truncateAccount.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/remove.png")));
-            
+
             popup.add(truncateAccount);
-            
+
             txtArea.setComponentPopupMenu(popup);
         }
-        
+
         public static void addRefreshableTo(JTextArea txtArea, Refresheable r) {
             JPopupMenu popup = new JPopupMenu();
             Refresheable _refresh = r;
-            
+
             UndoManager undoManager = new UndoManager();
             txtArea.getDocument().addUndoableEditListener(undoManager);
             Action undoAction = new AbstractAction("Undo") {
@@ -866,7 +866,7 @@ public class Helpers {
                     }
                 }
             };
-            
+
             Action copyAction = new AbstractAction("Copy") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
@@ -891,7 +891,7 @@ public class Helpers {
                     txtArea.selectAll();
                 }
             };
-            
+
             Action removeMEGANodesAction = new AbstractAction("DELETE SELECTED MEGA FOLDERS/FILES") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
@@ -905,22 +905,22 @@ public class Helpers {
                     }
                 }
             };
-            
+
             Action truncateAccountAction = new AbstractAction("TRUNCATE SELECTED ACCOUNT") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
                     if (txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
                         Helpers.threadRun(() -> {
-                            
+
                             String email = Helpers.extractFirstEmailFromtext(txtArea.getSelectedText());
-                            
+
                             if (email != null) {
                                 _refresh.enableR(false);
                                 Main.MAIN_WINDOW.truncateAccount(email);
                                 _refresh.enableR(true);
                                 _refresh.refresh();
                             }
-                            
+
                         });
                     }
                 }
@@ -929,54 +929,54 @@ public class Helpers {
             copyAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control C"));
             pasteAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control V"));
             selectAllAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control A"));
-            
+
             if (txtArea.isEditable()) {
                 JMenuItem undo = new JMenuItem(undoAction);
                 undo.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/undo.png")));
                 popup.add(undo);
-                
+
                 popup.addSeparator();
             }
-            
+
             JMenuItem cut = new JMenuItem(cutAction);
             cut.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/cut.png")));
             popup.add(cut);
-            
+
             JMenuItem copy = new JMenuItem(copyAction);
             copy.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/copy.png")));
             popup.add(copy);
-            
+
             JMenuItem paste = new JMenuItem(pasteAction);
             paste.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/paste.png")));
             popup.add(paste);
-            
+
             popup.addSeparator();
-            
+
             JMenuItem selectAll = new JMenuItem(selectAllAction);
             selectAll.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/select_all.png")));
             popup.add(selectAll);
-            
+
             popup.addSeparator();
-            
+
             JMenuItem removeNodes = new JMenuItem(removeMEGANodesAction);
-            
+
             removeNodes.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/remove.png")));
-            
+
             popup.add(removeNodes);
-            
+
             popup.addSeparator();
-            
+
             JMenuItem truncateAccount = new JMenuItem(truncateAccountAction);
-            
+
             truncateAccount.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/remove.png")));
-            
+
             popup.add(truncateAccount);
-            
+
             txtArea.setComponentPopupMenu(popup);
         }
-        
+
         private JTextFieldRegularPopupMenu() {
         }
     }
-    
+
 }
