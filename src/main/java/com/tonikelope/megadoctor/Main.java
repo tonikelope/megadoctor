@@ -46,7 +46,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.88";
+    public final static String VERSION = "0.89";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -319,6 +319,16 @@ public class Main extends javax.swing.JFrame {
         return true;
     }
 
+    public String currentAccountStats() {
+        String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+        String du = DUWithHandles();
+
+        String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+        return df + "\n" + du + "\n" + ls;
+    }
+
     public String DUWithHandles() {
 
         String ls = Helpers.runProcess(new String[]{"mega-ls", "/", "--show-handles"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
@@ -475,11 +485,7 @@ public class Main extends javax.swing.JFrame {
                         Helpers.runProcess(new String[]{"mega-import", s[1], folder}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
                     }
 
-                    String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
-                    String du = DUWithHandles();
-
-                    String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                    String stats = currentAccountStats();
 
                     parseAccountNodes(email);
 
@@ -487,7 +493,7 @@ public class Main extends javax.swing.JFrame {
 
                     Helpers.GUIRun(() -> {
 
-                        output_textarea.append("\n[" + email + "] (Refreshed after insertion)\n\n" + df + "\n" + du + "\n" + ls + "\n\n");
+                        output_textarea.append("\n[" + email + "] (Refreshed after insertion)\n\n" + stats + "\n\n");
 
                     });
 
@@ -509,17 +515,13 @@ public class Main extends javax.swing.JFrame {
 
                             Helpers.runProcess(delete_command.toArray(String[]::new), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-                            String ls_rm = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
-                            String du_rm = DUWithHandles();
-
-                            String df_rm = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                            String stats2 = currentAccountStats();
 
                             parseAccountNodes(email_rm);
 
                             Helpers.GUIRun(() -> {
 
-                                output_textarea.append("\n[" + email_rm + "] (Refreshed after deletion)\n\n" + df_rm + "\n" + du_rm + "\n" + ls_rm + "\n\n");
+                                output_textarea.append("\n[" + email_rm + "] (Refreshed after deletion)\n\n" + stats2 + "\n\n");
 
                             });
                         }
@@ -743,17 +745,13 @@ public class Main extends javax.swing.JFrame {
 
                 if (conta > 0) {
 
-                    String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
-                    String du = DUWithHandles();
-
-                    String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                    String stats = currentAccountStats();
 
                     parseAccountNodes(email);
 
                     Helpers.GUIRun(() -> {
 
-                        output_textarea.append("\n[" + email + "] (Refreshed after copying)\n\n" + df + "\n" + du + "\n" + ls + "\n\n");
+                        output_textarea.append("\n[" + email + "] (Refreshed after copying)\n\n" + stats + "\n\n");
 
                     });
 
@@ -840,17 +838,13 @@ public class Main extends javax.swing.JFrame {
 
                 if (conta > 0) {
 
-                    String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
-                    String du = DUWithHandles();
-
-                    String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                    String stats = currentAccountStats();
 
                     parseAccountNodes(email);
 
                     Helpers.GUIRun(() -> {
 
-                        output_textarea.append("\n[" + email + "] (Refreshed after moving)\n\n" + df + "\n" + du + "\n" + ls + "\n\n");
+                        output_textarea.append("\n[" + email + "] (Refreshed after moving)\n\n" + stats + "\n\n");
 
                     });
 
@@ -932,17 +926,13 @@ public class Main extends javax.swing.JFrame {
 
                 if (conta > 0) {
 
-                    String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
-                    String du = DUWithHandles();
-
-                    String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                    String stats = currentAccountStats();
 
                     parseAccountNodes(email);
 
                     Helpers.GUIRun(() -> {
 
-                        output_textarea.append("\n[" + email + "] (Refreshed after rename)\n\n" + df + "\n" + du + "\n" + ls + "\n\n");
+                        output_textarea.append("\n[" + email + "] (Refreshed after rename)\n\n" + stats + "\n\n");
 
                     });
 
@@ -1000,17 +990,14 @@ public class Main extends javax.swing.JFrame {
                 export_command.addAll(node_list);
 
                 login(email);
+
                 Helpers.runProcess(export_command.toArray(String[]::new), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-                String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
-                String du = DUWithHandles();
-
-                String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                String stats = currentAccountStats();
 
                 Helpers.GUIRun(() -> {
 
-                    output_textarea.append("\n[" + email + "] (Refreshed after public links generated/removed)\n\n" + df + "\n" + du + "\n" + ls + "\n\n");
+                    output_textarea.append("\n[" + email + "] (Refreshed after public links generated/removed)\n\n" + stats + "\n\n");
 
                 });
             }
@@ -1157,17 +1144,13 @@ public class Main extends javax.swing.JFrame {
 
             Helpers.runProcess(new String[]{"mega-reload"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-            String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
-            String du = DUWithHandles();
-
-            String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+            String stats = currentAccountStats();
 
             parseAccountNodes(email);
 
             Helpers.GUIRun(() -> {
 
-                output_textarea.append("\n[" + email + "] (" + reason + ")\n\n" + df + "\n" + du + "\n" + ls + "\n\n");
+                output_textarea.append("\n[" + email + "] (" + reason + ")\n\n" + stats + "\n\n");
 
             });
 
@@ -1667,15 +1650,11 @@ public class Main extends javax.swing.JFrame {
                                     status_label.setText("Reading " + email + " info...");
                                 });
 
-                                String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
-                                String du = DUWithHandles();
-
-                                String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                                String stats = currentAccountStats();
 
                                 Helpers.GUIRun(() -> {
 
-                                    output_textarea.append("\n[" + email + "]\n\n" + df + "\n" + du + "\n" + ls + "\n\n");
+                                    output_textarea.append("\n[" + email + "]\n\n" + stats + "\n\n");
 
                                 });
 

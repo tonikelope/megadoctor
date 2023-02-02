@@ -10,7 +10,6 @@ by tonikelope
  */
 package com.tonikelope.megadoctor;
 
-import static com.tonikelope.megadoctor.Main.MEGA_CMD_WINDOWS_PATH;
 import java.awt.Color;
 import java.io.File;
 import java.util.ArrayList;
@@ -391,9 +390,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
                 Main.MAIN_WINDOW.login(email);
 
-                String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
-                String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                String stats = Main.MAIN_WINDOW.currentAccountStats();
 
                 _free_space = Helpers.getAccountFreeSpace(email);
 
@@ -402,7 +399,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                 Helpers.GUIRun(() -> {
 
                     free_space.setText(Helpers.formatBytes(_free_space));
-                    account_stats_textarea.setText("[" + email + "] \n\n" + df + "\n" + ls + "\n\n");
+                    account_stats_textarea.setText("[" + email + "] \n\n" + stats + "\n\n");
                     account_stats_textarea.setCaretPosition(0);
                     progress.setVisible(false);
                     email_combobox.setEnabled(true);

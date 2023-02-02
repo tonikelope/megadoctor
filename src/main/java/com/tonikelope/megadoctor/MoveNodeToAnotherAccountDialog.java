@@ -10,7 +10,6 @@ by tonikelope
  */
 package com.tonikelope.megadoctor;
 
-import static com.tonikelope.megadoctor.Main.MEGA_CMD_WINDOWS_PATH;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Set;
@@ -186,15 +185,13 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog implemen
 
                 Main.MAIN_WINDOW.login(email);
 
-                String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
-                String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                String stats = Main.MAIN_WINDOW.currentAccountStats();
 
                 _free_space = Helpers.getAccountFreeSpace(email);
 
                 Helpers.GUIRun(() -> {
 
-                    account_stats_textarea.setText("[" + email + "] \n\n" + df + "\n" + ls + "\n\n");
+                    account_stats_textarea.setText("[" + email + "] \n\n" + stats + "\n\n");
                     account_stats_textarea.setCaretPosition(0);
                     free_space.setText(Helpers.formatBytes(_free_space));
                     email_combobox.setEnabled(true);
