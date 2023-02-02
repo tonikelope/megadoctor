@@ -74,7 +74,7 @@ public class Helpers {
 
             w.revalidate();
             w.repaint();
-            
+
         });
 
     }

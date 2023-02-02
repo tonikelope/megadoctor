@@ -46,7 +46,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.81";
+    public final static String VERSION = "0.82";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -1036,7 +1036,7 @@ public class Main extends javax.swing.JFrame {
 
         });
 
-        if (MEGA_ACCOUNTS.containsKey(email) && Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "CAUTION!! ALL CONTENT INSIDE <b>" + email + "</b> WILL BE <b>PERMANENTLY</b> DELETED.<br><br>ARE YOU SURE?") == 0 && Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "Forgive me for insisting... ARE YOU ABSOLUTELY SURE?") == 0) {
+        if (MEGA_ACCOUNTS.containsKey(email) && Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "CAUTION!! ALL CONTENT INSIDE <b>" + email + "</b> WILL BE <b>PERMANENTLY</b> DELETED.<br><br>ARE YOU SURE?") == 0 && Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "Sorry for asking you again... ARE YOU SURE?") == 0) {
 
             login(email);
 
