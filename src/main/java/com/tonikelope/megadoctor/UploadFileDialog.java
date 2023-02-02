@@ -366,7 +366,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
             });
         } else {
             local_folder_button.setEnabled(true);
-            local_file_button.setEnabled(false);
+            local_file_button.setEnabled(true);
             local_folder_button.setText("Select FOLDER");
         }
 
