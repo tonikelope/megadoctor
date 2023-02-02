@@ -15,6 +15,7 @@ import java.awt.Color;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.swing.JFileChooser;
 
 /**
@@ -44,11 +45,14 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
     private volatile long _free_space = 0;
     private volatile String _lpath = null;
     private volatile String _rpath = null;
+    private final AtomicBoolean _terminate_walk_tree = new AtomicBoolean();
 
     public UploadFileDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
 
         initComponents();
+
+        _terminate_walk_tree.set(false);
 
         Helpers.JTextFieldRegularPopupMenu.addRefreshableTo(account_stats_textarea, this);
 
@@ -65,6 +69,12 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         for (String email : emails) {
             email_combobox.addItem(email);
         }
+
+        progress.setIndeterminate(true);
+
+        local_folder_progress.setIndeterminate(true);
+
+        local_folder_progress.setVisible(false);
 
         pack();
 
@@ -117,6 +127,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         local_size = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
         account_stats_textarea = new javax.swing.JTextArea();
+        local_folder_progress = new javax.swing.JProgressBar();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle("UPLOAD FILE");
@@ -190,26 +201,29 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         account_stats_textarea.setDoubleBuffered(true);
         jScrollPane1.setViewportView(account_stats_textarea);
 
+        local_folder_progress.setDoubleBuffered(true);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1)
-                    .addComponent(progress, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(local_folder_progress, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(progress, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                         .addComponent(free_space)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(email_combobox, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(vamos_button))
-                    .addGroup(layout.createSequentialGroup()
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                         .addComponent(jLabel2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(remote_path))
-                    .addGroup(layout.createSequentialGroup()
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                         .addComponent(local_file_button)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(local_folder_button)
@@ -228,8 +242,10 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                     .addComponent(local_folder_button)
                     .addComponent(local_path)
                     .addComponent(local_size))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 368, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(local_folder_progress, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 363, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
@@ -262,12 +278,20 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
         // TODO add your handling code here:
         if (!progress.isVisible()) {
+
+            _terminate_walk_tree.set(true);
+
             dispose();
         }
     }//GEN-LAST:event_formWindowClosing
 
     private void local_file_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_local_file_buttonActionPerformed
         // TODO add your handling code here:
+
+        local_file_button.setEnabled(false);
+
+        local_folder_button.setEnabled(false);
+
         JFileChooser fileChooser = new JFileChooser();
 
         Helpers.setContainerFont(fileChooser, remote_path.getFont().deriveFont(14f));
@@ -284,6 +308,8 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
             local_path.setText(file.getAbsolutePath());
 
+            local_size.setText("");
+
             _local_size = file.length();
 
             local_size.setText(Helpers.formatBytes(_local_size));
@@ -291,11 +317,20 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
             checkFreeSpace();
         }
 
+        local_folder_button.setEnabled(true);
+
+        local_file_button.setEnabled(true);
+
         Helpers.smartPack(this);
     }//GEN-LAST:event_local_file_buttonActionPerformed
 
     private void local_folder_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_local_folder_buttonActionPerformed
         // TODO add your handling code here:
+
+        local_folder_button.setEnabled(false);
+
+        local_file_button.setEnabled(false);
+
         JFileChooser fileChooser = new JFileChooser();
 
         Helpers.setContainerFont(fileChooser, remote_path.getFont().deriveFont(14f));
@@ -311,12 +346,28 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
             _lpath = file.getAbsolutePath();
 
             local_path.setText(file.getAbsolutePath());
+            local_folder_progress.setVisible(true);
+            local_folder_button.setText("Calculating folder size...");
+            local_size.setText("");
+            Helpers.threadRun(() -> {
+                long size = Helpers.getDirectorySize(file, _terminate_walk_tree);
+                if (size > 0) {
+                    _local_size = size;
+                    Helpers.GUIRun(() -> {
+                        local_folder_button.setEnabled(true);
+                        local_file_button.setEnabled(true);
+                        local_folder_button.setText("Select FOLDER");
+                        local_folder_progress.setVisible(false);
+                        local_size.setText(Helpers.formatBytes(_local_size));
+                        checkFreeSpace();
+                    });
+                }
 
-            _local_size = Helpers.getDirectorySize(file);
-
-            local_size.setText(Helpers.formatBytes(_local_size));
-
-            checkFreeSpace();
+            });
+        } else {
+            local_folder_button.setEnabled(true);
+            local_file_button.setEnabled(false);
+            local_folder_button.setText("Select FOLDER");
         }
 
         Helpers.smartPack(this);
@@ -328,7 +379,6 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         String email = (String) email_combobox.getSelectedItem();
 
         if (!email.isBlank()) {
-            progress.setIndeterminate(true);
             progress.setVisible(true);
             email_combobox.setEnabled(false);
             local_file_button.setEnabled(false);
@@ -377,6 +427,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JButton local_file_button;
     private javax.swing.JButton local_folder_button;
+    private javax.swing.JProgressBar local_folder_progress;
     private javax.swing.JLabel local_path;
     private javax.swing.JLabel local_size;
     private javax.swing.JProgressBar progress;

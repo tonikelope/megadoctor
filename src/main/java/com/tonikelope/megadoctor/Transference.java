@@ -13,6 +13,7 @@ package com.tonikelope.megadoctor;
 import static com.tonikelope.megadoctor.Main.MEGA_CMD_WINDOWS_PATH;
 import static com.tonikelope.megadoctor.Main.TRANSFERENCES_LOCK;
 import java.io.File;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -33,7 +34,7 @@ public final class Transference extends javax.swing.JPanel {
     private volatile int _action;
     private volatile int _prog = 0;
     private volatile int _prog_init = 0;
-    private volatile long _size;
+    private volatile long _size = -1;
     private volatile boolean _directory = false;
     private volatile String _lpath, _rpath, _email;
     private volatile boolean _running = false;
@@ -41,6 +42,7 @@ public final class Transference extends javax.swing.JPanel {
     private volatile boolean _canceled = false;
     private volatile boolean _paused = false;
     private volatile long _prog_timestamp = 0;
+    private final AtomicBoolean _terminate_walk_tree = new AtomicBoolean();
 
     public boolean isDirectory() {
         return _directory;
@@ -206,6 +208,9 @@ public final class Transference extends javax.swing.JPanel {
     }
 
     public void stop() {
+
+        _terminate_walk_tree.set(true);
+
         _canceled = true;
 
         Helpers.threadRun(() -> {
@@ -530,7 +535,7 @@ public final class Transference extends javax.swing.JPanel {
 
     private boolean updateProgress() {
 
-        while (_paused) {
+        while ((_paused || _size < 0) && !_canceled && !_finished) {
 
             try {
                 Thread.sleep(1000);
@@ -604,6 +609,8 @@ public final class Transference extends javax.swing.JPanel {
         initComponents();
         status.setVisible(false);
 
+        _terminate_walk_tree.set(false);
+
         rpath = rpath.isBlank() ? "/" : rpath.trim();
 
         _email = email.trim();
@@ -611,24 +618,41 @@ public final class Transference extends javax.swing.JPanel {
 
         _action = act;
 
-        File local = new File(lpath);
+        Helpers.threadRun(() -> {
+            File local = new File(lpath);
 
-        if (local.isDirectory()) {
-            _directory = true;
-            _size = Helpers.getDirectorySize(local);
-        } else {
-            _size = new File(lpath).length();
-        }
+            if (local.isDirectory()) {
+                _directory = true;
+
+                _size = Helpers.getDirectorySize(local, _terminate_walk_tree);
+
+            } else {
+                _size = new File(lpath).length();
+            }
+
+            Helpers.GUIRun(() -> {
+
+                if (isDirectory()) {
+                    local_path.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/folder.png")));
+                }
+
+                if (_size > 0) {
+                    local_path.setText("[" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + _lpath);
+                }
+                progress.setIndeterminate(false);
+            });
+
+        });
 
         String fname = new File(_lpath).getName();
 
         _rpath = rpath.endsWith("/") ? rpath + fname : rpath;
 
-        local_path.setText("[" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + _lpath);
         remote_path.setText("(" + _email + ") " + _rpath);
         action.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/" + (act == 0 ? "left" : "right") + "-arrow.png")));
         progress.setMinimum(0);
         progress.setMaximum(10000);
+        progress.setIndeterminate(true);
     }
 
     /**
