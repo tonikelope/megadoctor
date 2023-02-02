@@ -46,7 +46,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.87";
+    public final static String VERSION = "0.88";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -1884,8 +1884,6 @@ public class Main extends javax.swing.JFrame {
 
                 Helpers.GUIRunAndWait(() -> {
 
-                    upload_button.setText("NEW UPLOAD");
-
                     getPause_button().setEnabled(true);
 
                     getCancel_trans_button().setEnabled(true);
@@ -1923,18 +1921,15 @@ public class Main extends javax.swing.JFrame {
                                     transferences.repaint();
                                     tabbed_panel.setSelectedIndex(1);
                                     upload_button.setEnabled(true);
-                                    getPause_button().setEnabled(true);
-                                    getCancel_trans_button().setEnabled(true);
-
+                                    upload_button.setText("NEW UPLOAD");
                                 });
 
                                 TRANSFERENCES_LOCK.notifyAll();
                             }
                         });
                     } else {
+                        upload_button.setText("NEW UPLOAD");
                         upload_button.setEnabled(true);
-                        getPause_button().setEnabled(true);
-                        getCancel_trans_button().setEnabled(true);
                     }
                 });
 
