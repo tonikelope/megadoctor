@@ -46,7 +46,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.79";
+    public final static String VERSION = "0.80";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -139,100 +139,99 @@ public class Main extends javax.swing.JFrame {
         upload_button.setEnabled(false);
         transf_scroll.getVerticalScrollBar().setUnitIncrement(20);
         setTitle("MegaDoctor " + VERSION);
+        status_label.setText("Checking if MEGACMD is present...");
+        setEnabled(false);
 
         pack();
 
+    }
+
+    private void runMEGACMDCHecker() {
+
+        MEGA_CMD_VERSION = Helpers.runProcess(new String[]{"mega-version"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+        if (MEGA_CMD_VERSION == null || "".equals(MEGA_CMD_VERSION)) {
+            Helpers.mostrarMensajeError(MAIN_WINDOW, "MEGA CMD IS REQUIRED");
+            Helpers.openBrowserURLAndWait(MEGA_CMD_URL);
+            System.exit(1);
+        }
+
+        Helpers.GUIRun(() -> {
+            MAIN_WINDOW.setEnabled(true);
+            MAIN_WINDOW.status_label.setText("");
+        });
+
+    }
+
+    private void runTransferenceWatchdog() {
         Helpers.threadRun(() -> {
 
-            Helpers.GUIRun(() -> {
-                status_label.setText("Checking if MEGACMD is present...");
-                setEnabled(false);
-            });
+            while (!_closing) {
 
-            MEGA_CMD_VERSION = Helpers.runProcess(new String[]{"mega-version"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-
-            Helpers.GUIRun(() -> {
-                setEnabled(true);
-                status_label.setText("");
-            });
-
-            if (MEGA_CMD_VERSION == null || "".equals(MEGA_CMD_VERSION)) {
-                Helpers.mostrarMensajeError(this, "MEGA CMD IS REQUIRED");
-                Helpers.openBrowserURLAndWait(MEGA_CMD_URL);
-                System.exit(1);
-            }
-
-            Helpers.threadRun(() -> {
-
-                while (!_closing) {
-
-                    synchronized (TRANSFERENCES_LOCK) {
-                        try {
-                            TRANSFERENCES_LOCK.wait(1000);
-                        } catch (InterruptedException ex) {
-                            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-                        }
+                synchronized (TRANSFERENCES_LOCK) {
+                    try {
+                        TRANSFERENCES_LOCK.wait(1000);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                    synchronized (TRANSFERENCES_LOCK) {
-                        Helpers.GUIRunAndWait(() -> {
+                }
+                synchronized (TRANSFERENCES_LOCK) {
+                    Helpers.GUIRunAndWait(() -> {
 
-                            if (transferences.getComponentCount() > 0) {
+                        if (transferences.getComponentCount() > 0) {
 
-                                transferences_control_panel.setVisible(true);
+                            transferences_control_panel.setVisible(true);
 
-                                _transferences_running = false;
+                            _transferences_running = false;
 
+                            for (Component t : transferences.getComponents()) {
+
+                                Transference trans = (Transference) t;
+
+                                if (trans.isRunning()) {
+                                    _transferences_running = true;
+                                    _current_transference = trans;
+                                    break;
+                                }
+                            }
+
+                            if (!_transferences_running) {
                                 for (Component t : transferences.getComponents()) {
 
                                     Transference trans = (Transference) t;
 
-                                    if (trans.isRunning()) {
+                                    if (!trans.isRunning() && !trans.isFinished() && !trans.isCanceled()) {
                                         _transferences_running = true;
                                         _current_transference = trans;
+                                        trans.start();
                                         break;
                                     }
                                 }
-
-                                if (!_transferences_running) {
-                                    for (Component t : transferences.getComponents()) {
-
-                                        Transference trans = (Transference) t;
-
-                                        if (!trans.isRunning() && !trans.isFinished() && !trans.isCanceled()) {
-                                            _transferences_running = true;
-                                            _current_transference = trans;
-                                            trans.start();
-                                            break;
-                                        }
-                                    }
-                                }
-
-                                cancel_trans_button.setEnabled(_transferences_running);
-
-                                vamos_button.setEnabled(!busy() || (isRunning_global_check() && !isAborting_global_check()));
-
-                                cuentas_textarea.setEnabled(!busy());
-
-                            } else {
-                                _transferences_running = false;
-
-                                _current_transference = null;
-
-                                transferences_control_panel.setVisible(false);
-
-                                vamos_button.setEnabled(!busy() || (isRunning_global_check() && !isAborting_global_check()));
-
-                                cuentas_textarea.setEnabled(!busy());
                             }
 
-                        });
-                    }
-                }
+                            cancel_trans_button.setEnabled(_transferences_running);
 
-            });
+                            vamos_button.setEnabled(!busy() || (isRunning_global_check() && !isAborting_global_check()));
+
+                            cuentas_textarea.setEnabled(!busy());
+
+                        } else {
+                            _transferences_running = false;
+
+                            _current_transference = null;
+
+                            transferences_control_panel.setVisible(false);
+
+                            vamos_button.setEnabled(!busy() || (isRunning_global_check() && !isAborting_global_check()));
+
+                            cuentas_textarea.setEnabled(!busy());
+                        }
+
+                    });
+                }
+            }
 
         });
-
     }
 
     public boolean login(String email) {
@@ -544,6 +543,8 @@ public class Main extends javax.swing.JFrame {
                     setEnabled(false);
                 });
                 _current_transference.pause();
+            } else {
+                Helpers.runProcess(new String[]{"mega-transfers", "-ca"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
             }
 
             if (session_menu.isSelected() || Helpers.mostrarMensajeInformativoSINO(this, "Do you want to save your MEGA accounts/sessions/transfers to disk to speed up next time?\n\n(If you are using a public computer it is NOT recommended to do so for security reasons).") == 0) {
@@ -626,8 +627,12 @@ public class Main extends javax.swing.JFrame {
             try ( FileInputStream fis = new FileInputStream(TRANSFERS_FILE);  ObjectInputStream ois = new ObjectInputStream(fis)) {
 
                 ArrayList<Object[]> trans = (ArrayList<Object[]>) ois.readObject();
+
+                ArrayList<Transference> valid_trans = new ArrayList<>();
+
                 if (!trans.isEmpty()) {
                     synchronized (TRANSFERENCES_LOCK) {
+
                         Helpers.GUIRunAndWait(() -> {
                             try {
 
@@ -635,6 +640,7 @@ public class Main extends javax.swing.JFrame {
                                     if (MEGA_SESSIONS.containsKey((String) o[0])) {
                                         Transference t = new Transference((String) o[0], (String) o[1], (String) o[2], (int) o[3]);
                                         transferences.add(t);
+                                        valid_trans.add(t);
                                     }
                                 }
                                 transferences.revalidate();
@@ -647,6 +653,10 @@ public class Main extends javax.swing.JFrame {
                                 Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
                             }
                         });
+
+                        if (!valid_trans.isEmpty()) {
+                            Helpers.runProcess(new String[]{"mega-transfers", "-ca"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+                        }
 
                         TRANSFERENCES_LOCK.notifyAll();
                     }
@@ -1193,67 +1203,70 @@ public class Main extends javax.swing.JFrame {
 
     private void loadAccounts() {
 
-        if (Files.exists(Paths.get(ACCOUNTS_FILE))) {
-            try ( FileInputStream fis = new FileInputStream(ACCOUNTS_FILE);  ObjectInputStream ois = new ObjectInputStream(fis)) {
+        Helpers.threadRun(() -> {
 
-                MEGA_ACCOUNTS = (LinkedHashMap<String, String>) ois.readObject();
+            if (Files.exists(Paths.get(ACCOUNTS_FILE))) {
+                try ( FileInputStream fis = new FileInputStream(ACCOUNTS_FILE);  ObjectInputStream ois = new ObjectInputStream(fis)) {
 
-                if (!MEGA_ACCOUNTS.isEmpty()) {
+                    MEGA_ACCOUNTS = (LinkedHashMap<String, String>) ois.readObject();
 
-                    ArrayList<String> accounts = new ArrayList<>();
+                    if (!MEGA_ACCOUNTS.isEmpty()) {
 
-                    for (String k : MEGA_ACCOUNTS.keySet()) {
-                        accounts.add(k + "#" + MEGA_ACCOUNTS.get(k));
-                    }
+                        ArrayList<String> accounts = new ArrayList<>();
 
-                    Collections.sort(accounts);
-
-                    Helpers.GUIRunAndWait(() -> {
-
-                        if (!_firstAccountsTextareaClick) {
-                            _firstAccountsTextareaClick = true;
-                            cuentas_textarea.setText("");
-                            cuentas_textarea.setForeground(null);
+                        for (String k : MEGA_ACCOUNTS.keySet()) {
+                            accounts.add(k + "#" + MEGA_ACCOUNTS.get(k));
                         }
 
-                        for (String account : accounts) {
-                            cuentas_textarea.append(account + "\n");
-                        }
+                        Collections.sort(accounts);
 
-                        upload_button.setEnabled(true);
+                        Helpers.GUIRunAndWait(() -> {
 
-                        session_menu.setSelected(true);
+                            if (!_firstAccountsTextareaClick) {
+                                _firstAccountsTextareaClick = true;
+                                cuentas_textarea.setText("");
+                                cuentas_textarea.setForeground(null);
+                            }
 
-                    });
-                } else {
-                    Helpers.GUIRun(() -> {
-                        session_menu.setSelected(false);
-                    });
-                }
+                            for (String account : accounts) {
+                                cuentas_textarea.append(account + "\n");
+                            }
 
-            } catch (Exception ex) {
-                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-            }
+                            upload_button.setEnabled(true);
 
-            if (Files.exists(Paths.get(SESSIONS_FILE))) {
-                try ( FileInputStream fis = new FileInputStream(SESSIONS_FILE);  ObjectInputStream ois = new ObjectInputStream(fis)) {
-                    MEGA_SESSIONS = (HashMap<String, String>) ois.readObject();
+                            session_menu.setSelected(true);
 
-                    if (!MEGA_SESSIONS.isEmpty()) {
-                        loadTransfers();
+                        });
+                    } else {
+                        Helpers.GUIRun(() -> {
+                            session_menu.setSelected(false);
+                        });
                     }
 
                 } catch (Exception ex) {
                     Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
                 }
+
+                if (Files.exists(Paths.get(SESSIONS_FILE))) {
+                    try ( FileInputStream fis = new FileInputStream(SESSIONS_FILE);  ObjectInputStream ois = new ObjectInputStream(fis)) {
+                        MEGA_SESSIONS = (HashMap<String, String>) ois.readObject();
+
+                        if (!MEGA_SESSIONS.isEmpty()) {
+                            loadTransfers();
+                        }
+
+                    } catch (Exception ex) {
+                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+
+            } else {
+                Helpers.GUIRun(() -> {
+                    session_menu.setSelected(false);
+                });
             }
 
-        } else {
-            Helpers.GUIRun(() -> {
-                session_menu.setSelected(false);
-            });
-        }
-
+        });
     }
 
     public void parseAccountNodes(String email) {
@@ -1375,17 +1388,17 @@ public class Main extends javax.swing.JFrame {
         output_textarea.setRows(5);
         jScrollPane1.setViewportView(output_textarea);
 
-        tabbed_panel.addTab("Log", jScrollPane1);
+        tabbed_panel.addTab("Log", new javax.swing.ImageIcon(getClass().getResource("/images/log.png")), jScrollPane1); // NOI18N
 
         transf_scroll.setBorder(null);
-
-        jPanel1.setPreferredSize(new java.awt.Dimension(1000, 350));
+        transf_scroll.setDoubleBuffered(true);
 
         cancel_trans_button.setBackground(new java.awt.Color(255, 51, 0));
         cancel_trans_button.setFont(new java.awt.Font("Noto Sans", 1, 14)); // NOI18N
         cancel_trans_button.setForeground(new java.awt.Color(255, 255, 255));
         cancel_trans_button.setText("CANCEL ALL");
         cancel_trans_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        cancel_trans_button.setDoubleBuffered(true);
         cancel_trans_button.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cancel_trans_buttonActionPerformed(evt);
@@ -1397,6 +1410,7 @@ public class Main extends javax.swing.JFrame {
         clear_trans_button.setForeground(new java.awt.Color(255, 255, 255));
         clear_trans_button.setText("Clear all finished");
         clear_trans_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        clear_trans_button.setDoubleBuffered(true);
         clear_trans_button.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 clear_trans_buttonActionPerformed(evt);
@@ -1412,7 +1426,7 @@ public class Main extends javax.swing.JFrame {
                 .addComponent(clear_trans_button)
                 .addGap(18, 18, 18)
                 .addComponent(cancel_trans_button)
-                .addContainerGap(795, Short.MAX_VALUE))
+                .addContainerGap(835, Short.MAX_VALUE))
         );
         transferences_control_panelLayout.setVerticalGroup(
             transferences_control_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1443,7 +1457,7 @@ public class Main extends javax.swing.JFrame {
 
         transf_scroll.setViewportView(jPanel1);
 
-        tabbed_panel.addTab("Transferences", transf_scroll);
+        tabbed_panel.addTab("Transferences", new javax.swing.ImageIcon(getClass().getResource("/images/transfers.png")), transf_scroll); // NOI18N
 
         upload_button.setBackground(new java.awt.Color(0, 0, 0));
         upload_button.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
@@ -1508,12 +1522,12 @@ public class Main extends javax.swing.JFrame {
                         .addComponent(logo_label)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(vamos_button, javax.swing.GroupLayout.DEFAULT_SIZE, 812, Short.MAX_VALUE)
+                            .addComponent(vamos_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(status_label, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                                 .addComponent(upload_button)
                                 .addGap(18, 18, 18)
-                                .addComponent(save_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(save_button, javax.swing.GroupLayout.DEFAULT_SIZE, 352, Short.MAX_VALUE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(clear_log_button))))
                     .addComponent(cuentas_scrollpanel)
@@ -1542,7 +1556,7 @@ public class Main extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(cuentas_scrollpanel, javax.swing.GroupLayout.PREFERRED_SIZE, 185, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(tabbed_panel)
+                .addComponent(tabbed_panel, javax.swing.GroupLayout.DEFAULT_SIZE, 414, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -2013,6 +2027,8 @@ public class Main extends javax.swing.JFrame {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 MAIN_WINDOW = new Main();
+                MAIN_WINDOW.runMEGACMDCHecker();
+                MAIN_WINDOW.runTransferenceWatchdog();
                 MAIN_WINDOW.loadAccounts();
                 MAIN_WINDOW.setVisible(true);
             }

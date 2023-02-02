@@ -180,7 +180,7 @@ public final class Transference extends javax.swing.JPanel {
                 }
             }
 
-            return (timeout < WAIT_TIMEOUT);
+            return (timeout == WAIT_TIMEOUT);
         }
 
         return false;
@@ -297,10 +297,6 @@ public final class Transference extends javax.swing.JPanel {
 
                 Helpers.runProcess(new String[]{"mega-transfers", "-ra"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-                Helpers.GUIRunAndWait(() -> {
-                    action.setText("");
-                });
-
                 TRANSFERENCES_LOCK.notifyAll();
             }
 
@@ -374,8 +370,6 @@ public final class Transference extends javax.swing.JPanel {
 
             Helpers.runProcess(new String[]{"mega-transfers", "-ra"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-            long start_timestamp = System.currentTimeMillis();
-
             Helpers.GUIRun(() -> {
                 progress.setIndeterminate(true);
 
@@ -393,6 +387,8 @@ public final class Transference extends javax.swing.JPanel {
 
             });
 
+            long start_timestamp = System.currentTimeMillis();
+
             while (updateProgress()) {
                 try {
                     Thread.sleep(1000);
@@ -401,16 +397,16 @@ public final class Transference extends javax.swing.JPanel {
                 }
             }
 
+            long finish_timestamp = System.currentTimeMillis();
+
             if (!_canceled) {
 
                 Helpers.GUIRun(() -> {
 
                     progress.setIndeterminate(true);
-                    action.setText("");
+                    action.setText("(Finishing...)");
 
                 });
-
-                long finish_timestamp = System.currentTimeMillis();
 
                 Helpers.runProcess(new String[]{"mega-reload"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
@@ -586,7 +582,7 @@ public final class Transference extends javax.swing.JPanel {
 
                 } else {
 
-                    action.setText(Integer.parseInt(matcher.group((_action == 0 ? 1 : 5))) + " files pending (" + matcher.group((_action == 0 ? 3 : 7)).replaceAll("  *", " ") + ")");
+                    action.setText(Integer.parseInt(matcher.group((_action == 0 ? 1 : 5))) + " files remaining (" + matcher.group((_action == 0 ? 3 : 7)).replaceAll("  *", " ") + ")");
 
                 }
 
