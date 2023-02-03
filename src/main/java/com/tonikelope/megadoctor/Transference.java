@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.SwingUtilities;
+import javax.swing.text.DefaultCaret;
 
 /**
  *
@@ -26,7 +27,7 @@ import javax.swing.SwingUtilities;
  */
 public final class Transference extends javax.swing.JPanel {
 
-    public static final int WAIT_TIMEOUT = 10;
+    public static final int WAIT_TIMEOUT = 15;
     public static final int FOLDER_SIZE_WAIT = 1000;
     public static final int SECURE_PAUSE_WAIT_FOLDER = 5000;
     public static final int SECURE_PAUSE_WAIT_FILE = 2000;
@@ -42,8 +43,18 @@ public final class Transference extends javax.swing.JPanel {
     private volatile boolean _finished = false;
     private volatile boolean _canceled = false;
     private volatile boolean _paused = false;
+    private volatile boolean _starting = false;
+    private volatile boolean _finishing = false;
     private volatile long _prog_timestamp = 0;
     private final AtomicBoolean _terminate_walk_tree = new AtomicBoolean();
+
+    public boolean isStarting() {
+        return _starting;
+    }
+
+    public boolean isFinishing() {
+        return _finishing;
+    }
 
     public boolean isDirectory() {
         return _directory;
@@ -108,7 +119,7 @@ public final class Transference extends javax.swing.JPanel {
     private void readTransferTag() {
 
         if (!isDirectory()) {
-            String transfer_data = Helpers.runProcess(new String[]{"mega-transfers", "--limit=1", "--output-cols=TAG", _action == 0 ? "--only-downoads" : "--only-uploads"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+            String transfer_data = Helpers.runProcess(new String[]{"mega-transfers", "--limit=1", "--output-cols=TAG", _action == 0 ? "--only-downloads" : "--only-uploads"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
             if (!transfer_data.trim().isEmpty()) {
                 String[] transfer_data_lines = transfer_data.split("\n");
@@ -171,7 +182,7 @@ public final class Transference extends javax.swing.JPanel {
                     Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
                 }
 
-                String transfer_data = Helpers.runProcess(new String[]{"mega-transfers", "--show-completed", "--limit=1", "--output-cols=TAG", _action == 0 ? "--only-downoads" : "--only-uploads"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                String transfer_data = Helpers.runProcess(new String[]{"mega-transfers", "--show-completed", "--limit=1", "--output-cols=TAG", _action == 0 ? "--only-downloads" : "--only-uploads"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
                 if (!transfer_data.trim().isEmpty()) {
                     String[] transfer_data_lines = transfer_data.split("\n");
@@ -232,6 +243,8 @@ public final class Transference extends javax.swing.JPanel {
                     Main.MAIN_WINDOW.getTransferences().repaint();
                 });
 
+                Main.MAIN_WINDOW.forceRefreshAccount(_email, "Refreshed after upload CANCEL [" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + _rpath, false, false);
+
                 TRANSFERENCES_LOCK.notifyAll();
             }
 
@@ -241,20 +254,19 @@ public final class Transference extends javax.swing.JPanel {
     private void securePauseTransfer() {
         Helpers.runProcess(new String[]{"mega-transfers", "-pa"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-        String transfers, old_transfers;
+        String current, last;
 
-        while ((old_transfers = Helpers.runProcess(new String[]{"mega-transfers", "--limit=1000000", "--output-cols=STATE"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]).contains("COMPLETING")) {
+        last = Helpers.runProcess(new String[]{"mega-transfers", "--limit=1000000", "--show-completed", "--output-cols=TAG,STATE"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException ex) {
-                Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
-            }
+        try {
+            Thread.sleep(isDirectory() ? SECURE_PAUSE_WAIT_FOLDER : SECURE_PAUSE_WAIT_FILE);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        while (!(transfers = Helpers.runProcess(new String[]{"mega-transfers", "--show-completed", "--limit=1000000", "--output-cols=TAG,STATE"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]).equals(old_transfers)) {
+        while ((current = Helpers.runProcess(new String[]{"mega-transfers", "--limit=1000000", "--show-completed", "--output-cols=TAG,STATE"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]).contains("COMPLETING") || !current.equals(last) || (current.trim().isEmpty() && readTotalRunningTransferences() > 0)) {
 
-            old_transfers = transfers;
+            last = current;
 
             try {
                 Thread.sleep(isDirectory() ? SECURE_PAUSE_WAIT_FOLDER : SECURE_PAUSE_WAIT_FILE);
@@ -353,12 +365,35 @@ public final class Transference extends javax.swing.JPanel {
         return folder_size;
     }
 
+    private int readTotalRunningTransferences() {
+        String transfer_data = Helpers.runProcess(new String[]{"mega-transfers", "--summary"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+        String[] transfer_data_lines = transfer_data.split("\n");
+
+        final String regex = "^ *(\\d+) +([\\d.]+ +[^ ]+) +([\\d.]+ +[^ ]+) +([\\d.]+) *% +(\\d+) +([\\d.]+ +[^ ]+) +([\\d.]+ +[^ ]+) +([\\d.]+) *%.*$";
+
+        final Pattern pattern = Pattern.compile(regex);
+
+        final Matcher matcher = pattern.matcher(transfer_data_lines[1].trim());
+
+        if (matcher.find()) {
+            return Integer.parseInt(matcher.group((_action == 0 ? 1 : 5)));
+        }
+
+        return 0;
+    }
+
     public void start() {
         Helpers.threadRun(() -> {
+
+            _starting = true;
 
             Helpers.GUIRun(() -> {
                 Main.MAIN_WINDOW.getVamos_button().setEnabled(false);
                 Main.MAIN_WINDOW.getCuentas_textarea().setEnabled(false);
+                Main.MAIN_WINDOW.getPause_button().setEnabled(false);
+                Main.MAIN_WINDOW.getCancel_trans_button().setEnabled(false);
+                Main.MAIN_WINDOW.getUpload_button().setEnabled(false);
                 action.setText("(STARTING...)");
             });
 
@@ -399,8 +434,13 @@ public final class Transference extends javax.swing.JPanel {
 
             Helpers.GUIRun(() -> {
                 progress.setIndeterminate(false);
+                Main.MAIN_WINDOW.getPause_button().setEnabled(true);
+                Main.MAIN_WINDOW.getCancel_trans_button().setEnabled(true);
+                Main.MAIN_WINDOW.getUpload_button().setEnabled(true);
 
             });
+
+            _starting = false;
 
             long start_timestamp = System.currentTimeMillis();
 
@@ -416,10 +456,17 @@ public final class Transference extends javax.swing.JPanel {
 
             if (!_canceled) {
 
+                _finishing = true;
+
                 Helpers.GUIRun(() -> {
 
                     progress.setIndeterminate(true);
                     action.setText("(FINISHING...)");
+                    folder_stats_textarea.setText("");
+                    folder_stats_scroll.setVisible(false);
+                    Main.MAIN_WINDOW.getUpload_button().setEnabled(false);
+                    Main.MAIN_WINDOW.getPause_button().setEnabled(false);
+                    Main.MAIN_WINDOW.getCancel_trans_button().setEnabled(false);
 
                 });
 
@@ -454,6 +501,8 @@ public final class Transference extends javax.swing.JPanel {
 
                 Helpers.runProcess(new String[]{"mega-export", "-af", _rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
+                long speed = calculateSpeed(_size, _prog_init < 0 ? 0 : _prog_init, 10000, start_timestamp, finish_timestamp);
+
                 Helpers.GUIRun(() -> {
                     progress.setIndeterminate(false);
 
@@ -464,8 +513,6 @@ public final class Transference extends javax.swing.JPanel {
                     status.setVisible(true);
 
                     local_path.setText("[" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + _lpath);
-
-                    long speed = calculateSpeed(_size, _prog_init < 0 ? 0 : _prog_init, 10000, start_timestamp, finish_timestamp);
 
                     action.setText("(Avg: " + Helpers.formatBytes(speed) + "/s)");
 
@@ -482,16 +529,23 @@ public final class Transference extends javax.swing.JPanel {
                 });
 
                 Main.MAIN_WINDOW.forceRefreshAccount(_email, "Refreshed after upload [" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + _rpath, false, false);
+            }
 
-                _running = false;
+            Helpers.GUIRun(() -> {
+                Main.MAIN_WINDOW.getUpload_button().setEnabled(true);
+                Main.MAIN_WINDOW.getPause_button().setEnabled(true);
+                Main.MAIN_WINDOW.getCancel_trans_button().setEnabled(true);
+            });
 
-                _finished = true;
+            _finishing = false;
 
-                synchronized (TRANSFERENCES_LOCK) {
+            _running = false;
 
-                    TRANSFERENCES_LOCK.notifyAll();
+            _finished = true;
 
-                }
+            synchronized (TRANSFERENCES_LOCK) {
+
+                TRANSFERENCES_LOCK.notifyAll();
 
             }
         });
@@ -510,13 +564,18 @@ public final class Transference extends javax.swing.JPanel {
 
     private long calculateSpeed(long size, int old_prog, int new_prog, long old_timestamp, long new_timestamp) {
 
-        int delta_prog = new_prog - old_prog;
+        try {
+            int delta_prog = new_prog - old_prog;
 
-        long delta_time = new_timestamp - old_timestamp;
+            long delta_time = new_timestamp - old_timestamp;
 
-        long speed = (long) (((((float) delta_prog / 10000) * size) / delta_time) * 1000);
+            long speed = (long) (((((float) delta_prog / 10000) * size) / delta_time) * 1000);
+            return speed;
+        } catch (Exception ex) {
 
-        return speed;
+        }
+
+        return 0;
     }
 
     private long remoteFolderSize(String rpath) {
@@ -538,9 +597,34 @@ public final class Transference extends javax.swing.JPanel {
 
     private boolean remoteFileExists(String rpath) {
 
-        String find = Helpers.runProcess(new String[]{"mega-find", rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+        String[] find = Helpers.runProcess(new String[]{"mega-find", rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-        return !find.trim().startsWith("[API:err:");
+        return (Integer.parseInt(find[2]) == 0);
+    }
+
+    private String readFolderStats() {
+        if (isDirectory()) {
+
+            String fstats = Helpers.runProcess(new String[]{"mega-transfers", "--limit=1000000", "--path-display-size=10000", "--output-cols=SOURCEPATH,PROGRESS,STATE"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+            fstats = fstats.replace(_lpath, ".");
+
+            Pattern pattern_header = Pattern.compile("SOURCEPATH +PROGRESS");
+
+            Matcher matcher_header = pattern_header.matcher(fstats);
+
+            String header = "";
+
+            if (matcher_header.find()) {
+                header = matcher_header.group(0);
+            }
+
+            fstats = fstats.replace(header, Helpers.adjustSpaces(header, -1 * (_lpath.length() - 1)));
+
+            return fstats;
+        }
+
+        return null;
     }
 
     private boolean updateProgress() {
@@ -584,20 +668,21 @@ public final class Transference extends javax.swing.JPanel {
 
             _prog_timestamp = System.currentTimeMillis();
 
+            String fstats = readFolderStats();
+
+            long speed = calculateSpeed(_size, old_prog, _prog, old_timestamp, _prog_timestamp);
+
             Helpers.GUIRun(() -> {
 
                 if (!isDirectory()) {
 
-                    if (old_timestamp != 0) {
-                        long speed = calculateSpeed(_size, old_prog, _prog, old_timestamp, _prog_timestamp);
-                        action.setText(Helpers.formatBytes(speed) + "/s");
-                    } else {
-                        action.setText("----");
-                    }
+                    action.setText(speed > 0 ? Helpers.formatBytes(speed) : "----" + "/s");
 
                 } else {
 
                     action.setText(Integer.parseInt(matcher.group((_action == 0 ? 1 : 5))) + " files remaining (" + matcher.group((_action == 0 ? 3 : 7)).replaceAll("  *", " ") + ")");
+
+                    folder_stats_textarea.setText(fstats);
 
                 }
 
@@ -618,6 +703,9 @@ public final class Transference extends javax.swing.JPanel {
     public Transference(String email, String lpath, String rpath, int act) {
         initComponents();
         status.setVisible(false);
+
+        DefaultCaret caret = (DefaultCaret) folder_stats_textarea.getCaret();
+        caret.setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
 
         _terminate_walk_tree.set(false);
 
@@ -663,6 +751,8 @@ public final class Transference extends javax.swing.JPanel {
         progress.setMinimum(0);
         progress.setMaximum(10000);
         progress.setIndeterminate(true);
+
+        folder_stats_scroll.setVisible(false);
     }
 
     /**
@@ -680,6 +770,8 @@ public final class Transference extends javax.swing.JPanel {
         remote_path = new javax.swing.JLabel();
         progress = new javax.swing.JProgressBar();
         status = new javax.swing.JLabel();
+        folder_stats_scroll = new javax.swing.JScrollPane();
+        folder_stats_textarea = new javax.swing.JTextArea();
 
         setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
         addMouseListener(new java.awt.event.MouseAdapter() {
@@ -690,7 +782,14 @@ public final class Transference extends javax.swing.JPanel {
 
         local_path.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
         local_path.setText("jLabel1");
+        local_path.setToolTipText("Double click for details (folders)");
+        local_path.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         local_path.setDoubleBuffered(true);
+        local_path.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                local_pathMouseClicked(evt);
+            }
+        });
 
         action.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
         action.setForeground(new java.awt.Color(0, 153, 255));
@@ -736,15 +835,27 @@ public final class Transference extends javax.swing.JPanel {
 
         status.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/ok.png"))); // NOI18N
 
+        folder_stats_textarea.setEditable(false);
+        folder_stats_textarea.setBackground(new java.awt.Color(153, 153, 153));
+        folder_stats_textarea.setColumns(20);
+        folder_stats_textarea.setFont(new java.awt.Font("Monospaced", 0, 18)); // NOI18N
+        folder_stats_textarea.setForeground(new java.awt.Color(255, 255, 255));
+        folder_stats_textarea.setRows(5);
+        folder_stats_textarea.setDoubleBuffered(true);
+        folder_stats_scroll.setViewportView(folder_stats_textarea);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+            .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(status)
-                .addGap(0, 0, 0)
-                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(folder_stats_scroll)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(status)
+                        .addGap(0, 0, 0)
+                        .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -754,6 +865,8 @@ public final class Transference extends javax.swing.JPanel {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(status, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(0, 0, 0)
+                .addComponent(folder_stats_scroll)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -777,8 +890,20 @@ public final class Transference extends javax.swing.JPanel {
         }
     }//GEN-LAST:event_formMouseClicked
 
+    private void local_pathMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_local_pathMouseClicked
+        // TODO add your handling code here:
+        if (isDirectory() && !isFinishing() && !isStarting() && SwingUtilities.isLeftMouseButton(evt)) {
+            local_path.setEnabled(false);
+            folder_stats_scroll.setVisible(!folder_stats_scroll.isVisible());
+            local_path.setEnabled(true);
+        }
+
+    }//GEN-LAST:event_local_pathMouseClicked
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel action;
+    private javax.swing.JScrollPane folder_stats_scroll;
+    private javax.swing.JTextArea folder_stats_textarea;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JLabel local_path;
     private javax.swing.JProgressBar progress;

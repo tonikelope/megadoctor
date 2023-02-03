@@ -74,6 +74,15 @@ import javax.swing.undo.UndoManager;
  */
 public class Helpers {
 
+    public static String adjustSpaces(String s, int n) {
+
+        String spaces = s.trim().replaceAll("^[^ ]*( *)[^ ]*$", "$1");
+
+        String new_spaces = " ".repeat(spaces.length() + n);
+
+        return s.replace(spaces, new_spaces);
+    }
+
     public static void smartPack(Window w) {
 
         Helpers.GUIRun(() -> {
@@ -105,11 +114,11 @@ public class Helpers {
     }
 
     public static String megaWhoami() {
-        String whoami = Helpers.runProcess(new String[]{"mega-whoami"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+        String[] whoami = Helpers.runProcess(new String[]{"mega-whoami"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-        if (!whoami.startsWith("[API:err:")) {
+        if (Integer.parseInt(whoami[2]) == 0) {
 
-            return whoami.replaceAll("^.+: +(.+)$", "$1").trim();
+            return whoami[1].replaceAll("^.+: +(.+)$", "$1").trim();
         }
 
         return "";
@@ -377,7 +386,7 @@ public class Helpers {
 
             process.waitFor();
 
-            return new String[]{String.valueOf(pid), sb.toString()};
+            return new String[]{String.valueOf(pid), sb.toString(), String.valueOf(process.exitValue())};
 
         } catch (Exception ex) {
         }
@@ -505,8 +514,6 @@ public class Helpers {
     }
 
     public static class JTextFieldRegularPopupMenu {
-
-        public static JMenuItem refreshLastAccount = null;
 
         public static void addTo(JTextField txtField) {
             JPopupMenu popup = new JPopupMenu();
@@ -716,17 +723,6 @@ public class Helpers {
                 }
             };
 
-            Action forceRefreshLastAccountAction = new AbstractAction("REFRESH LAST ACCOUNT") {
-                @Override
-                public void actionPerformed(ActionEvent ae) {
-                    if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && Main.MAIN_WINDOW.getLast_email_force_refresh() != null) {
-                        Helpers.threadRun(() -> {
-                            Main.MAIN_WINDOW.forceRefreshAccount(Main.MAIN_WINDOW.getLast_email_force_refresh(), "Force refresh", true, true);
-                        });
-                    }
-                }
-            };
-
             Action truncateAccountAction = new AbstractAction("TRUNCATE SELECTED ACCOUNT") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
@@ -835,11 +831,26 @@ public class Helpers {
 
             popup.add(refreshAccount);
 
-            refreshLastAccount = new JMenuItem(forceRefreshLastAccountAction);
-            refreshLastAccount.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/refresh.png")));
-            popup.add(refreshLastAccount);
+            if (Main.MAIN_WINDOW != null && Main.MAIN_WINDOW.getLast_email_force_refresh() != null) {
+                Action forceRefreshLastAccountAction = new AbstractAction("REFRESH LAST ACCOUNT -> " + Main.MAIN_WINDOW.getLast_email_force_refresh()) {
+                    @Override
+                    public void actionPerformed(ActionEvent ae) {
+                        if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && Main.MAIN_WINDOW.getLast_email_force_refresh() != null) {
+                            Helpers.threadRun(() -> {
+                                Main.MAIN_WINDOW.forceRefreshAccount(Main.MAIN_WINDOW.getLast_email_force_refresh(), "Force refresh", true, true);
+                            });
+                        }
+                    }
+                };
+                JMenuItem refreshLastAccount = new JMenuItem(forceRefreshLastAccountAction);
 
-            refreshLastAccount.setEnabled(false);
+                refreshLastAccount.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/refresh.png")));
+
+                refreshLastAccount.setEnabled(Main.MAIN_WINDOW != null && Main.MAIN_WINDOW.getLast_email_force_refresh() != null);
+
+                popup.add(refreshLastAccount);
+
+            }
 
             popup.addSeparator();
 

@@ -46,7 +46,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.91";
+    public final static String VERSION = "0.92";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -71,6 +71,10 @@ public class Main extends javax.swing.JFrame {
     private volatile boolean _transferences_running = false;
     private volatile Transference _current_transference = null;
     private volatile String _last_email_force_refresh = null;
+
+    public JButton getUpload_button() {
+        return upload_button;
+    }
 
     public JButton getPause_button() {
         return pause_button;
@@ -221,9 +225,9 @@ public class Main extends javax.swing.JFrame {
                                 }
                             }
 
-                            cancel_trans_button.setEnabled(_transferences_running);
+                            cancel_trans_button.setEnabled(_transferences_running && !_current_transference.isStarting() && !_current_transference.isFinishing());
 
-                            pause_button.setEnabled(_transferences_running);
+                            pause_button.setEnabled(_transferences_running && !_current_transference.isStarting() && !_current_transference.isFinishing());
 
                             vamos_button.setEnabled(!busy() || (isRunning_global_check() && !isAborting_global_check()));
 
@@ -272,17 +276,17 @@ public class Main extends javax.swing.JFrame {
                 status_label.setForeground(new Color(0, 153, 0));
             });
 
-            String login_session_output = Helpers.runProcess(new String[]{"mega-login", MEGA_SESSIONS.get(email)}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+            String[] login_session_output = Helpers.runProcess(new String[]{"mega-login", MEGA_SESSIONS.get(email)}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-            if (login_session_output.startsWith("[API:err:")) {
+            if (Integer.parseInt(login_session_output[2]) != 0) {
 
                 Helpers.GUIRunAndWait(() -> {
-                    status_label.setForeground(Color.DARK_GRAY);
+                    status_label.setForeground(Color.WHITE);
                 });
 
-                String login = Helpers.runProcess(new String[]{"mega-login", email, Helpers.escapeMEGAPassword(password)}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                String[] login = Helpers.runProcess(new String[]{"mega-login", email, Helpers.escapeMEGAPassword(password)}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-                if (login.startsWith("[API:err:")) {
+                if (Integer.parseInt(login[2]) != 0) {
                     Helpers.GUIRunAndWait(() -> {
                         status_label.setForeground(Color.BLACK);
                     });
@@ -292,9 +296,9 @@ public class Main extends javax.swing.JFrame {
 
         } else {
 
-            String login = Helpers.runProcess(new String[]{"mega-login", email, Helpers.escapeMEGAPassword(password)}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+            String[] login = Helpers.runProcess(new String[]{"mega-login", email, Helpers.escapeMEGAPassword(password)}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-            if (login.startsWith("[API:err:")) {
+            if (Integer.parseInt(login[2]) != 0) {
                 Helpers.GUIRunAndWait(() -> {
                     status_label.setForeground(Color.BLACK);
                 });
@@ -352,7 +356,12 @@ public class Main extends javax.swing.JFrame {
             final Matcher matcher = pattern.matcher(ls);
 
             while (matcher.find()) {
-                du = du.replace(matcher.group(1), matcher.group(0));
+
+                final Pattern pattern2 = Pattern.compile("(^/)" + matcher.group(1) + "(:[^:/]+)$", Pattern.MULTILINE);
+
+                final Matcher matcher2 = pattern2.matcher(du);
+
+                du = matcher2.replaceAll("$1" + matcher.group(0) + "$2");
             }
 
             String[] du_lines = du.split("\n");
@@ -1148,21 +1157,18 @@ public class Main extends javax.swing.JFrame {
 
             parseAccountNodes(email);
 
+            _last_email_force_refresh = email;
+
             Helpers.GUIRun(() -> {
 
                 output_textarea.append("\n[" + email + "] (" + reason + ")\n\n" + stats + "\n\n");
-
+                Helpers.JTextFieldRegularPopupMenu.addTo(output_textarea);
+                Helpers.JTextFieldRegularPopupMenu.addTo(cuentas_textarea);
             });
 
             if (login) {
                 logout(true);
             }
-
-            _last_email_force_refresh = email;
-
-            Helpers.JTextFieldRegularPopupMenu.refreshLastAccount.setText("REFRESH LAST (" + email + ")");
-
-            Helpers.JTextFieldRegularPopupMenu.refreshLastAccount.setEnabled(true);
 
             if (notification) {
                 Helpers.mostrarMensajeInformativo(MAIN_WINDOW, email + " REFRESHED");
@@ -1377,6 +1383,7 @@ public class Main extends javax.swing.JFrame {
             }
         });
 
+        tabbed_panel.setToolTipText("Double click to show/hide accounts textbox");
         tabbed_panel.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
         tabbed_panel.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -1443,7 +1450,7 @@ public class Main extends javax.swing.JFrame {
                 .addComponent(pause_button)
                 .addGap(18, 18, 18)
                 .addComponent(cancel_trans_button)
-                .addContainerGap(835, Short.MAX_VALUE))
+                .addContainerGap(695, Short.MAX_VALUE))
         );
         transferences_control_panelLayout.setVerticalGroup(
             transferences_control_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1462,8 +1469,8 @@ public class Main extends javax.swing.JFrame {
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(transferences_control_panel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(transferences, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(transferences_control_panel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1545,12 +1552,12 @@ public class Main extends javax.swing.JFrame {
                             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                                 .addComponent(upload_button)
                                 .addGap(18, 18, 18)
-                                .addComponent(save_button, javax.swing.GroupLayout.DEFAULT_SIZE, 352, Short.MAX_VALUE)
+                                .addComponent(save_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(clear_log_button))))
                     .addComponent(cuentas_scrollpanel)
                     .addComponent(progressbar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(tabbed_panel, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
+                    .addComponent(tabbed_panel))
                 .addContainerGap())
         );
         layout.setVerticalGroup(

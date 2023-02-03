@@ -94,7 +94,7 @@
                           <Group type="102" alignment="1" attributes="0">
                               <Component id="upload_button" min="-2" max="-2" attributes="0"/>
                               <EmptySpace type="separate" max="-2" attributes="0"/>
-                              <Component id="save_button" pref="352" max="32767" attributes="0"/>
+                              <Component id="save_button" max="32767" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
                               <Component id="clear_log_button" min="-2" max="-2" attributes="0"/>
                           </Group>
@@ -102,7 +102,7 @@
                   </Group>
                   <Component id="cuentas_scrollpanel" alignment="0" max="32767" attributes="0"/>
                   <Component id="progressbar" alignment="0" max="32767" attributes="0"/>
-                  <Component id="tabbed_panel" alignment="0" pref="0" max="32767" attributes="0"/>
+                  <Component id="tabbed_panel" alignment="0" max="32767" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
           </Group>
@@ -232,6 +232,7 @@
     </Component>
     <Container class="javax.swing.JTabbedPane" name="tabbed_panel">
       <Properties>
+        <Property name="toolTipText" type="java.lang.String" value="Double click to show/hide accounts textbox"/>
         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
           <Font name="Noto Sans" size="24" style="1"/>
         </Property>
@@ -302,8 +303,8 @@
               <Layout>
                 <DimensionLayout dim="0">
                   <Group type="103" groupAlignment="0" attributes="0">
-                      <Component id="transferences_control_panel" max="32767" attributes="0"/>
-                      <Component id="transferences" alignment="0" max="32767" attributes="0"/>
+                      <Component id="transferences" max="32767" attributes="0"/>
+                      <Component id="transferences_control_panel" alignment="0" max="32767" attributes="0"/>
                   </Group>
                 </DimensionLayout>
                 <DimensionLayout dim="1">
@@ -329,7 +330,7 @@
                               <Component id="pause_button" min="-2" max="-2" attributes="0"/>
                               <EmptySpace type="separate" max="-2" attributes="0"/>
                               <Component id="cancel_trans_button" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace pref="835" max="32767" attributes="0"/>
+                              <EmptySpace pref="695" max="32767" attributes="0"/>
                           </Group>
                       </Group>
                     </DimensionLayout>
