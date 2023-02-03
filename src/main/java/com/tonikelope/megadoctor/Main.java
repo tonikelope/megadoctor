@@ -46,7 +46,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.95";
+    public final static String VERSION = "0.96";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -359,7 +359,7 @@ public class Main extends javax.swing.JFrame {
 
             while (matcher.find()) {
 
-                final Pattern pattern2 = Pattern.compile("(^/)" + matcher.group(1) + "(:[^:/]+)$", Pattern.MULTILINE);
+                final Pattern pattern2 = Pattern.compile("(^/)" + Pattern.quote(matcher.group(1)) + "(:[^:/]+)$", Pattern.MULTILINE);
 
                 final Matcher matcher2 = pattern2.matcher(du);
 
@@ -368,11 +368,11 @@ public class Main extends javax.swing.JFrame {
 
             String[] du_lines = du.split("\n");
 
-            du_lines[du_lines.length - 2] += "-------------";
+            du_lines[du_lines.length - 2] += "-".repeat(13);
 
-            du_lines[0] = du_lines[0].replaceAll("( +)", "$1             ");
+            du_lines[0] = du_lines[0].replaceAll("( +)", "$1" + " ".repeat(13));
 
-            du_lines[du_lines.length - 1] = du_lines[du_lines.length - 1].replaceAll("(used:)( +)(\\d)", "$1             $2$3");
+            du_lines[du_lines.length - 1] = du_lines[du_lines.length - 1].replaceAll("(used:)( +)(\\d)", "$1" + " ".repeat(13) + "$2$3");
 
             return String.join("\n", du_lines);
         } else {
