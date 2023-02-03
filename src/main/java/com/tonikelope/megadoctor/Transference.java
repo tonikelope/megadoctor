@@ -752,7 +752,7 @@ public final class Transference extends javax.swing.JPanel {
         progress.setMaximum(10000);
         progress.setIndeterminate(true);
 
-        folder_stats_scroll.setVisible(false);
+        folder_stats_scroll.setVisible(isDirectory());
     }
 
     /**
@@ -782,7 +782,7 @@ public final class Transference extends javax.swing.JPanel {
 
         local_path.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
         local_path.setText("jLabel1");
-        local_path.setToolTipText("Double click for details (folders)");
+        local_path.setToolTipText("Click for details (folders)");
         local_path.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         local_path.setDoubleBuffered(true);
         local_path.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -893,9 +893,9 @@ public final class Transference extends javax.swing.JPanel {
     private void local_pathMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_local_pathMouseClicked
         // TODO add your handling code here:
         if (isDirectory() && !isFinishing() && !isStarting() && SwingUtilities.isLeftMouseButton(evt)) {
-            local_path.setEnabled(false);
             folder_stats_scroll.setVisible(!folder_stats_scroll.isVisible());
-            local_path.setEnabled(true);
+            revalidate();
+            repaint();
         }
 
     }//GEN-LAST:event_local_pathMouseClicked
