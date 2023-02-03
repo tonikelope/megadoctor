@@ -365,16 +365,19 @@ public final class Transference extends javax.swing.JPanel {
     private int readTotalRunningTransferences() {
         String transfer_data = Helpers.runProcess(new String[]{"mega-transfers", "--summary"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-        String[] transfer_data_lines = transfer_data.split("\n");
+        if (!transfer_data.trim().isEmpty()) {
 
-        final String regex = "^ *(\\d+) +([\\d.]+ +[^ ]+) +([\\d.]+ +[^ ]+) +([\\d.]+) *% +(\\d+) +([\\d.]+ +[^ ]+) +([\\d.]+ +[^ ]+) +([\\d.]+) *%.*$";
+            String[] transfer_data_lines = transfer_data.split("\n");
 
-        final Pattern pattern = Pattern.compile(regex);
+            final String regex = "^ *(\\d+) +([\\d.]+ +[^ ]+) +([\\d.]+ +[^ ]+) +([\\d.]+) *% +(\\d+) +([\\d.]+ +[^ ]+) +([\\d.]+ +[^ ]+) +([\\d.]+) *%.*$";
 
-        final Matcher matcher = pattern.matcher(transfer_data_lines[1].trim());
+            final Pattern pattern = Pattern.compile(regex);
 
-        if (matcher.find()) {
-            return Integer.parseInt(matcher.group((_action == 0 ? 1 : 5)));
+            final Matcher matcher = pattern.matcher(transfer_data_lines[1].trim());
+
+            if (matcher.find()) {
+                return Integer.parseInt(matcher.group((_action == 0 ? 1 : 5)));
+            }
         }
 
         return 0;
@@ -556,7 +559,7 @@ public final class Transference extends javax.swing.JPanel {
 
         String transfer_data = Helpers.runProcess(new String[]{"mega-transfers", "--limit=1"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-        return !transfer_data.trim().isEmpty();
+        return (!transfer_data.trim().isEmpty() && readTotalRunningTransferences() > 0);
     }
 
     private long calculateSpeed(long size, int old_prog, int new_prog, long old_timestamp, long new_timestamp) {
@@ -600,28 +603,30 @@ public final class Transference extends javax.swing.JPanel {
     }
 
     private String readFolderStats() {
-        if (isDirectory()) {
+        if (isDirectory() && transferRunning()) {
 
             String fstats = Helpers.runProcess(new String[]{"mega-transfers", "--limit=1000000", "--path-display-size=10000", "--output-cols=SOURCEPATH,PROGRESS,STATE"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-            fstats = fstats.replace(_lpath, ".");
+            if (!fstats.trim().isEmpty()) {
+                fstats = fstats.replace(_lpath, ".");
 
-            Pattern pattern_header = Pattern.compile("SOURCEPATH +PROGRESS");
+                Pattern pattern_header = Pattern.compile("SOURCEPATH +PROGRESS");
 
-            Matcher matcher_header = pattern_header.matcher(fstats);
+                Matcher matcher_header = pattern_header.matcher(fstats);
 
-            String header = "";
+                String header = "";
 
-            if (matcher_header.find()) {
-                header = matcher_header.group(0);
+                if (matcher_header.find()) {
+                    header = matcher_header.group(0);
+                }
+
+                fstats = fstats.replace(header, Helpers.adjustSpaces(header, -1 * (_lpath.length() - 1)));
             }
-
-            fstats = fstats.replace(header, Helpers.adjustSpaces(header, -1 * (_lpath.length() - 1)));
 
             return fstats;
         }
 
-        return null;
+        return "";
     }
 
     private boolean updateProgress() {
@@ -891,7 +896,7 @@ public final class Transference extends javax.swing.JPanel {
 
     private void local_pathMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_local_pathMouseClicked
         // TODO add your handling code here:
-        if (isDirectory() && !isFinishing() && !isStarting() && SwingUtilities.isLeftMouseButton(evt)) {
+        if (isDirectory() && !isFinished() && !isFinishing() && !isStarting() && SwingUtilities.isLeftMouseButton(evt)) {
             folder_stats_scroll.setVisible(!folder_stats_scroll.isVisible());
             revalidate();
             repaint();
