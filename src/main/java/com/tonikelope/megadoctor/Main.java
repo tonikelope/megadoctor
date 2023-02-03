@@ -46,7 +46,7 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.93";
+    public final static String VERSION = "0.94";
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -203,7 +203,7 @@ public class Main extends javax.swing.JFrame {
 
                                 Transference trans = (Transference) t;
 
-                                if (trans.isRunning()) {
+                                if (trans.isRunning() && !trans.isCanceled()) {
                                     _transferences_running = true;
                                     _current_transference = trans;
                                     break;
@@ -225,9 +225,11 @@ public class Main extends javax.swing.JFrame {
                                 }
                             }
 
-                            cancel_trans_button.setEnabled(_transferences_running && !_current_transference.isStarting() && !_current_transference.isFinishing());
+                            cancel_trans_button.setEnabled(_transferences_running && !_current_transference.isStarting() && !_current_transference.isFinishing() && !_current_transference.isCanceled() && transferences.getComponentCount() > 0);
 
-                            pause_button.setEnabled(_transferences_running && !_current_transference.isStarting() && !_current_transference.isFinishing());
+                            pause_button.setEnabled(cancel_trans_button.isEnabled());
+
+                            clear_trans_button.setEnabled(transferences.getComponentCount() > 0);
 
                             vamos_button.setEnabled(!busy() || (isRunning_global_check() && !isAborting_global_check()));
 
@@ -1956,8 +1958,11 @@ public class Main extends javax.swing.JFrame {
                         transferences.repaint();
                     }
 
-                    clear_trans_button.setEnabled(true);
+                    clear_trans_button.setEnabled(transferences.getComponentCount() > 0);
+
                 });
+
+                TRANSFERENCES_LOCK.notifyAll();
             }
         });
 
@@ -1972,38 +1977,24 @@ public class Main extends javax.swing.JFrame {
 
                         if (Helpers.mostrarMensajeInformativoSINO(this, "All transactions in progress or on hold will be lost. ARE YOU SURE?") == 0) {
 
-                            cancel_trans_button.setEnabled(false);
-
-                            upload_button.setEnabled(false);
-
                             Helpers.threadRun(() -> {
 
                                 synchronized (TRANSFERENCES_LOCK) {
 
-                                    Helpers.GUIRun(() -> {
+                                    Helpers.GUIRunAndWait(() -> {
                                         progressbar.setIndeterminate(true);
-                                    });
-
-                                    Helpers.runProcess(new String[]{"mega-transfers", "-ca"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
-
-                                    if (_current_transference != null) {
-                                        _current_transference.setCanceled(true);
-                                    }
-
-                                    _transferences_running = false;
-
-                                    _current_transference = null;
-
-                                    Helpers.GUIRun(() -> {
+                                        cancel_trans_button.setEnabled(false);
+                                        pause_button.setEnabled(false);
+                                        clear_trans_button.setEnabled(false);
+                                        upload_button.setEnabled(false);
                                         transferences.removeAll();
                                         transferences.revalidate();
                                         transferences.repaint();
-                                        upload_button.setEnabled(!MEGA_ACCOUNTS.isEmpty());
-                                        vamos_button.setEnabled(true);
-                                        cuentas_textarea.setEnabled(true);
-                                        cancel_trans_button.setEnabled(true);
-                                        progressbar.setIndeterminate(false);
                                     });
+
+                                    if (_current_transference != null) {
+                                        _current_transference.stop();
+                                    }
 
                                     TRANSFERENCES_LOCK.notifyAll();
                                 }

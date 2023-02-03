@@ -225,30 +225,27 @@ public final class Transference extends javax.swing.JPanel {
 
         _canceled = true;
 
-        Helpers.threadRun(() -> {
+        synchronized (TRANSFERENCES_LOCK) {
 
-            synchronized (TRANSFERENCES_LOCK) {
-
-                if (_running) {
-                    Helpers.runProcess(new String[]{"mega-transfers", "-ca"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
-                }
-
-                _running = false;
-
-                Helpers.GUIRunAndWait(() -> {
-                    Main.MAIN_WINDOW.getTransferences().remove(this);
-
-                    Main.MAIN_WINDOW.getTransferences().revalidate();
-
-                    Main.MAIN_WINDOW.getTransferences().repaint();
-                });
-
-                Main.MAIN_WINDOW.forceRefreshAccount(_email, "Refreshed after upload CANCEL [" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + _rpath, false, false);
-
-                TRANSFERENCES_LOCK.notifyAll();
+            if (_running) {
+                Helpers.runProcess(new String[]{"mega-transfers", "-ca"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
             }
 
-        });
+            _running = false;
+
+            Helpers.GUIRunAndWait(() -> {
+                Main.MAIN_WINDOW.getTransferences().remove(this);
+
+                Main.MAIN_WINDOW.getTransferences().revalidate();
+
+                Main.MAIN_WINDOW.getTransferences().repaint();
+            });
+
+            Main.MAIN_WINDOW.forceRefreshAccount(_email, "Refreshed after upload CANCEL [" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + _rpath, false, false);
+
+            TRANSFERENCES_LOCK.notifyAll();
+        }
+
     }
 
     private void securePauseTransfer() {
@@ -533,8 +530,8 @@ public final class Transference extends javax.swing.JPanel {
 
             Helpers.GUIRun(() -> {
                 Main.MAIN_WINDOW.getUpload_button().setEnabled(true);
-                Main.MAIN_WINDOW.getPause_button().setEnabled(true);
-                Main.MAIN_WINDOW.getCancel_trans_button().setEnabled(true);
+                Main.MAIN_WINDOW.getPause_button().setEnabled(Main.MAIN_WINDOW.getTransferences().getComponentCount() > 0);
+                Main.MAIN_WINDOW.getCancel_trans_button().setEnabled(Main.MAIN_WINDOW.getTransferences().getComponentCount() > 0);
             });
 
             _finishing = false;
@@ -881,7 +878,9 @@ public final class Transference extends javax.swing.JPanel {
             if (!_canceled && !_finished) {
 
                 if (Main.MAIN_WINDOW.getCancel_trans_button().isEnabled() && Helpers.mostrarMensajeInformativoSINO(Main.MAIN_WINDOW, "<b>" + filename + "</b><br><br><b>CANCEL</b> this transference?") == 0) {
-                    stop();
+                    Helpers.threadRun(() -> {
+                        stop();
+                    });
                 }
 
             } else if (!_canceled && _finished && Helpers.mostrarMensajeInformativoSINO(Main.MAIN_WINDOW, "<b>" + filename + "</b><br><br><b>Clear</b> this finished transference?") == 0) {
