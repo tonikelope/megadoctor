@@ -437,7 +437,7 @@ public final class Transference extends javax.swing.JPanel {
                 Main.MAIN_WINDOW.getPause_button().setEnabled(true);
                 Main.MAIN_WINDOW.getCancel_trans_button().setEnabled(true);
                 Main.MAIN_WINDOW.getUpload_button().setEnabled(true);
-
+                folder_stats_scroll.setVisible(isDirectory());
             });
 
             _starting = false;
@@ -754,7 +754,7 @@ public final class Transference extends javax.swing.JPanel {
         progress.setMaximum(10000);
         progress.setIndeterminate(true);
 
-        folder_stats_scroll.setVisible(isDirectory());
+        folder_stats_scroll.setVisible(false);
     }
 
     /**
