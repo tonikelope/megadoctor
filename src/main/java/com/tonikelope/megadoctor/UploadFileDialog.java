@@ -23,6 +23,8 @@ import javax.swing.JFileChooser;
  */
 public class UploadFileDialog extends javax.swing.JDialog implements Refresheable {
 
+    public static String LAST_FOLDER = null;
+
     public String getSelected_email() {
         return (String) email_combobox.getSelectedItem();
     }
@@ -314,6 +316,10 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
         JFileChooser fileChooser = new JFileChooser();
 
+        if (LAST_FOLDER != null) {
+            fileChooser.setCurrentDirectory(new File(LAST_FOLDER));
+        }
+
         Helpers.setContainerFont(fileChooser, remote_path.getFont().deriveFont(14f));
 
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
@@ -323,6 +329,8 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         if (option == JFileChooser.APPROVE_OPTION) {
 
             File file = fileChooser.getSelectedFile();
+
+            LAST_FOLDER = file.getParentFile().getAbsolutePath();
 
             _lpath = file.getAbsolutePath();
 
@@ -357,6 +365,10 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
         JFileChooser fileChooser = new JFileChooser();
 
+        if (LAST_FOLDER != null) {
+            fileChooser.setCurrentDirectory(new File(LAST_FOLDER));
+        }
+
         Helpers.setContainerFont(fileChooser, remote_path.getFont().deriveFont(14f));
 
         fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -366,6 +378,8 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         if (option == JFileChooser.APPROVE_OPTION) {
 
             File file = fileChooser.getSelectedFile();
+
+            LAST_FOLDER = file.getAbsolutePath();
 
             _lpath = file.getAbsolutePath();
 
