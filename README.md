@@ -9,5 +9,4 @@
 
 <p align="center"><img src="https://github.com/tonikelope/megadoctor/raw/main/snapshots/screenshot.png"></p>
 <p align="center"><img src="https://github.com/tonikelope/megadoctor/raw/main/snapshots/transfer.png"></p>
-<p align="center"><img src="https://github.com/tonikelope/megadoctor/raw/main/snapshots/megadoctor.png"></p>
 <p align="center"><img src="https://github.com/tonikelope/megadoctor/raw/main/snapshots/megadoctor2.png"></p>
