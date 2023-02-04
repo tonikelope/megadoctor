@@ -50,7 +50,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.0";
+    public final static String VERSION = "1.1";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -634,11 +634,13 @@ public class Main extends javax.swing.JFrame {
         Helpers.GUIRunAndWait(() -> {
             if (transferences.getComponentCount() > 0) {
 
+                trans.add(new Object[]{_current_transference.getEmail(), _current_transference.getLpath(), _current_transference.getRpath(), _current_transference.getAction()}
+                );
                 for (Component c : transferences.getComponents()) {
 
                     Transference t = (Transference) c;
 
-                    if (!t.isFinished() && !t.isCanceled()) {
+                    if (t != _current_transference && !t.isFinished() && !t.isCanceled()) {
 
                         String email = t.getEmail();
 
