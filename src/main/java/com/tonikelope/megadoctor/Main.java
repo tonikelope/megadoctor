@@ -14,6 +14,8 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.util.ArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -33,12 +35,14 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JTextArea;
+import javax.swing.UIManager;
 
 /**
  *
@@ -46,7 +50,8 @@ import javax.swing.JTextArea;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.97";
+    public final static String VERSION = "0.98";
+    public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -71,6 +76,9 @@ public class Main extends javax.swing.JFrame {
     private volatile boolean _transferences_running = false;
     private volatile Transference _current_transference = null;
     private volatile String _last_email_force_refresh = null;
+    private volatile JPanel transferences = null;
+    private final HashMap<Component, Transference> transferences_map = new HashMap<>();
+    private final DragMouseAdapter dh_trans = new DragMouseAdapter();
 
     public JButton getUpload_button() {
         return upload_button;
@@ -147,6 +155,11 @@ public class Main extends javax.swing.JFrame {
         initComponents();
         Helpers.JTextFieldRegularPopupMenu.addTo(cuentas_textarea);
         Helpers.JTextFieldRegularPopupMenu.addTo(output_textarea);
+        transferences = new JPanel();
+        transferences.setLayout(new BoxLayout(transferences, BoxLayout.Y_AXIS));
+        transferences.addMouseListener((MouseListener) dh_trans);
+        transferences.addMouseMotionListener((MouseMotionListener) dh_trans);
+        transferences_panel.add(transferences);
         progressbar.setMinimum(0);
         upload_button.setEnabled(false);
         transf_scroll.getVerticalScrollBar().setUnitIncrement(20);
@@ -195,45 +208,46 @@ public class Main extends javax.swing.JFrame {
 
                         if (transferences.getComponentCount() > 0) {
 
-                            transferences_control_panel.setVisible(true);
+                            if (!dh_trans.isWorking()) {
 
-                            _transferences_running = false;
+                                transferences_control_panel.setVisible(true);
 
-                            for (Component t : transferences.getComponents()) {
+                                _transferences_running = false;
 
-                                Transference trans = (Transference) t;
+                                for (Component tr : transferences.getComponents()) {
 
-                                if (trans.isRunning() && !trans.isCanceled()) {
-                                    _transferences_running = true;
-                                    _current_transference = trans;
-                                    break;
-                                }
-                            }
+                                    Transference t = transferences_map.get(tr);
 
-                            if (!_transferences_running) {
-                                for (Component t : transferences.getComponents()) {
-
-                                    Transference trans = (Transference) t;
-
-                                    if (!trans.isRunning() && !trans.isFinished() && !trans.isCanceled()) {
+                                    if (t.isRunning() && !t.isCanceled()) {
                                         _transferences_running = true;
-                                        _current_transference = trans;
-                                        pause_button.setText("PAUSE");
-                                        trans.start();
+                                        _current_transference = t;
                                         break;
                                     }
                                 }
+
+                                if (!_transferences_running) {
+                                    for (Component tr : transferences.getComponents()) {
+                                        Transference t = transferences_map.get(tr);
+                                        if (!t.isRunning() && !t.isFinished() && !t.isCanceled()) {
+                                            _transferences_running = true;
+                                            _current_transference = t;
+                                            pause_button.setText("PAUSE");
+                                            t.start();
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                cancel_trans_button.setEnabled(_transferences_running && !_current_transference.isStarting() && !_current_transference.isFinishing() && !_current_transference.isCanceled() && transferences.getComponentCount() > 0);
+
+                                pause_button.setEnabled(cancel_trans_button.isEnabled());
+
+                                clear_trans_button.setEnabled(transferences.getComponentCount() > 0);
+
+                                vamos_button.setEnabled(!busy() || (isRunning_global_check() && !isAborting_global_check()));
+
+                                cuentas_textarea.setEnabled(!busy());
                             }
-
-                            cancel_trans_button.setEnabled(_transferences_running && !_current_transference.isStarting() && !_current_transference.isFinishing() && !_current_transference.isCanceled() && transferences.getComponentCount() > 0);
-
-                            pause_button.setEnabled(cancel_trans_button.isEnabled());
-
-                            clear_trans_button.setEnabled(transferences.getComponentCount() > 0);
-
-                            vamos_button.setEnabled(!busy() || (isRunning_global_check() && !isAborting_global_check()));
-
-                            cuentas_textarea.setEnabled(!busy());
 
                         } else {
                             _transferences_running = false;
@@ -672,7 +686,7 @@ public class Main extends javax.swing.JFrame {
                                 for (Object[] o : trans) {
                                     if (MEGA_SESSIONS.containsKey((String) o[0])) {
                                         Transference t = new Transference((String) o[0], (String) o[1], (String) o[2], (int) o[3]);
-                                        transferences.add(t);
+                                        transferences_map.put(transferences.add(t), t);
                                         valid_trans.add(t);
                                     }
                                 }
@@ -1318,7 +1332,7 @@ public class Main extends javax.swing.JFrame {
         cancel_trans_button = new javax.swing.JButton();
         clear_trans_button = new javax.swing.JButton();
         pause_button = new javax.swing.JButton();
-        transferences = new javax.swing.JPanel();
+        transferences_panel = new javax.swing.JPanel();
         upload_button = new javax.swing.JButton();
         clear_log_button = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
@@ -1407,7 +1421,7 @@ public class Main extends javax.swing.JFrame {
         transf_scroll.setDoubleBuffered(true);
 
         cancel_trans_button.setBackground(new java.awt.Color(255, 51, 0));
-        cancel_trans_button.setFont(new java.awt.Font("Noto Sans", 1, 14)); // NOI18N
+        cancel_trans_button.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
         cancel_trans_button.setForeground(new java.awt.Color(255, 255, 255));
         cancel_trans_button.setText("CANCEL ALL");
         cancel_trans_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
@@ -1419,9 +1433,9 @@ public class Main extends javax.swing.JFrame {
         });
 
         clear_trans_button.setBackground(new java.awt.Color(0, 153, 0));
-        clear_trans_button.setFont(new java.awt.Font("Noto Sans", 1, 14)); // NOI18N
+        clear_trans_button.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
         clear_trans_button.setForeground(new java.awt.Color(255, 255, 255));
-        clear_trans_button.setText("Clear all finished");
+        clear_trans_button.setText("CLEAR ALL FINISHED");
         clear_trans_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         clear_trans_button.setDoubleBuffered(true);
         clear_trans_button.addActionListener(new java.awt.event.ActionListener() {
@@ -1431,7 +1445,7 @@ public class Main extends javax.swing.JFrame {
         });
 
         pause_button.setBackground(new java.awt.Color(255, 204, 0));
-        pause_button.setFont(new java.awt.Font("Noto Sans", 1, 14)); // NOI18N
+        pause_button.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
         pause_button.setText("PAUSE");
         pause_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         pause_button.setDoubleBuffered(true);
@@ -1452,7 +1466,7 @@ public class Main extends javax.swing.JFrame {
                 .addComponent(pause_button)
                 .addGap(18, 18, 18)
                 .addComponent(cancel_trans_button)
-                .addContainerGap(695, Short.MAX_VALUE))
+                .addContainerGap(708, Short.MAX_VALUE))
         );
         transferences_control_panelLayout.setVerticalGroup(
             transferences_control_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1465,21 +1479,21 @@ public class Main extends javax.swing.JFrame {
                 .addContainerGap())
         );
 
-        transferences.setLayout(new javax.swing.BoxLayout(transferences, javax.swing.BoxLayout.PAGE_AXIS));
+        transferences_panel.setLayout(new java.awt.BorderLayout());
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(transferences, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(transferences_control_panel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(transferences_panel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addComponent(transferences_control_panel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 0, 0)
-                .addComponent(transferences, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(transferences_panel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         transf_scroll.setViewportView(jPanel1);
@@ -1583,7 +1597,7 @@ public class Main extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(cuentas_scrollpanel, javax.swing.GroupLayout.PREFERRED_SIZE, 185, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(tabbed_panel, javax.swing.GroupLayout.DEFAULT_SIZE, 414, Short.MAX_VALUE)
+                .addComponent(tabbed_panel)
                 .addContainerGap())
         );
 
@@ -1908,7 +1922,7 @@ public class Main extends javax.swing.JFrame {
                                     status_label.setText("");
                                     progressbar.setIndeterminate(false);
                                     Transference trans = new Transference(dialog.getSelected_email(), dialog.getLocal_path(), dialog.getRemote_path(), 1);
-                                    transferences.add(trans);
+                                    transferences_map.put(transferences.add(trans), trans);
                                     transferences.revalidate();
                                     transferences.repaint();
                                     tabbed_panel.setSelectedIndex(1);
@@ -1949,6 +1963,7 @@ public class Main extends javax.swing.JFrame {
                             Transference trans = (Transference) t;
 
                             if (trans.isFinished()) {
+                                transferences_map.remove(t);
                                 transferences.remove(t);
                             }
                         }
@@ -1987,6 +2002,7 @@ public class Main extends javax.swing.JFrame {
                                         pause_button.setEnabled(false);
                                         clear_trans_button.setEnabled(false);
                                         upload_button.setEnabled(false);
+                                        transferences_map.clear();
                                         transferences.removeAll();
                                         transferences.revalidate();
                                         transferences.repaint();
@@ -2076,6 +2092,9 @@ public class Main extends javax.swing.JFrame {
      * @param args the command line arguments
      */
     public static void main(String args[]) {
+        UIManager.put("OptionPane.messageFont", new Font("Noto Sans", Font.PLAIN, MESSAGE_DIALOG_FONT_SIZE));
+        UIManager.put("OptionPane.buttonFont", new Font("Noto Sans", Font.PLAIN, MESSAGE_DIALOG_FONT_SIZE));
+
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
@@ -2130,8 +2149,8 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JLabel status_label;
     private javax.swing.JTabbedPane tabbed_panel;
     private javax.swing.JScrollPane transf_scroll;
-    private javax.swing.JPanel transferences;
     private javax.swing.JPanel transferences_control_panel;
+    private javax.swing.JPanel transferences_panel;
     private javax.swing.JButton upload_button;
     private javax.swing.JButton vamos_button;
     // End of variables declaration//GEN-END:variables

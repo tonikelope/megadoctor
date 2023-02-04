@@ -263,13 +263,13 @@ public class Helpers {
 
         if (SwingUtilities.isEventDispatchThread()) {
 
-            JOptionPane.showMessageDialog(frame, "<html><div align='center' style='font-size:1.2em'>" + msg + "</div></html>");
+            JOptionPane.showMessageDialog(frame, "<html><div align='center'>" + msg + "</div></html>");
 
         } else {
             Helpers.GUIRunAndWait(new Runnable() {
                 @Override
                 public void run() {
-                    JOptionPane.showMessageDialog(frame, "<html><div align='center' style='font-size:1.2em'>" + msg + "</div></html>");
+                    JOptionPane.showMessageDialog(frame, "<html><div align='center'>" + msg + "</div></html>");
                 }
             });
         }
@@ -282,7 +282,7 @@ public class Helpers {
 
         if (SwingUtilities.isEventDispatchThread()) {
 
-            return JOptionPane.showConfirmDialog(frame, "<html><div align='center' style='font-size:1.2em'>" + msg + "</div></html>", "Info", JOptionPane.YES_NO_OPTION);
+            return JOptionPane.showConfirmDialog(frame, "<html><div align='center'>" + msg + "</div></html>", "Info", JOptionPane.YES_NO_OPTION);
 
         } else {
 
@@ -292,7 +292,7 @@ public class Helpers {
                 @Override
                 public void run() {
 
-                    res[0] = JOptionPane.showConfirmDialog(frame, "<html><div align='center' style='font-size:1.2em'>" + msg + "</div></html>", "Info", JOptionPane.YES_NO_OPTION);
+                    res[0] = JOptionPane.showConfirmDialog(frame, "<html><div align='center'>" + msg + "</div></html>", "Info", JOptionPane.YES_NO_OPTION);
                 }
             });
 
@@ -308,14 +308,14 @@ public class Helpers {
 
         if (SwingUtilities.isEventDispatchThread()) {
 
-            JOptionPane.showMessageDialog(frame, "<html><div align='center' style='font-size:1.2em'>" + msg + "</div></html>", "ERROR", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(frame, "<html><div align='center'>" + msg + "</div></html>", "ERROR", JOptionPane.ERROR_MESSAGE);
 
         } else {
 
             Helpers.GUIRunAndWait(new Runnable() {
                 @Override
                 public void run() {
-                    JOptionPane.showMessageDialog(frame, "<html><div align='center' style='font-size:1.2em'>" + msg + "</div></html>", "ERROR", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(frame, "<html><div align='center'>" + msg + "</div></html>", "ERROR", JOptionPane.ERROR_MESSAGE);
                 }
             });
         }

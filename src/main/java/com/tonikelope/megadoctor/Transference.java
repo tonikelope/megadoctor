@@ -287,6 +287,7 @@ public final class Transference extends javax.swing.JPanel {
 
             Helpers.GUIRun(() -> {
                 action.setText("(PAUSED)");
+                setBackground(Main.MAIN_WINDOW.getPause_button().getBackground());
             });
 
             TRANSFERENCES_LOCK.notifyAll();
@@ -318,6 +319,7 @@ public final class Transference extends javax.swing.JPanel {
                 Helpers.GUIRun(() -> {
                     Main.MAIN_WINDOW.getPause_button().setEnabled(true);
                     Main.MAIN_WINDOW.getCancel_trans_button().setEnabled(true);
+                    setBackground(null);
                 });
 
                 TRANSFERENCES_LOCK.notifyAll();
@@ -774,13 +776,11 @@ public final class Transference extends javax.swing.JPanel {
         status = new javax.swing.JLabel();
         folder_stats_scroll = new javax.swing.JScrollPane();
         folder_stats_textarea = new javax.swing.JTextArea();
+        jLabel1 = new javax.swing.JLabel();
 
         setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
-        addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                formMouseClicked(evt);
-            }
-        });
+
+        jPanel1.setOpaque(false);
 
         local_path.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
         local_path.setText("jLabel1");
@@ -846,6 +846,10 @@ public final class Transference extends javax.swing.JPanel {
         folder_stats_textarea.setDoubleBuffered(true);
         folder_stats_scroll.setViewportView(folder_stats_textarea);
 
+        jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/drag.png"))); // NOI18N
+        jLabel1.setCursor(new java.awt.Cursor(java.awt.Cursor.MOVE_CURSOR));
+        jLabel1.setDoubleBuffered(true);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -853,30 +857,37 @@ public final class Transference extends javax.swing.JPanel {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(folder_stats_scroll)
                     .addGroup(layout.createSequentialGroup()
+                        .addComponent(jLabel1)
+                        .addGap(0, 0, 0)
                         .addComponent(status)
                         .addGap(0, 0, 0)
-                        .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                        .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(folder_stats_scroll))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(status, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                        .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(status, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(jLabel1))
                 .addGap(0, 0, 0)
-                .addComponent(folder_stats_scroll)
+                .addComponent(folder_stats_scroll, javax.swing.GroupLayout.DEFAULT_SIZE, 142, Short.MAX_VALUE)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
 
-    private void formMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_formMouseClicked
+    private void local_pathMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_local_pathMouseClicked
         // TODO add your handling code here:
-
-        if (SwingUtilities.isRightMouseButton(evt)) {
+        if (isDirectory() && !isFinished() && !isFinishing() && !isStarting() && SwingUtilities.isLeftMouseButton(evt)) {
+            folder_stats_scroll.setVisible(!folder_stats_scroll.isVisible());
+            revalidate();
+            repaint();
+        } else if (SwingUtilities.isRightMouseButton(evt)) {
 
             String filename = new File(_lpath).getName();
 
@@ -892,15 +903,6 @@ public final class Transference extends javax.swing.JPanel {
                 clearFinished();
             }
         }
-    }//GEN-LAST:event_formMouseClicked
-
-    private void local_pathMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_local_pathMouseClicked
-        // TODO add your handling code here:
-        if (isDirectory() && !isFinished() && !isFinishing() && !isStarting() && SwingUtilities.isLeftMouseButton(evt)) {
-            folder_stats_scroll.setVisible(!folder_stats_scroll.isVisible());
-            revalidate();
-            repaint();
-        }
 
     }//GEN-LAST:event_local_pathMouseClicked
 
@@ -908,6 +910,7 @@ public final class Transference extends javax.swing.JPanel {
     private javax.swing.JLabel action;
     private javax.swing.JScrollPane folder_stats_scroll;
     private javax.swing.JTextArea folder_stats_textarea;
+    private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JLabel local_path;
     private javax.swing.JProgressBar progress;
