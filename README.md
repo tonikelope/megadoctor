@@ -1,6 +1,6 @@
 # megadoctor
 
-## MEGA-CMD's best friend
+## MEGAcmd's best friend
 
 1. Check your accounts statistics.
 2. Delete/rename/move/copy folders/files (selecting NODE-IDs with mouse).
