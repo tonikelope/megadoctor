@@ -50,9 +50,11 @@
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="local_folder_button" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
-                      <Component id="local_size" min="-2" max="-2" attributes="0"/>
+                      <Component id="mega_button" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
-                      <Component id="local_path" pref="396" max="32767" attributes="0"/>
+                      <Component id="local_size" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
+                      <Component id="local_path" pref="288" max="32767" attributes="0"/>
                   </Group>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
@@ -68,6 +70,7 @@
                   <Component id="local_folder_button" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="local_path" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="local_size" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="mega_button" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
               <Component id="local_folder_progress" max="-2" attributes="0"/>
@@ -143,7 +146,7 @@
         <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
           <Image iconType="3" name="/images/file.png"/>
         </Property>
-        <Property name="text" type="java.lang.String" value="Select FILE"/>
+        <Property name="text" type="java.lang.String" value="FILE"/>
         <Property name="cursor" type="java.awt.Cursor" editor="org.netbeans.modules.form.editors2.CursorEditor">
           <Color id="Cursor de Mano"/>
         </Property>
@@ -182,7 +185,7 @@
         <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
           <Image iconType="3" name="/images/folder.png"/>
         </Property>
-        <Property name="text" type="java.lang.String" value="Select FOLDER"/>
+        <Property name="text" type="java.lang.String" value="FOLDER"/>
         <Property name="cursor" type="java.awt.Cursor" editor="org.netbeans.modules.form.editors2.CursorEditor">
           <Color id="Cursor de Mano"/>
         </Property>
@@ -240,6 +243,24 @@
       <Properties>
         <Property name="doubleBuffered" type="boolean" value="true"/>
       </Properties>
+    </Component>
+    <Component class="javax.swing.JButton" name="mega_button">
+      <Properties>
+        <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+          <Font name="Noto Sans" size="18" style="1"/>
+        </Property>
+        <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+          <Image iconType="3" name="/images/mega.png"/>
+        </Property>
+        <Property name="text" type="java.lang.String" value="MEGA LINK"/>
+        <Property name="cursor" type="java.awt.Cursor" editor="org.netbeans.modules.form.editors2.CursorEditor">
+          <Color id="Cursor de Mano"/>
+        </Property>
+        <Property name="doubleBuffered" type="boolean" value="true"/>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="mega_buttonActionPerformed"/>
+      </Events>
     </Component>
   </SubComponents>
 </Form>

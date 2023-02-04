@@ -39,6 +39,10 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         return _rpath;
     }
 
+    public long getLocal_size() {
+        return _local_size;
+    }
+
     private boolean _ok = false;
     private volatile long _local_size = 0;
     private volatile long _free_space = 0;
@@ -127,6 +131,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         jScrollPane1 = new javax.swing.JScrollPane();
         account_stats_textarea = new javax.swing.JTextArea();
         local_folder_progress = new javax.swing.JProgressBar();
+        mega_button = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle("UPLOAD FILE");
@@ -159,7 +164,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
         local_file_button.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
         local_file_button.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/file.png"))); // NOI18N
-        local_file_button.setText("Select FILE");
+        local_file_button.setText("FILE");
         local_file_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         local_file_button.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -176,7 +181,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
         local_folder_button.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
         local_folder_button.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/folder.png"))); // NOI18N
-        local_folder_button.setText("Select FOLDER");
+        local_folder_button.setText("FOLDER");
         local_folder_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         local_folder_button.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -201,6 +206,17 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         jScrollPane1.setViewportView(account_stats_textarea);
 
         local_folder_progress.setDoubleBuffered(true);
+
+        mega_button.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
+        mega_button.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/mega.png"))); // NOI18N
+        mega_button.setText("MEGA LINK");
+        mega_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        mega_button.setDoubleBuffered(true);
+        mega_button.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mega_buttonActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -227,9 +243,11 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(local_folder_button)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(local_size)
+                        .addComponent(mega_button)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(local_path, javax.swing.GroupLayout.DEFAULT_SIZE, 396, Short.MAX_VALUE)))
+                        .addComponent(local_size)
+                        .addGap(0, 0, 0)
+                        .addComponent(local_path, javax.swing.GroupLayout.DEFAULT_SIZE, 288, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -240,7 +258,8 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                     .addComponent(local_file_button)
                     .addComponent(local_folder_button)
                     .addComponent(local_path)
-                    .addComponent(local_size))
+                    .addComponent(local_size)
+                    .addComponent(mega_button))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(local_folder_progress, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -267,7 +286,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         // TODO add your handling code here:
 
         if (!_lpath.isBlank()) {
-            _rpath = remote_path.getText();
+            _rpath = remote_path.getText().isBlank() ? "/" : remote_path.getText().trim();
             _ok = true;
         }
 
@@ -290,6 +309,8 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         local_file_button.setEnabled(false);
 
         local_folder_button.setEnabled(false);
+
+        mega_button.setEnabled(false);
 
         JFileChooser fileChooser = new JFileChooser();
 
@@ -320,6 +341,8 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
         local_file_button.setEnabled(true);
 
+        mega_button.setEnabled(true);
+
         Helpers.smartPack(this);
     }//GEN-LAST:event_local_file_buttonActionPerformed
 
@@ -329,6 +352,8 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         local_folder_button.setEnabled(false);
 
         local_file_button.setEnabled(false);
+
+        mega_button.setEnabled(true);
 
         JFileChooser fileChooser = new JFileChooser();
 
@@ -355,6 +380,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                     Helpers.GUIRun(() -> {
                         local_folder_button.setEnabled(true);
                         local_file_button.setEnabled(true);
+                        mega_button.setEnabled(true);
                         local_folder_button.setText("Select FOLDER");
                         local_folder_progress.setVisible(false);
                         local_size.setText(Helpers.formatBytes(_local_size));
@@ -366,6 +392,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         } else {
             local_folder_button.setEnabled(true);
             local_file_button.setEnabled(true);
+            mega_button.setEnabled(true);
             local_folder_button.setText("Select FOLDER");
         }
 
@@ -382,6 +409,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
             email_combobox.setEnabled(false);
             local_file_button.setEnabled(false);
             local_folder_button.setEnabled(false);
+            mega_button.setEnabled(false);
             vamos_button.setEnabled(false);
             account_stats_textarea.setText("");
             free_space.setText("");
@@ -405,6 +433,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                     email_combobox.setEnabled(true);
                     local_file_button.setEnabled(true);
                     local_folder_button.setEnabled(true);
+                    mega_button.setEnabled(true);
                     vamos_button.setEnabled(true);
                     Helpers.smartPack(this);
 
@@ -415,6 +444,26 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
             });
         }
     }//GEN-LAST:event_email_comboboxItemStateChanged
+
+    private void mega_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mega_buttonActionPerformed
+        // TODO add your handling code here:
+        boolean vamos_button_enabled = vamos_button.isEnabled();
+
+        TextDialog dialog = new TextDialog(null, true);
+        Helpers.setCenterOfParent(this, dialog);
+        dialog.setVisible(true);
+
+        if (dialog.getLink() != null) {
+            local_path.setText(dialog.getLink());
+            local_size.setText("");
+            _local_size = 0;
+            _lpath = dialog.getLink();
+            vamos_button.setEnabled(true);
+            Helpers.smartPack(this);
+        } else {
+            vamos_button.setEnabled(vamos_button_enabled);
+        }
+    }//GEN-LAST:event_mega_buttonActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextArea account_stats_textarea;
@@ -427,6 +476,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
     private javax.swing.JProgressBar local_folder_progress;
     private javax.swing.JLabel local_path;
     private javax.swing.JLabel local_size;
+    private javax.swing.JButton mega_button;
     private javax.swing.JProgressBar progress;
     private javax.swing.JTextField remote_path;
     private javax.swing.JButton vamos_button;

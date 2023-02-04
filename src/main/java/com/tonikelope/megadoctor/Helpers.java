@@ -98,6 +98,16 @@ public class Helpers {
 
     }
 
+    public static boolean checkMEGALInk(String link) {
+        link = link.trim();
+
+        final String regex = "https://mega\\.nz/((folder|file)/([^#]+)#(.+)|#(F?)!([^!]+)!(.+))";
+        final Pattern pattern = Pattern.compile(regex);
+        final Matcher matcher = pattern.matcher(link);
+
+        return matcher.find();
+    }
+
     public static String formatBytes(Long bytes) {
 
         String[] units = {"B", "KB", "MB", "GB", "TB"};

@@ -50,7 +50,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.1";
+    public final static String VERSION = "1.2";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -346,7 +346,9 @@ public class Main extends javax.swing.JFrame {
 
         String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-        return df + "\n" + du + "\n" + ls;
+        String[] shared = Helpers.runProcess(new String[]{"mega-share", "/"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+        return df + "\n" + du + "\n" + ls + (Integer.parseInt(shared[2]) == 0 ? "\n" + shared[1] : "");
     }
 
     public String DUWithHandles() {
@@ -1045,6 +1047,50 @@ public class Main extends javax.swing.JFrame {
         });
 
         _running_main_action = false;
+    }
+
+    public void importLink(String email, String link, String rpath) {
+
+        _running_main_action = true;
+
+        String old_status = MAIN_WINDOW.getStatus_label().getText();
+
+        Helpers.GUIRun(() -> {
+
+            enableButtons(false);
+            MAIN_WINDOW.getProgressbar().setIndeterminate(true);
+            MAIN_WINDOW.getStatus_label().setText("IMPORTING " + link + " -> " + email + " PLEASE WAIT...");
+
+        });
+
+        if (MEGA_ACCOUNTS.containsKey(email)) {
+
+            login(email);
+
+            String[] import_result = Helpers.runProcess(new String[]{"mega-import", link, rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+            if (Integer.parseInt(import_result[2]) == 0) {
+                forceRefreshAccount(email, "Refreshed after insertion", false, false);
+                Helpers.mostrarMensajeInformativo(MAIN_WINDOW, link + " IMPORTED");
+            } else {
+                Helpers.mostrarMensajeError(MAIN_WINDOW, link + " " + rpath + " IMPORTATION ERROR (" + import_result[2] + ")");
+            }
+        }
+
+        Helpers.GUIRun(() -> {
+
+            enableButtons(true);
+
+            if (old_status.isBlank()) {
+                MAIN_WINDOW.getProgressbar().setIndeterminate(false);
+            }
+
+            MAIN_WINDOW.getStatus_label().setText(old_status);
+
+        });
+
+        _running_main_action = false;
+
     }
 
     public void truncateAccount(String email) {
@@ -1912,29 +1958,47 @@ public class Main extends javax.swing.JFrame {
 
                     if (dialog.isOk()) {
 
-                        vamos_button.setEnabled(false);
+                        if (Helpers.checkMEGALInk(dialog.getLocal_path())) {
 
-                        cuentas_textarea.setEnabled(false);
+                            Helpers.threadRun(() -> {
 
-                        Helpers.threadRun(() -> {
-
-                            synchronized (TRANSFERENCES_LOCK) {
+                                importLink(dialog.getSelected_email(), dialog.getLocal_path(), dialog.getRemote_path());
 
                                 Helpers.GUIRunAndWait(() -> {
                                     status_label.setText("");
                                     progressbar.setIndeterminate(false);
-                                    Transference trans = new Transference(dialog.getSelected_email(), dialog.getLocal_path(), dialog.getRemote_path(), 1);
-                                    transferences_map.put(transferences.add(trans), trans);
-                                    transferences.revalidate();
-                                    transferences.repaint();
-                                    tabbed_panel.setSelectedIndex(1);
                                     upload_button.setEnabled(true);
                                     upload_button.setText("NEW UPLOAD");
                                 });
 
-                                TRANSFERENCES_LOCK.notifyAll();
-                            }
-                        });
+                            });
+
+                        } else {
+
+                            vamos_button.setEnabled(false);
+
+                            cuentas_textarea.setEnabled(false);
+
+                            Helpers.threadRun(() -> {
+
+                                synchronized (TRANSFERENCES_LOCK) {
+
+                                    Helpers.GUIRunAndWait(() -> {
+                                        status_label.setText("");
+                                        progressbar.setIndeterminate(false);
+                                        Transference trans = new Transference(dialog.getSelected_email(), dialog.getLocal_path(), dialog.getRemote_path(), 1);
+                                        transferences_map.put(transferences.add(trans), trans);
+                                        transferences.revalidate();
+                                        transferences.repaint();
+                                        tabbed_panel.setSelectedIndex(1);
+                                        upload_button.setEnabled(true);
+                                        upload_button.setText("NEW UPLOAD");
+                                    });
+
+                                    TRANSFERENCES_LOCK.notifyAll();
+                                }
+                            });
+                        }
                     } else {
                         upload_button.setText("NEW UPLOAD");
                         upload_button.setEnabled(true);
