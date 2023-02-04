@@ -29,23 +29,35 @@ class DragMouseAdapter extends MouseAdapter {
     private Point dragOffset;
     private final int gestureMotionThreshold = DragSource.getDragThreshold();
     private volatile boolean working = false;
+    private final Object working_notifier;
 
     public boolean isWorking() {
         return working;
     }
 
-    public DragMouseAdapter() {
+    public DragMouseAdapter(Object wnotifier) {
         super();
         window.setBackground(new Color(0, true));
+        working_notifier = wnotifier;
+    }
+
+    private void setWorking(boolean w) {
+
+        working = w;
+
+        if (!working) {
+            synchronized (working_notifier) {
+                working_notifier.notifyAll();
+            }
+        }
     }
 
     @Override
     public void mousePressed(MouseEvent e) {
-        working = true;
+        setWorking(true);
         JComponent parent = (JComponent) e.getComponent();
         if (parent.getComponentCount() <= 1) {
             startPt = null;
-            working = false;
             return;
         }
         startPt = e.getPoint();
@@ -108,7 +120,6 @@ class DragMouseAdapter extends MouseAdapter {
     public void mouseDragged(MouseEvent e) {
 
         if (startPt == null) {
-            working = false;
             return;
         }
 
@@ -154,7 +165,7 @@ class DragMouseAdapter extends MouseAdapter {
     public void mouseReleased(MouseEvent e) {
         startPt = null;
         if (!window.isVisible() || draggingComonent == null) {
-            working = false;
+            setWorking(false);
             return;
         }
         Point pt = e.getPoint();
@@ -173,13 +184,13 @@ class DragMouseAdapter extends MouseAdapter {
             Component c = parent.getComponent(i);
             if (Objects.equals(c, gap)) {
                 swapComponentLocation(parent, gap, cmp, i);
-                working = false;
+                setWorking(false);
                 return;
             }
             int tgt = getTargetIndex(c.getBounds(), pt, i);
             if (tgt >= 0) {
                 swapComponentLocation(parent, gap, cmp, tgt);
-                working = false;
+                setWorking(false);
                 return;
             }
         }
@@ -189,6 +200,6 @@ class DragMouseAdapter extends MouseAdapter {
             swapComponentLocation(parent, gap, cmp, index);
         }
 
-        working = false;
+        setWorking(false);
     }
 }

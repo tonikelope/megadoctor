@@ -50,7 +50,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "0.99";
+    public final static String VERSION = "1.0";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -78,7 +78,7 @@ public class Main extends javax.swing.JFrame {
     private volatile String _last_email_force_refresh = null;
     private volatile JPanel transferences = null;
     private final HashMap<Component, Transference> transferences_map = new HashMap<>();
-    private final DragMouseAdapter dh_trans = new DragMouseAdapter();
+    private final DragMouseAdapter transfers_dragdrop_adapter = new DragMouseAdapter(TRANSFERENCES_LOCK);
 
     public JButton getUpload_button() {
         return upload_button;
@@ -157,8 +157,8 @@ public class Main extends javax.swing.JFrame {
         Helpers.JTextFieldRegularPopupMenu.addTo(output_textarea);
         transferences = new JPanel();
         transferences.setLayout(new BoxLayout(transferences, BoxLayout.Y_AXIS));
-        transferences.addMouseListener((MouseListener) dh_trans);
-        transferences.addMouseMotionListener((MouseMotionListener) dh_trans);
+        transferences.addMouseListener((MouseListener) transfers_dragdrop_adapter);
+        transferences.addMouseMotionListener((MouseMotionListener) transfers_dragdrop_adapter);
         transferences_panel.add(transferences);
         progressbar.setMinimum(0);
         upload_button.setEnabled(false);
@@ -208,7 +208,7 @@ public class Main extends javax.swing.JFrame {
 
                         if (transferences.getComponentCount() > 0) {
 
-                            if (!dh_trans.isWorking()) {
+                            if (!transfers_dragdrop_adapter.isWorking()) {
 
                                 transferences_control_panel.setVisible(true);
 
