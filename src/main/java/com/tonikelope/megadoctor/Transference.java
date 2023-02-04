@@ -680,7 +680,7 @@ public final class Transference extends javax.swing.JPanel {
 
                 if (!isDirectory()) {
 
-                    action.setText(speed > 0 ? Helpers.formatBytes(speed) : "----" + "/s");
+                    action.setText(speed > 0 ? Helpers.formatBytes(speed) + "/s" : "----");
 
                 } else {
 
