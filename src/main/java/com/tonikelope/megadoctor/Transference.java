@@ -241,7 +241,9 @@ public final class Transference extends javax.swing.JPanel {
                 Main.MAIN_WINDOW.getTransferences().repaint();
             });
 
-            Main.MAIN_WINDOW.forceRefreshAccount(_email, "Refreshed after upload CANCEL [" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + _rpath, false, false);
+            if (Main.MAIN_WINDOW.getCurrent_transference() == this && Helpers.megaWhoami().equals(_email.toLowerCase())) {
+                Main.MAIN_WINDOW.forceRefreshAccount(_email, "Refreshed after upload CANCEL [" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + _rpath, false, false);
+            }
 
             TRANSFERENCES_LOCK.notifyAll();
         }
