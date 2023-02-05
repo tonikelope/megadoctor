@@ -51,7 +51,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.9";
+    public final static String VERSION = "1.10";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -349,7 +349,7 @@ public class Main extends javax.swing.JFrame {
 
         String[] shared = Helpers.runProcess(new String[]{"mega-share", "/"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-        return df + "\n" + du + "\n" + ls + (Integer.parseInt(shared[2]) == 0 ? "\n" + shared[1] : "");
+        return df + "\n" + du + "\n" + ls.replace("shared as exported permanent file link: ", "").replace("shared as exported permanent folder link: ", "") + (Integer.parseInt(shared[2]) == 0 ? "\n" + shared[1] : "");
     }
 
     public String DUWithHandles() {
