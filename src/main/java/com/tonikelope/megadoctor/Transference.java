@@ -770,30 +770,28 @@ public final class Transference extends javax.swing.JPanel {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jPanel1 = new javax.swing.JPanel();
-        local_path = new javax.swing.JLabel();
+        main_panel = new javax.swing.JPanel();
+        status = new javax.swing.JLabel();
         action = new javax.swing.JLabel();
         remote_path = new javax.swing.JLabel();
         progress = new javax.swing.JProgressBar();
-        status = new javax.swing.JLabel();
+        local_path = new javax.swing.JLabel();
         folder_stats_scroll = new javax.swing.JScrollPane();
         folder_stats_textarea = new javax.swing.JTextArea();
-        jLabel1 = new javax.swing.JLabel();
+        drag = new javax.swing.JLabel();
 
         setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
 
-        jPanel1.setOpaque(false);
-
-        local_path.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
-        local_path.setText("jLabel1");
-        local_path.setToolTipText("Click for details (folders)");
-        local_path.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-        local_path.setDoubleBuffered(true);
-        local_path.addMouseListener(new java.awt.event.MouseAdapter() {
+        main_panel.setToolTipText("");
+        main_panel.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        main_panel.setOpaque(false);
+        main_panel.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                local_pathMouseClicked(evt);
+                main_panelMouseClicked(evt);
             }
         });
+
+        status.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/ok.png"))); // NOI18N
 
         action.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
         action.setForeground(new java.awt.Color(0, 153, 255));
@@ -808,15 +806,21 @@ public final class Transference extends javax.swing.JPanel {
         progress.setFont(new java.awt.Font("Noto Sans", 0, 24)); // NOI18N
         progress.setStringPainted(true);
 
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        local_path.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
+        local_path.setText("jLabel1");
+        local_path.setDoubleBuffered(true);
+
+        javax.swing.GroupLayout main_panelLayout = new javax.swing.GroupLayout(main_panel);
+        main_panel.setLayout(main_panelLayout);
+        main_panelLayout.setHorizontalGroup(
+            main_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(main_panelLayout.createSequentialGroup()
+                .addGap(0, 0, 0)
+                .addComponent(status)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(main_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(progress, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
+                    .addGroup(main_panelLayout.createSequentialGroup()
                         .addComponent(local_path)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(action)
@@ -824,20 +828,21 @@ public final class Transference extends javax.swing.JPanel {
                         .addComponent(remote_path)))
                 .addGap(0, 0, 0))
         );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
+        main_panelLayout.setVerticalGroup(
+            main_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(main_panelLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(local_path)
-                    .addComponent(action)
-                    .addComponent(remote_path))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(progress, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGroup(main_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(status, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(main_panelLayout.createSequentialGroup()
+                        .addGroup(main_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(action)
+                            .addComponent(remote_path)
+                            .addComponent(local_path))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(progress, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                .addContainerGap())
         );
-
-        status.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/ok.png"))); // NOI18N
 
         folder_stats_textarea.setEditable(false);
         folder_stats_textarea.setBackground(new java.awt.Color(153, 153, 153));
@@ -848,9 +853,9 @@ public final class Transference extends javax.swing.JPanel {
         folder_stats_textarea.setDoubleBuffered(true);
         folder_stats_scroll.setViewportView(folder_stats_textarea);
 
-        jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/drag.png"))); // NOI18N
-        jLabel1.setCursor(new java.awt.Cursor(java.awt.Cursor.MOVE_CURSOR));
-        jLabel1.setDoubleBuffered(true);
+        drag.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/drag.png"))); // NOI18N
+        drag.setCursor(new java.awt.Cursor(java.awt.Cursor.MOVE_CURSOR));
+        drag.setDoubleBuffered(true);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -860,11 +865,9 @@ public final class Transference extends javax.swing.JPanel {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel1)
-                        .addGap(0, 0, 0)
-                        .addComponent(status)
-                        .addGap(0, 0, 0)
-                        .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addComponent(drag)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(main_panel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addComponent(folder_stats_scroll))
                 .addContainerGap())
         );
@@ -873,17 +876,15 @@ public final class Transference extends javax.swing.JPanel {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                        .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(status, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addComponent(jLabel1))
+                    .addComponent(main_panel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(drag))
                 .addGap(0, 0, 0)
-                .addComponent(folder_stats_scroll, javax.swing.GroupLayout.DEFAULT_SIZE, 142, Short.MAX_VALUE)
+                .addComponent(folder_stats_scroll, javax.swing.GroupLayout.DEFAULT_SIZE, 147, Short.MAX_VALUE)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
 
-    private void local_pathMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_local_pathMouseClicked
+    private void main_panelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_main_panelMouseClicked
         // TODO add your handling code here:
         if (isDirectory() && !isFinished() && !isFinishing() && !isStarting() && SwingUtilities.isLeftMouseButton(evt)) {
             folder_stats_scroll.setVisible(!folder_stats_scroll.isVisible());
@@ -905,16 +906,15 @@ public final class Transference extends javax.swing.JPanel {
                 clearFinished();
             }
         }
-
-    }//GEN-LAST:event_local_pathMouseClicked
+    }//GEN-LAST:event_main_panelMouseClicked
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel action;
+    private javax.swing.JLabel drag;
     private javax.swing.JScrollPane folder_stats_scroll;
     private javax.swing.JTextArea folder_stats_textarea;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JPanel jPanel1;
     private javax.swing.JLabel local_path;
+    private javax.swing.JPanel main_panel;
     private javax.swing.JProgressBar progress;
     private javax.swing.JLabel remote_path;
     private javax.swing.JLabel status;

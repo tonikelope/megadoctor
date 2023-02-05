@@ -54,7 +54,9 @@ public class TextDialog extends javax.swing.JDialog {
             }
         });
 
+        ok_button.setBackground(new java.awt.Color(0, 153, 0));
         ok_button.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
+        ok_button.setForeground(new java.awt.Color(255, 255, 255));
         ok_button.setText("OK");
         ok_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         ok_button.setDoubleBuffered(true);
@@ -69,20 +71,23 @@ public class TextDialog extends javax.swing.JDialog {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
                 .addComponent(texto, javax.swing.GroupLayout.DEFAULT_SIZE, 749, Short.MAX_VALUE)
-                .addGap(18, 18, 18)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(ok_button)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(cancel_button))
+                .addComponent(cancel_button)
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addGap(6, 6, 6)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(texto, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(cancel_button)
-                    .addComponent(ok_button))
-                .addGap(0, 0, 0))
+                    .addComponent(ok_button)
+                    .addComponent(cancel_button))
+                .addContainerGap())
         );
 
         pack();

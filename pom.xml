@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.tonikelope.megadoctor</groupId>
     <artifactId>MegaDoctor</artifactId>
-    <version>1.7</version>
+    <version>1.8</version>
     <packaging>jar</packaging>
     <build>
         <plugins>
@@ -67,5 +67,5 @@
         <exec.mainClass>com.tonikelope.megadoctor.MegaDoctor</exec.mainClass>
     </properties>
     <name>MegaDoctor</name>
-    <description>Just another tool to manage your MEGA accounts</description>
+    <description>MEGAcmd's best friend</description>
 </project>

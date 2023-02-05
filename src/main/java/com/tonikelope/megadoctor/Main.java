@@ -51,7 +51,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.7";
+    public final static String VERSION = "1.8";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -1072,7 +1072,7 @@ public class Main extends javax.swing.JFrame {
 
             if (Integer.parseInt(import_result[2]) == 0) {
                 forceRefreshAccount(email, "Refreshed after insertion", false, false);
-                Helpers.mostrarMensajeInformativo(MAIN_WINDOW, link + " IMPORTED");
+                Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "<b>" + link + "</b>\nIMPORTED");
             } else {
                 Helpers.mostrarMensajeError(MAIN_WINDOW, link + " " + rpath + " IMPORTATION ERROR (" + import_result[2] + ")");
             }
@@ -1118,7 +1118,7 @@ public class Main extends javax.swing.JFrame {
 
             forceRefreshAccount(email, "Refreshed after account truncate", false, false);
 
-            Helpers.mostrarMensajeInformativo(MAIN_WINDOW, email + " TRUNCATED");
+            Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "<b>" + email + "</b>\nTRUNCATED");
         }
 
         Helpers.GUIRun(() -> {
@@ -1236,7 +1236,7 @@ public class Main extends javax.swing.JFrame {
             }
 
             if (notification) {
-                Helpers.mostrarMensajeInformativo(MAIN_WINDOW, email + " REFRESHED");
+                Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "<b>" + email + "</b>\nREFRESHED");
             }
 
         } else {
@@ -1831,8 +1831,8 @@ public class Main extends javax.swing.JFrame {
         // TODO add your handling code here:
 
         JFileChooser fileChooser = new JFileChooser();
-        
-        fileChooser.setPreferredSize(new Dimension(800,600));
+
+        fileChooser.setPreferredSize(new Dimension(800, 600));
 
         Helpers.setContainerFont(fileChooser, save_button.getFont().deriveFont(14f).deriveFont(Font.PLAIN));
 
