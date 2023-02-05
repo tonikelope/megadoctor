@@ -395,7 +395,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                         local_folder_button.setEnabled(true);
                         local_file_button.setEnabled(true);
                         mega_button.setEnabled(true);
-                        local_folder_button.setText("Select FOLDER");
+                        local_folder_button.setText("FOLDER");
                         local_folder_progress.setVisible(false);
                         local_size.setText(Helpers.formatBytes(_local_size));
                         checkFreeSpace();
@@ -407,7 +407,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
             local_folder_button.setEnabled(true);
             local_file_button.setEnabled(true);
             mega_button.setEnabled(true);
-            local_folder_button.setText("Select FOLDER");
+            local_folder_button.setText("FOLDER");
         }
 
         Helpers.smartPack(this);
