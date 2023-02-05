@@ -364,7 +364,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
         local_file_button.setEnabled(false);
 
-        mega_button.setEnabled(true);
+        mega_button.setEnabled(false);
 
         JFileChooser fileChooser = new JFileChooser();
 
