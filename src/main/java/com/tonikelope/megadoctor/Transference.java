@@ -714,9 +714,26 @@ public final class Transference extends javax.swing.JPanel {
         rpath = rpath.isBlank() ? "/" : rpath.trim();
 
         _email = email.trim();
+
         _lpath = lpath;
 
         _action = act;
+
+        String fname = new File(_lpath).getName();
+
+        _rpath = rpath.endsWith("/") ? rpath + fname : rpath;
+
+        remote_path.setText("(" + _email + ") " + _rpath);
+
+        action.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/" + (act == 0 ? "left" : "right") + "-arrow.png")));
+
+        progress.setMinimum(0);
+
+        progress.setMaximum(10000);
+
+        progress.setIndeterminate(true);
+
+        folder_stats_scroll.setVisible(false);
 
         Helpers.threadRun(() -> {
             File local = new File(lpath);
@@ -743,18 +760,6 @@ public final class Transference extends javax.swing.JPanel {
             });
 
         });
-
-        String fname = new File(_lpath).getName();
-
-        _rpath = rpath.endsWith("/") ? rpath + fname : rpath;
-
-        remote_path.setText("(" + _email + ") " + _rpath);
-        action.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/" + (act == 0 ? "left" : "right") + "-arrow.png")));
-        progress.setMinimum(0);
-        progress.setMaximum(10000);
-        progress.setIndeterminate(true);
-
-        folder_stats_scroll.setVisible(false);
     }
 
     /**
@@ -778,7 +783,6 @@ public final class Transference extends javax.swing.JPanel {
 
         setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
 
-        main_panel.setToolTipText("");
         main_panel.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         main_panel.setOpaque(false);
         main_panel.addMouseListener(new java.awt.event.MouseAdapter() {
