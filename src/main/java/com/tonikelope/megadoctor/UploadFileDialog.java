@@ -11,6 +11,7 @@ by tonikelope
 package com.tonikelope.megadoctor;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -315,6 +316,8 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         mega_button.setEnabled(false);
 
         JFileChooser fileChooser = new JFileChooser();
+        
+        fileChooser.setPreferredSize(new Dimension(800,600));
 
         if (LAST_FOLDER != null) {
             fileChooser.setCurrentDirectory(new File(LAST_FOLDER));
@@ -364,6 +367,8 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         mega_button.setEnabled(true);
 
         JFileChooser fileChooser = new JFileChooser();
+        
+        fileChooser.setPreferredSize(new Dimension(800,600));
 
         if (LAST_FOLDER != null) {
             fileChooser.setCurrentDirectory(new File(LAST_FOLDER));

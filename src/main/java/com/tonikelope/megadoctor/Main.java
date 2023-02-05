@@ -12,6 +12,7 @@ package com.tonikelope.megadoctor;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -50,7 +51,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.6";
+    public final static String VERSION = "1.7";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -1830,6 +1831,8 @@ public class Main extends javax.swing.JFrame {
         // TODO add your handling code here:
 
         JFileChooser fileChooser = new JFileChooser();
+        
+        fileChooser.setPreferredSize(new Dimension(800,600));
 
         Helpers.setContainerFont(fileChooser, save_button.getFont().deriveFont(14f).deriveFont(Font.PLAIN));
 
