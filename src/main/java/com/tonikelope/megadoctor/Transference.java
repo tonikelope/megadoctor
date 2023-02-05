@@ -463,7 +463,7 @@ public final class Transference extends javax.swing.JPanel {
                 _finishing = true;
 
                 Helpers.GUIRun(() -> {
-
+                    progress.setValue(progress.getMaximum());
                     progress.setIndeterminate(true);
                     action.setText("(FINISHING...)");
                     folder_stats_textarea.setText("");
@@ -510,23 +510,19 @@ public final class Transference extends javax.swing.JPanel {
                 Helpers.GUIRun(() -> {
                     progress.setIndeterminate(false);
 
-                    progress.setStringPainted(true);
-
-                    progress.setValue(progress.getMaximum());
-
-                    status.setVisible(true);
+                    status_icon.setVisible(true);
 
                     local_path.setText("[" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + _lpath);
 
                     action.setText("(Avg: " + Helpers.formatBytes(speed) + "/s)");
 
                     if (check_error) {
-                        status.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/warning_transference.png")));
+                        status_icon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/warning_transference.png")));
                         this.setToolTipText("Unable to verify that the transfer was completed correctly");
                     }
 
                     if (warning_folder_size) {
-                        status.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/warning_transference.png")));
+                        status_icon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/warning_transference.png")));
                         this.setToolTipText("REMOTE FOLDER SIZE IS DIFFERENT FROM LOCAL SIZE");
                     }
 
@@ -708,7 +704,7 @@ public final class Transference extends javax.swing.JPanel {
      */
     public Transference(String email, String lpath, String rpath, int act) {
         initComponents();
-        status.setVisible(false);
+        status_icon.setVisible(false);
 
         DefaultCaret caret = (DefaultCaret) folder_stats_textarea.getCaret();
         caret.setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
@@ -771,7 +767,7 @@ public final class Transference extends javax.swing.JPanel {
     private void initComponents() {
 
         main_panel = new javax.swing.JPanel();
-        status = new javax.swing.JLabel();
+        status_icon = new javax.swing.JLabel();
         action = new javax.swing.JLabel();
         remote_path = new javax.swing.JLabel();
         progress = new javax.swing.JProgressBar();
@@ -791,7 +787,7 @@ public final class Transference extends javax.swing.JPanel {
             }
         });
 
-        status.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/ok.png"))); // NOI18N
+        status_icon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/ok.png"))); // NOI18N
 
         action.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
         action.setForeground(new java.awt.Color(0, 153, 255));
@@ -816,7 +812,7 @@ public final class Transference extends javax.swing.JPanel {
             main_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(main_panelLayout.createSequentialGroup()
                 .addGap(0, 0, 0)
-                .addComponent(status)
+                .addComponent(status_icon)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(main_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(progress, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -833,7 +829,7 @@ public final class Transference extends javax.swing.JPanel {
             .addGroup(main_panelLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(main_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(status, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(status_icon, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(main_panelLayout.createSequentialGroup()
                         .addGroup(main_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(action)
@@ -917,6 +913,6 @@ public final class Transference extends javax.swing.JPanel {
     private javax.swing.JPanel main_panel;
     private javax.swing.JProgressBar progress;
     private javax.swing.JLabel remote_path;
-    private javax.swing.JLabel status;
+    private javax.swing.JLabel status_icon;
     // End of variables declaration//GEN-END:variables
 }
