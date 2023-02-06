@@ -389,6 +389,9 @@ public final class Transference extends javax.swing.JPanel {
 
     public void start() {
         Helpers.threadRun(() -> {
+            _running = true;
+            
+            waitPaused();
 
             _starting = true;
 
@@ -400,8 +403,6 @@ public final class Transference extends javax.swing.JPanel {
                 Main.MAIN_WINDOW.getUpload_button().setEnabled(false);
                 action.setText("(STARTING...)");
             });
-
-            _running = true;
 
             Main.MAIN_WINDOW.login(_email);
 
@@ -461,6 +462,8 @@ public final class Transference extends javax.swing.JPanel {
             if (!_canceled) {
 
                 _finishing = true;
+                
+                waitPaused();
 
                 Helpers.GUIRun(() -> {
                     progress.setValue(progress.getMaximum());
@@ -626,9 +629,8 @@ public final class Transference extends javax.swing.JPanel {
 
         return "";
     }
-
-    private boolean updateProgress() {
-
+    
+    private void waitPaused(){
         while ((_paused || _size < 0) && !_canceled && !_finished) {
 
             try {
@@ -637,6 +639,11 @@ public final class Transference extends javax.swing.JPanel {
                 Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+    }
+
+    private boolean updateProgress() {
+
+        waitPaused();
 
         if (!transferRunning() || _prog == 10000) {
             return false;

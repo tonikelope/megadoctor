@@ -781,7 +781,7 @@ public class Helpers {
 
                             if (email != null) {
 
-                                Main.MAIN_WINDOW.forceRefreshAccount(email, "Force refresh", true, true);
+                                Main.MAIN_WINDOW.forceRefreshAccount(email, "Forced FULL REFRESH (SESSION was regenerated)", true, true);
                             }
                         });
                     }
@@ -897,12 +897,12 @@ public class Helpers {
             popup.add(refreshAccount);
 
             if (Main.MAIN_WINDOW != null && Main.MAIN_WINDOW.getLast_email_force_refresh() != null) {
-                Action forceRefreshLastAccountAction = new AbstractAction("REFRESH LAST ACCOUNT -> " + Main.MAIN_WINDOW.getLast_email_force_refresh()) {
+                Action forceRefreshLastAccountAction = new AbstractAction("REFRESH (FAST) LAST ACCOUNT -> " + Main.MAIN_WINDOW.getLast_email_force_refresh()) {
                     @Override
                     public void actionPerformed(ActionEvent ae) {
                         if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && Main.MAIN_WINDOW.getLast_email_force_refresh() != null) {
                             Helpers.threadRun(() -> {
-                                Main.MAIN_WINDOW.forceRefreshAccount(Main.MAIN_WINDOW.getLast_email_force_refresh(), "Force refresh", true, true);
+                                Main.MAIN_WINDOW.forceRefreshAccount(Main.MAIN_WINDOW.getLast_email_force_refresh(), "Forced FAST REFRESH", true, false);
                             });
                         }
                     }
