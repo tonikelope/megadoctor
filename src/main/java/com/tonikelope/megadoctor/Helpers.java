@@ -40,6 +40,7 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -73,6 +74,56 @@ import javax.swing.undo.UndoManager;
  * @author tonikelope
  */
 public class Helpers {
+
+    public static HashMap<String, Long> getReservedTransfersSpace() {
+        synchronized (Main.TRANSFERENCES_LOCK) {
+            HashMap<Component, Transference> transferences_map = Main.MAIN_WINDOW.getTransferences_map();
+
+            HashMap<String, Long> reserved = new HashMap<>();
+
+            for (Transference t : transferences_map.values()) {
+                if (!t.isDirectory() && !t.isFinished() && !t.isCanceled()) {
+
+                    if (reserved.containsKey(t.getEmail())) {
+                        long s = reserved.get(t.getEmail());
+                        reserved.put(t.getEmail(), s + t.getFileSize());
+                    } else {
+                        reserved.put(t.getEmail(), t.getFileSize());
+                    }
+                }
+            }
+            return reserved;
+        }
+
+    }
+
+    public static String findFirstAccountWithSpace(long required, HashMap<String, Long> reserved) {
+        String account = null;
+
+        ArrayList<String> emails = new ArrayList<>();
+
+        for (String email : Main.MEGA_ACCOUNTS.keySet()) {
+            emails.add(email);
+        }
+
+        Collections.sort(emails);
+
+        for (String email : emails) {
+
+            long r = 0;
+
+            if (reserved != null && reserved.containsKey(email)) {
+                r = reserved.get(email);
+            }
+
+            if (Helpers.getAccountFreeSpace(email) - r >= required) {
+                account = email;
+                break;
+            }
+        }
+
+        return account;
+    }
 
     public static String adjustSpaces(String s, int n) {
 

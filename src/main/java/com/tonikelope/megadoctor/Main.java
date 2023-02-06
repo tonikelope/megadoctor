@@ -34,6 +34,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.BoxLayout;
@@ -51,7 +52,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.13";
+    public final static String VERSION = "1.14";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -80,6 +81,11 @@ public class Main extends javax.swing.JFrame {
     private volatile JPanel transferences = null;
     private final HashMap<Component, Transference> transferences_map = new HashMap<>();
     private final DragMouseAdapter transfers_dragdrop_adapter = new DragMouseAdapter(TRANSFERENCES_LOCK);
+    private volatile boolean _check_only_new = false;
+
+    public HashMap<Component, Transference> getTransferences_map() {
+        return transferences_map;
+    }
 
     public JButton getUpload_button() {
         return upload_button;
@@ -416,6 +422,7 @@ public class Main extends javax.swing.JFrame {
         Helpers.GUIRun(() -> {
             MAIN_WINDOW.getCuentas_textarea().setEnabled(enable);
             clear_log_button.setEnabled(enable);
+            check_only_new_checkbox.setEnabled(enable);
             MAIN_WINDOW.getVamos_button().setEnabled(enable || isRunning_global_check());
             upload_button.setEnabled(enable && !MEGA_ACCOUNTS.isEmpty());
             MAIN_WINDOW.getSave_button().setEnabled(enable);
@@ -1384,6 +1391,7 @@ public class Main extends javax.swing.JFrame {
         transferences_panel = new javax.swing.JPanel();
         upload_button = new javax.swing.JButton();
         clear_log_button = new javax.swing.JButton();
+        check_only_new_checkbox = new javax.swing.JCheckBox();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu2 = new javax.swing.JMenu();
         session_menu = new javax.swing.JCheckBoxMenuItem();
@@ -1435,6 +1443,7 @@ public class Main extends javax.swing.JFrame {
 
         status_label.setFont(new java.awt.Font("Noto Sans", 3, 18)); // NOI18N
         status_label.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+        status_label.setText("dadasdasdasdasdasdasdasdasdasdasdasdasdasdasdasd a da dadad ad ad adadas da dad adada dada da d ada da da da");
         status_label.setDoubleBuffered(true);
 
         save_button.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
@@ -1515,7 +1524,7 @@ public class Main extends javax.swing.JFrame {
                 .addComponent(pause_button)
                 .addGap(18, 18, 18)
                 .addComponent(cancel_trans_button)
-                .addContainerGap(708, Short.MAX_VALUE))
+                .addContainerGap(1134, Short.MAX_VALUE))
         );
         transferences_control_panelLayout.setVerticalGroup(
             transferences_control_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1573,6 +1582,16 @@ public class Main extends javax.swing.JFrame {
             }
         });
 
+        check_only_new_checkbox.setFont(new java.awt.Font("Noto Sans", 0, 18)); // NOI18N
+        check_only_new_checkbox.setText("Check only unknown accounts");
+        check_only_new_checkbox.setToolTipText("Check only new accounts");
+        check_only_new_checkbox.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        check_only_new_checkbox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                check_only_new_checkboxActionPerformed(evt);
+            }
+        });
+
         jMenuBar1.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
 
         jMenu2.setText("Options");
@@ -1608,45 +1627,49 @@ public class Main extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addComponent(logo_label)
+                    .addComponent(cuentas_scrollpanel)
+                    .addComponent(progressbar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(tabbed_panel, javax.swing.GroupLayout.DEFAULT_SIZE, 1520, Short.MAX_VALUE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(logo_label, javax.swing.GroupLayout.PREFERRED_SIZE, 288, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(check_only_new_checkbox))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(vamos_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(status_label, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                            .addGroup(layout.createSequentialGroup()
                                 .addComponent(upload_button)
                                 .addGap(18, 18, 18)
                                 .addComponent(save_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(clear_log_button))))
-                    .addComponent(cuentas_scrollpanel)
-                    .addComponent(progressbar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(tabbed_panel))
+                                .addComponent(clear_log_button))
+                            .addComponent(vamos_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(status_label, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(logo_label)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addGroup(layout.createSequentialGroup()
                         .addContainerGap()
-                        .addComponent(vamos_button)
-                        .addGap(18, 18, 18)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(vamos_button))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(logo_label)
                             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(upload_button)
                                 .addComponent(save_button)
-                                .addComponent(upload_button))
-                            .addComponent(clear_log_button, javax.swing.GroupLayout.Alignment.TRAILING))
+                                .addComponent(clear_log_button)))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(status_label)))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(check_only_new_checkbox)
+                            .addComponent(status_label))))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(progressbar, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(cuentas_scrollpanel, javax.swing.GroupLayout.PREFERRED_SIZE, 185, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(cuentas_scrollpanel, javax.swing.GroupLayout.PREFERRED_SIZE, 208, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(tabbed_panel, javax.swing.GroupLayout.DEFAULT_SIZE, 441, Short.MAX_VALUE)
+                .addComponent(tabbed_panel, javax.swing.GroupLayout.DEFAULT_SIZE, 379, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1686,8 +1709,17 @@ public class Main extends javax.swing.JFrame {
                     MEGA_ACCOUNTS_LOGIN_ERROR.clear();
 
                     while (matcher.find()) {
-                        MEGA_ACCOUNTS.put(matcher.group(1), matcher.group(2));
-                        mega_accounts.put(matcher.group(1), matcher.group(2));
+
+                        if (_check_only_new) {
+                            if (!MEGA_ACCOUNTS.containsKey(matcher.group(1))) {
+                                MEGA_ACCOUNTS.put(matcher.group(1), matcher.group(2));
+                                mega_accounts.put(matcher.group(1), matcher.group(2));
+                            }
+                        } else {
+                            MEGA_ACCOUNTS.put(matcher.group(1), matcher.group(2));
+                            mega_accounts.put(matcher.group(1), matcher.group(2));
+                        }
+
                     }
 
                     if (!mega_accounts.isEmpty()) {
@@ -1787,10 +1819,10 @@ public class Main extends javax.swing.JFrame {
 
                         });
 
-                        Helpers.mostrarMensajeInformativo(this, isAborting_global_check() ? "CANCELED!" : "DONE");
+                        Helpers.mostrarMensajeInformativo(this, isAborting_global_check() ? "CANCELED!" : "ALL ACCOUNTS CHECKED");
 
                     } else {
-                        Helpers.mostrarMensajeInformativo(this, "ALL ACCOUNTS REFRESHED");
+                        Helpers.mostrarMensajeInformativo(this, "ALL ACCOUNTS CHECKED");
                     }
 
                     Helpers.GUIRun(() -> {
@@ -1965,7 +1997,7 @@ public class Main extends javax.swing.JFrame {
 
                             Helpers.threadRun(() -> {
 
-                                importLink(dialog.getSelected_email(), dialog.getLocal_path(), dialog.getRemote_path());
+                                importLink(dialog.getEmail(), dialog.getLocal_path(), dialog.getRemote_path());
 
                                 Helpers.GUIRunAndWait(() -> {
                                     status_label.setText("");
@@ -1984,19 +2016,72 @@ public class Main extends javax.swing.JFrame {
 
                             Helpers.threadRun(() -> {
 
+                                File f = new File(dialog.getLocal_path());
+
                                 synchronized (TRANSFERENCES_LOCK) {
 
-                                    Helpers.GUIRunAndWait(() -> {
-                                        status_label.setText("");
-                                        progressbar.setIndeterminate(false);
-                                        Transference trans = new Transference(dialog.getSelected_email(), dialog.getLocal_path(), dialog.getRemote_path(), 1);
-                                        transferences_map.put(transferences.add(trans), trans);
-                                        transferences.revalidate();
-                                        transferences.repaint();
-                                        tabbed_panel.setSelectedIndex(1);
-                                        upload_button.setEnabled(true);
-                                        upload_button.setText("NEW UPLOAD");
-                                    });
+                                    if (!f.isDirectory() || !dialog.isAuto() || !dialog.isSplit_folder()) {
+                                        Helpers.GUIRunAndWait(() -> {
+                                            status_label.setText("");
+                                            progressbar.setIndeterminate(false);
+                                            Transference trans = new Transference(dialog.getEmail(), dialog.getLocal_path(), dialog.getRemote_path(), 1);
+                                            transferences_map.put(transferences.add(trans), trans);
+                                            transferences.revalidate();
+                                            transferences.repaint();
+                                            tabbed_panel.setSelectedIndex(1);
+                                            upload_button.setEnabled(true);
+                                            upload_button.setText("NEW UPLOAD");
+                                        });
+                                    } else {
+
+                                        File[] directoryListing = f.listFiles();
+
+                                        HashMap<String, Long> reserved = Helpers.getReservedTransfersSpace();
+
+                                        if (directoryListing != null) {
+                                            for (File child : directoryListing) {
+
+                                                AtomicBoolean terminate_walk_tree = new AtomicBoolean();
+
+                                                long size = child.isDirectory() ? Helpers.getDirectorySize(child, terminate_walk_tree) : child.length();
+
+                                                String email = Helpers.findFirstAccountWithSpace(size, reserved);
+
+                                                if (email != null) {
+
+                                                    if (reserved.containsKey(email)) {
+                                                        long s = reserved.get(email);
+                                                        reserved.put(email, s + size);
+                                                    } else {
+                                                        reserved.put(email, size);
+                                                    }
+
+                                                    Helpers.GUIRunAndWait(() -> {
+
+                                                        Transference trans = new Transference(email, child.getAbsolutePath(), dialog.getRemote_path(), 1);
+                                                        transferences_map.put(transferences.add(trans), trans);
+                                                        transferences.revalidate();
+                                                        transferences.repaint();
+
+                                                    });
+
+                                                } else {
+                                                    Helpers.mostrarMensajeError(null, "THERE IS NO ACCOUNT WITH ENOUGH FREE SPACE FOR:\n" + child.getAbsolutePath());
+                                                }
+
+                                            }
+
+                                            Helpers.GUIRunAndWait(() -> {
+                                                status_label.setText("");
+                                                progressbar.setIndeterminate(false);
+                                                tabbed_panel.setSelectedIndex(1);
+                                                upload_button.setEnabled(true);
+                                                upload_button.setText("NEW UPLOAD");
+                                            });
+                                        } else {
+                                            Helpers.mostrarMensajeError(null, "EMPY FOLDER");
+                                        }
+                                    }
 
                                     TRANSFERENCES_LOCK.notifyAll();
                                 }
@@ -2157,6 +2242,11 @@ public class Main extends javax.swing.JFrame {
         });
     }//GEN-LAST:event_pause_buttonActionPerformed
 
+    private void check_only_new_checkboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_check_only_new_checkboxActionPerformed
+        // TODO add your handling code here:
+        this._check_only_new = check_only_new_checkbox.isSelected();
+    }//GEN-LAST:event_check_only_new_checkboxActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -2199,6 +2289,7 @@ public class Main extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton cancel_trans_button;
+    private javax.swing.JCheckBox check_only_new_checkbox;
     private javax.swing.JButton clear_log_button;
     private javax.swing.JButton clear_trans_button;
     private javax.swing.JScrollPane cuentas_scrollpanel;

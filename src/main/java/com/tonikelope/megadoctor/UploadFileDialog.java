@@ -26,7 +26,15 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
     public static String LAST_FOLDER = null;
 
-    public String getSelected_email() {
+    public boolean isAuto() {
+        return _auto;
+    }
+
+    public boolean isSplit_folder() {
+        return _split_folder;
+    }
+
+    public String getEmail() {
         return _email;
     }
 
@@ -53,6 +61,8 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
     private volatile String _link;
     private volatile String _lpath = null;
     private volatile String _rpath = null;
+    private volatile boolean _split_folder = false;
+    private volatile boolean _auto = false;
     private final AtomicBoolean _terminate_walk_tree = new AtomicBoolean();
 
     public UploadFileDialog(java.awt.Frame parent, boolean modal) {
@@ -61,6 +71,8 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         initComponents();
 
         _terminate_walk_tree.set(false);
+
+        split_folder_checkbox.setVisible(false);
 
         Helpers.JTextFieldRegularPopupMenu.addRefreshableTo(account_stats_textarea, this);
 
@@ -148,6 +160,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         local_folder_progress = new javax.swing.JProgressBar();
         mega_button = new javax.swing.JButton();
         auto_select_account = new javax.swing.JCheckBox();
+        split_folder_checkbox = new javax.swing.JCheckBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle("UPLOAD FILE");
@@ -207,6 +220,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
         free_space.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
         free_space.setText("---");
+        free_space.setToolTipText("Free account space");
         free_space.setDoubleBuffered(true);
 
         local_size.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
@@ -236,11 +250,23 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
         auto_select_account.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
         auto_select_account.setText("AUTO");
+        auto_select_account.setToolTipText("Auto search an account with free space");
         auto_select_account.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         auto_select_account.setDoubleBuffered(true);
         auto_select_account.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 auto_select_accountActionPerformed(evt);
+            }
+        });
+
+        split_folder_checkbox.setFont(new java.awt.Font("Noto Sans", 0, 24)); // NOI18N
+        split_folder_checkbox.setText("Split folder");
+        split_folder_checkbox.setToolTipText("Create a transfer for every folder child (first level)");
+        split_folder_checkbox.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        split_folder_checkbox.setDoubleBuffered(true);
+        split_folder_checkbox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                split_folder_checkboxActionPerformed(evt);
             }
         });
 
@@ -256,6 +282,8 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                     .addComponent(progress, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                         .addComponent(auto_select_account)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(split_folder_checkbox)
                         .addGap(18, 18, 18)
                         .addComponent(free_space)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -303,7 +331,8 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                     .addComponent(email_combobox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(free_space)
                     .addComponent(auto_select_account)
-                    .addComponent(vamos_button))
+                    .addComponent(vamos_button)
+                    .addComponent(split_folder_checkbox))
                 .addContainerGap())
         );
 
@@ -322,45 +351,37 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
             if (auto_select_account.isSelected()) {
 
-                vamos_button.setText("SEARCHING ACCOUNT...");
+                File f = new File(this._lpath);
 
-                Helpers.threadRun(() -> {
+                if (!f.isDirectory() || !_split_folder) {
+                    vamos_button.setText("SEARCHING ACCOUNT...");
 
-                    String account = null;
+                    Helpers.threadRun(() -> {
 
-                    ArrayList<String> emails = new ArrayList<>();
+                        String account = Helpers.findFirstAccountWithSpace(_local_size, Helpers.getReservedTransfersSpace());
 
-                    for (String email : Main.MEGA_ACCOUNTS.keySet()) {
-                        emails.add(email);
-                    }
+                        if (account == null) {
+                            Helpers.mostrarMensajeError(null, "THERE IS NO ACCOUNT WITH ENOUGH FREE SPACE");
+                            Helpers.GUIRun(() -> {
+                                vamos_button.setEnabled(true);
+                                progress.setVisible(false);
+                                auto_select_account.setEnabled(true);
+                                vamos_button.setText("LET'S GO");
+                            });
+                        } else {
 
-                    Collections.sort(emails);
+                            _email = account;
+                            _ok = true;
+                            Helpers.GUIRunAndWait(() -> {
+                                dispose();
+                            });
 
-                    for (String email : emails) {
-                        if (Helpers.getAccountFreeSpace(email) >= _local_size) {
-                            account = email;
-                            break;
                         }
-                    }
-
-                    if (account == null) {
-                        Helpers.mostrarMensajeError(null, "THERE IS NO ACCOUNT WITH ENOUGH FREE SPACE");
-                        Helpers.GUIRun(() -> {
-                            vamos_button.setEnabled(true);
-                            progress.setVisible(false);
-                            auto_select_account.setEnabled(true);
-                            vamos_button.setText("LET'S GO");
-                        });
-                    } else {
-
-                        _email = account;
-                        _ok = true;
-                        Helpers.GUIRunAndWait(() -> {
-                            dispose();
-                        });
-
-                    }
-                });
+                    });
+                } else {
+                    _ok = true;
+                    dispose();
+                }
 
             } else {
                 _email = (String) email_combobox.getSelectedItem();
@@ -570,11 +591,18 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
     private void auto_select_accountActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_auto_select_accountActionPerformed
         // TODO add your handling code here:
 
+        _auto = auto_select_account.isSelected();
         free_space.setEnabled(!auto_select_account.isSelected());
         email_combobox.setEnabled(!auto_select_account.isSelected());
         account_stats_textarea.setEnabled(!auto_select_account.isSelected());
+        split_folder_checkbox.setVisible(auto_select_account.isSelected());
         checkFreeSpace();
     }//GEN-LAST:event_auto_select_accountActionPerformed
+
+    private void split_folder_checkboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_split_folder_checkboxActionPerformed
+        // TODO add your handling code here:
+        _split_folder = split_folder_checkbox.isSelected();
+    }//GEN-LAST:event_split_folder_checkboxActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JScrollPane account_stats_scroll;
@@ -591,6 +619,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
     private javax.swing.JButton mega_button;
     private javax.swing.JProgressBar progress;
     private javax.swing.JTextField remote_path;
+    private javax.swing.JCheckBox split_folder_checkbox;
     private javax.swing.JButton vamos_button;
     // End of variables declaration//GEN-END:variables
 
