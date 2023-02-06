@@ -52,7 +52,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.15";
+    public final static String VERSION = "1.16";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -283,7 +283,7 @@ public class Main extends javax.swing.JFrame {
 
     public boolean login(String email) {
 
-        if (Helpers.megaWhoami().equals(email.toLowerCase())) {
+        if (Helpers.megaWhoami().toLowerCase().equals(email.toLowerCase())) {
             return true;
         }
 
@@ -318,6 +318,10 @@ public class Main extends javax.swing.JFrame {
             }
 
         } else {
+
+            Helpers.GUIRunAndWait(() -> {
+                status_label.setForeground(Color.BLUE);
+            });
 
             String[] login = Helpers.runProcess(new String[]{"mega-login", email, Helpers.escapeMEGAPassword(password)}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
@@ -1215,7 +1219,7 @@ public class Main extends javax.swing.JFrame {
         _running_main_action = false;
     }
 
-    public void forceRefreshAccount(String email, String reason, boolean notification, boolean login) {
+    public void forceRefreshAccount(String email, String reason, boolean notification, boolean refresh_session) {
 
         _running_main_action = true;
 
@@ -1231,11 +1235,14 @@ public class Main extends javax.swing.JFrame {
 
         if (MEGA_ACCOUNTS.containsKey(email)) {
 
-            if (login) {
-                login(email);
+            if (refresh_session) {
+
+                MEGA_SESSIONS.remove(email);
+
+                logout(false);
             }
 
-            Helpers.runProcess(new String[]{"mega-reload"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+            login(email);
 
             String stats = currentAccountStats();
 
@@ -1249,10 +1256,6 @@ public class Main extends javax.swing.JFrame {
                 Helpers.JTextFieldRegularPopupMenu.addTo(output_textarea);
                 Helpers.JTextFieldRegularPopupMenu.addTo(cuentas_textarea);
             });
-
-            if (login) {
-                logout(true);
-            }
 
             if (notification) {
                 Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "<b>" + email + "</b>\nREFRESHED");

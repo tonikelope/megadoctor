@@ -474,8 +474,6 @@ public final class Transference extends javax.swing.JPanel {
 
                 });
 
-                Helpers.runProcess(new String[]{"mega-reload"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
-
                 int verification_timeout = 0;
 
                 while (!remoteFileExists(_rpath) && verification_timeout < WAIT_TIMEOUT) {
