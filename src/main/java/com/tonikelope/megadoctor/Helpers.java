@@ -561,14 +561,18 @@ public class Helpers {
         return nodesMAP;
     }
 
-    public static String getNodePathFromFindCommandOutput(String node, String find) {
+    public static String getNodeFullPath(String node) {
 
-        final String regex = "(.+) <" + node + ">";
-        final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
-        final Matcher matcher = pattern.matcher(find);
+        String[] f = Helpers.runProcess(new String[]{"mega-find", "--show-handles", node}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-        if (matcher.find()) {
-            return "/" + matcher.group(1).trim();
+        if (Integer.parseInt(f[2]) == 0) {
+            final String regex = "(.+) <" + node + ">";
+            final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+            final Matcher matcher = pattern.matcher(f[1]);
+
+            if (matcher.find()) {
+                return "/" + matcher.group(1).trim();
+            }
         }
 
         return null;

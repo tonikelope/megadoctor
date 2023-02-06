@@ -15,6 +15,7 @@ import java.awt.Dimension;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.swing.JFileChooser;
 
@@ -541,7 +542,9 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
                 String stats = Main.MAIN_WINDOW.currentAccountStats();
 
-                _free_space = Helpers.getAccountFreeSpace(email);
+                HashMap<String, Long> reserved = Helpers.getReservedTransfersSpace();
+
+                _free_space = Helpers.getAccountFreeSpace(email) - (reserved.containsKey(email) ? reserved.get(email) : 0);
 
                 Main.MAIN_WINDOW.parseAccountNodes(email);
 

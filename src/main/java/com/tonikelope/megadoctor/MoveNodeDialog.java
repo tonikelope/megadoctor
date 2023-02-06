@@ -27,39 +27,38 @@ public class MoveNodeDialog extends javax.swing.JDialog {
     }
 
     private boolean _ok = false;
+    private int _mode;
 
     /**
      * Creates new form RenameNodeDialog
      */
-    public MoveNodeDialog(java.awt.Frame parent, boolean modal, String old_fpath, int mode, String ls) {
+    public MoveNodeDialog(java.awt.Frame parent, boolean modal, String old_fpath, int mode) {
         super(parent, modal);
         initComponents();
 
+        _mode = mode;
+
         Helpers.JTextFieldRegularPopupMenu.addTo(new_name);
 
-        if (ls != null) {
-            file_tree.setText(ls);
-        } else {
-            file_tree_scroll.setVisible(false);
-        }
-
-        String old_n = old_fpath.replaceAll("^.*/([^/]*)$", "$1");
-        String old_p = old_fpath.replaceAll("^(.*/)[^/]*$", "$1");
-
-        old_full_path.setText(old_fpath);
+        file_tree.setText(Main.MAIN_WINDOW.currentAccountStats());
 
         if (mode == 2) {
-            setTitle("MOVE FOLDER/FILE");
-            old_path.setVisible(false);
-            new_name.setText(old_fpath);
+            setTitle("MOVE TO DESTINATION");
+            old_full_path.setVisible(false);
+            old_path.setText("DESTINATION FOLDER -> ");
+            new_name.setText("");
         } else if (mode == 1) {
-            setTitle("COPY FOLDER/FILE");
-            old_path.setVisible(false);
-            new_name.setText(old_fpath);
+            setTitle("COPY TO DESTINATION");
+            old_full_path.setVisible(false);
+            old_path.setText("DESTINATION FOLDER -> ");
+            new_name.setText("");
         } else {
+            String old_p = old_fpath.replaceAll("^(.*/)[^/]*$", "$1");
+            String old_n = old_fpath.replaceAll("^.*/([^/]*)$", "$1");
             setTitle("RENAME FOLDER/FILE");
             old_path.setText(old_p);
             new_name.setText(old_n);
+            old_full_path.setText(old_fpath);
         }
 
         vamos_button.setText(getTitle());
@@ -87,7 +86,8 @@ public class MoveNodeDialog extends javax.swing.JDialog {
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("RENAME FOLDER/FILE");
 
-        old_full_path.setFont(new java.awt.Font("Noto Sans", 0, 18)); // NOI18N
+        old_full_path.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
+        old_full_path.setForeground(new java.awt.Color(153, 153, 153));
         old_full_path.setText("OLD NAME");
         old_full_path.setDoubleBuffered(true);
 
@@ -108,7 +108,7 @@ public class MoveNodeDialog extends javax.swing.JDialog {
             }
         });
 
-        old_path.setFont(new java.awt.Font("Noto Sans", 0, 18)); // NOI18N
+        old_path.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
         old_path.setText("jLabel1");
 
         file_tree_scroll.setPreferredSize(new java.awt.Dimension(700, 400));
@@ -135,14 +135,14 @@ public class MoveNodeDialog extends javax.swing.JDialog {
                         .addComponent(old_path)
                         .addGap(0, 0, 0)
                         .addComponent(new_name, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addComponent(file_tree_scroll, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(file_tree_scroll, javax.swing.GroupLayout.DEFAULT_SIZE, 988, Short.MAX_VALUE))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(file_tree_scroll, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(file_tree_scroll, javax.swing.GroupLayout.DEFAULT_SIZE, 411, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(old_full_path)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -159,7 +159,14 @@ public class MoveNodeDialog extends javax.swing.JDialog {
 
     private void vamos_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_vamos_buttonActionPerformed
         // TODO add your handling code here:
+        if (_mode >= 1 && !new_name.getText().endsWith("/")) {
+
+            new_name.setText(new_name.getText() + "/");
+
+        }
+
         _ok = true;
+
         setVisible(false);
     }//GEN-LAST:event_vamos_buttonActionPerformed
 

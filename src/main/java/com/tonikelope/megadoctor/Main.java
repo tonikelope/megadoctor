@@ -52,7 +52,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.14";
+    public final static String VERSION = "1.15";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -746,23 +746,26 @@ public class Main extends javax.swing.JFrame {
             for (String email : nodesToCopy.keySet()) {
 
                 login(email);
+
                 ArrayList<String> node_list = nodesToCopy.get(email);
+
+                Helpers.GUIRunAndWait(() -> {
+                    _move_dialog = new MoveNodeDialog(MAIN_WINDOW, true, null, 1);
+
+                    _move_dialog.setLocationRelativeTo(MAIN_WINDOW);
+
+                    _move_dialog.setVisible(true);
+                });
 
                 int conta = 0;
 
                 for (String node : node_list) {
 
-                    String old_full_path = Helpers.getNodePathFromFindCommandOutput(node, Helpers.runProcess(new String[]{"mega-find", "--show-handles", node}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]);
+                    String old_full_path = Helpers.getNodeFullPath(node);
 
-                    Helpers.GUIRunAndWait(() -> {
-                        _move_dialog = new MoveNodeDialog(MAIN_WINDOW, true, old_full_path, 1, "[" + email + "]\n" + Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]);
+                    String old_n = old_full_path.replaceAll("^.*/([^/]*)$", "$1");
 
-                        _move_dialog.setLocationRelativeTo(MAIN_WINDOW);
-
-                        _move_dialog.setVisible(true);
-                    });
-
-                    String new_full_path = _move_dialog.getNew_name().getText().trim();
+                    String new_full_path = _move_dialog.getNew_name().getText().trim() + old_n;
 
                     if (_move_dialog.isOk() && !old_full_path.equals(new_full_path) && !new_full_path.isBlank()) {
 
@@ -795,7 +798,7 @@ public class Main extends javax.swing.JFrame {
                 }
 
                 if (cancel) {
-                    Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "CANCELED (SOME FOLDERS/FILES WERE NOT MOVED)");
+                    Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "CANCELED (SOME FOLDERS/FILES WERE NOT COPIED)");
                     break;
                 }
 
@@ -834,6 +837,8 @@ public class Main extends javax.swing.JFrame {
 
         HashMap<String, ArrayList<String>> nodesToMove = Helpers.extractNodeMapFromText(text);
 
+        boolean cancel = false;
+
         if (!nodesToMove.isEmpty()) {
 
             for (String email : nodesToMove.keySet()) {
@@ -841,21 +846,23 @@ public class Main extends javax.swing.JFrame {
                 login(email);
                 ArrayList<String> node_list = nodesToMove.get(email);
 
+                Helpers.GUIRunAndWait(() -> {
+                    _move_dialog = new MoveNodeDialog(MAIN_WINDOW, true, null, 2);
+
+                    _move_dialog.setLocationRelativeTo(MAIN_WINDOW);
+
+                    _move_dialog.setVisible(true);
+                });
+
                 int conta = 0;
 
                 for (String node : node_list) {
 
-                    String old_full_path = Helpers.getNodePathFromFindCommandOutput(node, Helpers.runProcess(new String[]{"mega-find", "--show-handles", node}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]);
+                    String old_full_path = Helpers.getNodeFullPath(node);
 
-                    Helpers.GUIRunAndWait(() -> {
-                        _move_dialog = new MoveNodeDialog(MAIN_WINDOW, true, old_full_path, 2, "[" + email + "]\n" + Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]);
+                    String old_n = old_full_path.replaceAll("^.*/([^/]*)$", "$1");
 
-                        _move_dialog.setLocationRelativeTo(MAIN_WINDOW);
-
-                        _move_dialog.setVisible(true);
-                    });
-
-                    String new_full_path = _move_dialog.getNew_name().getText().trim();
+                    String new_full_path = _move_dialog.getNew_name().getText().trim() + old_n;
 
                     if (_move_dialog.isOk() && !old_full_path.equals(new_full_path) && !new_full_path.isBlank()) {
 
@@ -863,12 +870,12 @@ public class Main extends javax.swing.JFrame {
 
                         Helpers.runProcess(new String[]{"mega-mkdir", "-p", folder}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-                        Helpers.runProcess(new String[]{"mega-mv", node, new_full_path}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+                        Helpers.runProcess(new String[]{"mega-cp", node, new_full_path}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
                         conta++;
 
                     } else if (!_move_dialog.isOk()) {
-                        Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "CANCELED (SOME FOLDERS/FILES WERE NOT MOVED)");
+                        cancel = true;
                         break;
                     }
                 }
@@ -887,12 +894,17 @@ public class Main extends javax.swing.JFrame {
 
                 }
 
+                if (cancel) {
+                    Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "CANCELED (SOME FOLDERS/FILES WERE NOT MOVED)");
+                    break;
+                }
+
             }
 
             logout(true);
 
             if (_move_dialog.isOk()) {
-                Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL FOLDERS/FILES RENAMED");
+                Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL FOLDERS/FILES MOVED");
             }
 
         } else if (nodesToMove.isEmpty()) {
@@ -933,14 +945,14 @@ public class Main extends javax.swing.JFrame {
 
                 for (String node : node_list) {
 
-                    String old_full_path = Helpers.getNodePathFromFindCommandOutput(node, Helpers.runProcess(new String[]{"mega-find", "--show-handles", node}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]);
+                    String old_full_path = Helpers.getNodeFullPath(node);
 
                     String old_name = old_full_path.replaceAll("^.*/([^/]*)$", "$1");
 
                     String old_path = old_full_path.replaceAll("^(.*/)[^/]*$", "$1");
 
                     Helpers.GUIRunAndWait(() -> {
-                        _move_dialog = new MoveNodeDialog(MAIN_WINDOW, true, old_full_path, 0, "[" + email + "]\n" + Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]);
+                        _move_dialog = new MoveNodeDialog(MAIN_WINDOW, true, old_full_path, 0);
 
                         _move_dialog.setLocationRelativeTo(MAIN_WINDOW);
 
@@ -1443,7 +1455,6 @@ public class Main extends javax.swing.JFrame {
 
         status_label.setFont(new java.awt.Font("Noto Sans", 3, 18)); // NOI18N
         status_label.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-        status_label.setText("dadasdasdasdasdasdasdasdasdasdasdasdasdasdasdasd a da dadad ad ad adadas da dad adada dada da d ada da da da");
         status_label.setDoubleBuffered(true);
 
         save_button.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
@@ -1582,8 +1593,8 @@ public class Main extends javax.swing.JFrame {
             }
         });
 
-        check_only_new_checkbox.setFont(new java.awt.Font("Noto Sans", 0, 18)); // NOI18N
-        check_only_new_checkbox.setText("Check only unknown accounts");
+        check_only_new_checkbox.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
+        check_only_new_checkbox.setText("Check only new accounts");
         check_only_new_checkbox.setToolTipText("Check only new accounts");
         check_only_new_checkbox.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         check_only_new_checkbox.addActionListener(new java.awt.event.ActionListener() {
@@ -1629,11 +1640,11 @@ public class Main extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(cuentas_scrollpanel)
                     .addComponent(progressbar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(tabbed_panel, javax.swing.GroupLayout.DEFAULT_SIZE, 1520, Short.MAX_VALUE)
+                    .addComponent(tabbed_panel, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(logo_label, javax.swing.GroupLayout.PREFERRED_SIZE, 288, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(check_only_new_checkbox))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(logo_label, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(check_only_new_checkbox, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()

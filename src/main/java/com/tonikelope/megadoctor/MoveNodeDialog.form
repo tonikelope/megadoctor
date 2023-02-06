@@ -34,7 +34,7 @@
                       <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
                       <Component id="new_name" max="32767" attributes="0"/>
                   </Group>
-                  <Component id="file_tree_scroll" alignment="0" max="32767" attributes="0"/>
+                  <Component id="file_tree_scroll" alignment="0" pref="988" max="32767" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
           </Group>
@@ -44,7 +44,7 @@
       <Group type="103" groupAlignment="0" attributes="0">
           <Group type="102" alignment="0" attributes="0">
               <EmptySpace max="-2" attributes="0"/>
-              <Component id="file_tree_scroll" max="32767" attributes="0"/>
+              <Component id="file_tree_scroll" pref="411" max="32767" attributes="0"/>
               <EmptySpace type="unrelated" max="-2" attributes="0"/>
               <Component id="old_full_path" max="-2" attributes="0"/>
               <EmptySpace type="unrelated" max="-2" attributes="0"/>
@@ -63,7 +63,10 @@
     <Component class="javax.swing.JLabel" name="old_full_path">
       <Properties>
         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-          <Font name="Noto Sans" size="18" style="0"/>
+          <Font name="Noto Sans" size="18" style="1"/>
+        </Property>
+        <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
+          <Color blue="99" green="99" red="99" type="rgb"/>
         </Property>
         <Property name="text" type="java.lang.String" value="OLD NAME"/>
         <Property name="doubleBuffered" type="boolean" value="true"/>
@@ -105,7 +108,7 @@
     <Component class="javax.swing.JLabel" name="old_path">
       <Properties>
         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-          <Font name="Noto Sans" size="18" style="0"/>
+          <Font name="Noto Sans" size="18" style="1"/>
         </Property>
         <Property name="text" type="java.lang.String" value="jLabel1"/>
       </Properties>
