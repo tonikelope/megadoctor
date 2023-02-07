@@ -52,7 +52,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.19";
+    public final static String VERSION = "1.20";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -269,6 +269,10 @@ public class Main extends javax.swing.JFrame {
                                 vamos_button.setEnabled(!busy() || (isRunning_global_check() && !isAborting_global_check()));
 
                                 cuentas_textarea.setEnabled(!busy());
+
+                                getPause_button().setVisible(isTransferences_running());
+
+                                getCancel_all_button().setVisible(isTransferences_running());
                             }
 
                         } else {
@@ -1970,7 +1974,7 @@ public class Main extends javax.swing.JFrame {
         // TODO add your handling code here:
 
         if (!Main.MEGA_ACCOUNTS.isEmpty()) {
-            
+
             _provisioning_upload = true;
 
             getUpload_button().setEnabled(false);
@@ -2042,7 +2046,7 @@ public class Main extends javax.swing.JFrame {
                                     getPause_button().setEnabled(true);
                                     getUpload_button().setText("NEW UPLOAD");
                                 });
-                                
+
                                 _provisioning_upload = false;
                             });
 
@@ -2114,7 +2118,7 @@ public class Main extends javax.swing.JFrame {
                                         getPause_button().setEnabled(true);
                                         getUpload_button().setText("NEW UPLOAD");
                                     });
-                                    
+
                                     _provisioning_upload = false;
 
                                     TRANSFERENCES_LOCK.notifyAll();
@@ -2149,22 +2153,21 @@ public class Main extends javax.swing.JFrame {
                 Helpers.GUIRunAndWait(() -> {
                     if (transferences.getComponentCount() > 0) {
 
-                        for (Component t : transferences.getComponents()) {
+                        for (Component c : transferences.getComponents()) {
 
-                            Transference trans = (Transference) t;
+                            Transference t = transferences_map.get(c);
 
-                            if (trans.isFinished()) {
-                                transferences_map.remove(t);
-                                transferences.remove(t);
+                            if (t.isFinished()) {
+                                transferences_map.remove(c);
+                                transferences.remove(c);
                             }
                         }
 
                         transferences.revalidate();
-
                         transferences.repaint();
                     }
 
-                    clear_trans_button.setEnabled(transferences.getComponentCount() > 0);
+                    clear_trans_button.setEnabled(true);
 
                 });
 
