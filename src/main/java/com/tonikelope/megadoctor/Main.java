@@ -52,7 +52,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.25";
+    public final static String VERSION = "1.26";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -2105,14 +2105,31 @@ public class Main extends javax.swing.JFrame {
 
                                         File[] directoryListing = f.listFiles();
 
-                                        HashMap<String, Long> reserved = Helpers.getReservedTransfersSpace();
-
                                         if (directoryListing != null) {
+                                            
+                                            HashMap<String, Long> reserved = Helpers.getReservedTransfersSpace();
+
+                                            ArrayList<Object[]> hijos = new ArrayList<>();
+
                                             for (File child : directoryListing) {
 
                                                 AtomicBoolean terminate_walk_tree = new AtomicBoolean();
 
                                                 long size = child.isDirectory() ? Helpers.getDirectorySize(child, terminate_walk_tree) : child.length();
+
+                                                hijos.add(new Object[]{child.getAbsolutePath(), size});
+                                            }
+
+                                            Collections.sort(hijos, new Comparator<Object[]>() {
+                                                @Override
+                                                public int compare(Object[] o1, Object[] o2) {
+                                                    return Long.compare((long) o2[1], (long) o1[1]);
+                                                }
+                                            });
+
+                                            for (Object[] h : hijos) {
+
+                                                long size = (long) h[1];
 
                                                 String email = Helpers.findFirstAccountWithSpace(size, reserved);
 
@@ -2127,7 +2144,7 @@ public class Main extends javax.swing.JFrame {
 
                                                     Helpers.GUIRunAndWait(() -> {
 
-                                                        Transference trans = new Transference(email, child.getAbsolutePath(), dialog.getRemote_path(), 1);
+                                                        Transference trans = new Transference(email, (String) h[0], dialog.getRemote_path(), 1);
                                                         transferences_map.put(transferences.add(trans), trans);
                                                         transferences.revalidate();
                                                         transferences.repaint();
@@ -2135,7 +2152,7 @@ public class Main extends javax.swing.JFrame {
                                                     });
 
                                                 } else {
-                                                    Helpers.mostrarMensajeError(null, "THERE IS NO ACCOUNT WITH ENOUGH FREE SPACE FOR:\n" + child.getAbsolutePath());
+                                                    Helpers.mostrarMensajeError(null, "THERE IS NO ACCOUNT WITH ENOUGH FREE SPACE FOR:\n" + (String) h[0]);
                                                 }
 
                                             }
@@ -2157,19 +2174,19 @@ public class Main extends javax.swing.JFrame {
 
                                     TRANSFERENCES_LOCK.notifyAll();
                                 }
-                            });
+                            }
+                            );
                         }
-
                     } else {
                         getUpload_button().setText("NEW UPLOAD");
                         getUpload_button().setEnabled(true);
                         getPause_button().setEnabled(true);
                         _provisioning_upload = false;
                     }
-                });
+                }
+                );
 
             });
-
         } else {
             Helpers.mostrarMensajeError(this, "YOU HAVE TO FIRST ADD SOME ACCOUNTS AND CHECK THEM");
         }
