@@ -97,8 +97,8 @@ public class Helpers {
 
     }
 
-    public static String findFirstAccountWithSpace(long required, HashMap<String, Long> reserved) {
-        String account = null;
+    public static String findFirstAccountWithSpace(long required, HashMap<String, Long> reserved, HashMap<String, Long> free_space_cache) {
+        String bingo = null;
 
         ArrayList<String> emails = new ArrayList<>();
 
@@ -116,13 +116,22 @@ public class Helpers {
                 r = reserved.get(email);
             }
 
-            if (Helpers.getAccountFreeSpace(email) - r >= required) {
-                account = email;
+            long s;
+
+            if (free_space_cache != null) {
+                s = free_space_cache.containsKey(email) ? free_space_cache.get(email) : Helpers.getAccountFreeSpace(email);
+                free_space_cache.putIfAbsent(email, s);
+            } else {
+                s = Helpers.getAccountFreeSpace(email);
+            }
+
+            if (s - r >= required) {
+                bingo = email;
                 break;
             }
         }
 
-        return account;
+        return bingo;
     }
 
     public static String adjustSpaces(String s, int n) {

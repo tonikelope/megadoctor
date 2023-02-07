@@ -2106,8 +2106,10 @@ public class Main extends javax.swing.JFrame {
                                         File[] directoryListing = f.listFiles();
 
                                         if (directoryListing != null) {
-                                            
+
                                             HashMap<String, Long> reserved = Helpers.getReservedTransfersSpace();
+
+                                            HashMap<String, Long> free_space_cache = new HashMap<>();
 
                                             ArrayList<Object[]> hijos = new ArrayList<>();
 
@@ -2131,7 +2133,7 @@ public class Main extends javax.swing.JFrame {
 
                                                 long size = (long) h[1];
 
-                                                String email = Helpers.findFirstAccountWithSpace(size, reserved);
+                                                String email = Helpers.findFirstAccountWithSpace(size, reserved, free_space_cache);
 
                                                 if (email != null) {
 

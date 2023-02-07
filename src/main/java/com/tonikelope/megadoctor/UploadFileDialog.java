@@ -363,7 +363,9 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
                     Helpers.threadRun(() -> {
 
-                        String account = Helpers.findFirstAccountWithSpace(_local_size, Helpers.getReservedTransfersSpace());
+                        HashMap<String, Long> free_space_cache = new HashMap<>();
+
+                        String account = Helpers.findFirstAccountWithSpace(_local_size, Helpers.getReservedTransfersSpace(), free_space_cache);
 
                         if (account == null) {
                             Helpers.mostrarMensajeError(null, "THERE IS NO ACCOUNT WITH ENOUGH FREE SPACE");
