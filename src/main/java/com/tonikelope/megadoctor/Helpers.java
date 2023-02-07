@@ -179,7 +179,7 @@ public class Helpers {
 
         if (Integer.parseInt(whoami[2]) == 0) {
 
-            return whoami[1].replaceAll("^.+: +(.+)$", "$1").trim();
+            return whoami[1].replaceAll("^.+: +(.+)$", "$1").trim().toLowerCase();
         }
 
         return "";

@@ -12,6 +12,7 @@ package com.tonikelope.megadoctor;
 
 import static com.tonikelope.megadoctor.Main.MEGA_CMD_WINDOWS_PATH;
 import static com.tonikelope.megadoctor.Main.TRANSFERENCES_LOCK;
+import java.awt.Component;
 import java.io.File;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
@@ -232,20 +233,23 @@ public final class Transference extends javax.swing.JPanel {
             }
 
             _running = false;
-
             Helpers.GUIRunAndWait(() -> {
-                Main.MAIN_WINDOW.getTransferences().remove(this);
+                for (Component c : Main.MAIN_WINDOW.getTransferences_map().keySet()) {
 
-                Main.MAIN_WINDOW.getTransferences().revalidate();
+                    if (Main.MAIN_WINDOW.getTransferences_map().get(c) == this) {
+                        Main.MAIN_WINDOW.getTransferences_map().remove(c);
+                        Main.MAIN_WINDOW.getTransferences().remove(c);
+                    }
+                }
 
-                Main.MAIN_WINDOW.getTransferences().repaint();
             });
 
-            if (Main.MAIN_WINDOW.getCurrent_transference() == this && Helpers.megaWhoami().equals(_email.toLowerCase())) {
-                Main.MAIN_WINDOW.forceRefreshAccount(_email, "Refreshed after upload CANCEL [" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + _rpath, false, false);
-            }
-
             TRANSFERENCES_LOCK.notifyAll();
+
+        }
+
+        if (Main.MAIN_WINDOW.getCurrent_transference() == this && Helpers.megaWhoami().equals(_email.toLowerCase())) {
+            Main.MAIN_WINDOW.forceRefreshAccount(_email, "Refreshed after upload CANCEL [" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + _rpath, false, false);
         }
 
     }
@@ -279,18 +283,23 @@ public final class Transference extends javax.swing.JPanel {
 
         _paused = true;
 
+        Main.MAIN_WINDOW.setTransferences_paused(true);
+
         synchronized (TRANSFERENCES_LOCK) {
 
-            Helpers.GUIRun(() -> {
-                action.setText("(PAUSING...)");
-            });
+            if (!_finished && !_canceled) {
 
-            securePauseTransfer();
+                Helpers.GUIRun(() -> {
+                    action.setText("(PAUSING...)");
+                });
 
-            Helpers.GUIRun(() -> {
-                action.setText("(PAUSED)");
-                setBackground(Main.MAIN_WINDOW.getPause_button().getBackground());
-            });
+                securePauseTransfer();
+
+                Helpers.GUIRun(() -> {
+                    action.setText("(PAUSED)");
+                    setBackground(Main.MAIN_WINDOW.getPause_button().getBackground());
+                });
+            }
 
             TRANSFERENCES_LOCK.notifyAll();
         }
@@ -306,12 +315,13 @@ public final class Transference extends javax.swing.JPanel {
         if (_paused && _running) {
             _paused = false;
 
+            Main.MAIN_WINDOW.setTransferences_paused(false);
+
             synchronized (TRANSFERENCES_LOCK) {
 
                 Helpers.GUIRun(() -> {
                     action.setText("(RESUMING...)");
-                    Main.MAIN_WINDOW.getPause_button().setEnabled(false);
-                    Main.MAIN_WINDOW.getCancel_trans_button().setEnabled(false);
+
                 });
 
                 Main.MAIN_WINDOW.login(_email);
@@ -319,8 +329,6 @@ public final class Transference extends javax.swing.JPanel {
                 Helpers.runProcess(new String[]{"mega-transfers", "-ra"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
                 Helpers.GUIRun(() -> {
-                    Main.MAIN_WINDOW.getPause_button().setEnabled(true);
-                    Main.MAIN_WINDOW.getCancel_trans_button().setEnabled(true);
                     setBackground(null);
                 });
 
@@ -389,164 +397,160 @@ public final class Transference extends javax.swing.JPanel {
 
     public void start() {
         Helpers.threadRun(() -> {
+
+            if (Main.MAIN_WINDOW.isTransferences_paused()) {
+                this.pause();
+            }
+
             _running = true;
-            
+
             waitPaused();
-
-            _starting = true;
-
-            Helpers.GUIRun(() -> {
-                Main.MAIN_WINDOW.getVamos_button().setEnabled(false);
-                Main.MAIN_WINDOW.getCuentas_textarea().setEnabled(false);
-                Main.MAIN_WINDOW.getPause_button().setEnabled(false);
-                Main.MAIN_WINDOW.getCancel_trans_button().setEnabled(false);
-                Main.MAIN_WINDOW.getUpload_button().setEnabled(false);
-                action.setText("(STARTING...)");
-            });
-
-            Main.MAIN_WINDOW.login(_email);
-
-            Helpers.runProcess(new String[]{"mega-transfers", "-pa"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
-
-            if (!transferRunning()) {
-
-                if (_action == 0) {
-                    Helpers.runProcess(new String[]{"mega-get", "-mq", "--ignore-quota-warn", _rpath, _lpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
-                } else {
-                    Helpers.runProcess(new String[]{"mega-put", "-cq", "--ignore-quota-warn", _lpath, _rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
-                }
-
-            } else {
-
-                _prog_init = -1;
-            }
-
-            readTransferTag();
-
-            Helpers.runProcess(new String[]{"mega-transfers", "-ra"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
-
-            Helpers.GUIRun(() -> {
-                progress.setIndeterminate(true);
-
-            });
-
-            waitTransferStart();
-
-            if (isDirectory()) {
-
-                waitRemoteExists();
-            }
-
-            Helpers.GUIRun(() -> {
-                progress.setIndeterminate(false);
-                Main.MAIN_WINDOW.getPause_button().setEnabled(true);
-                Main.MAIN_WINDOW.getCancel_trans_button().setEnabled(true);
-                Main.MAIN_WINDOW.getUpload_button().setEnabled(true);
-                folder_stats_scroll.setVisible(isDirectory());
-            });
-
-            _starting = false;
-
-            long start_timestamp = System.currentTimeMillis();
-
-            while (updateProgress()) {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-
-            long finish_timestamp = System.currentTimeMillis();
 
             if (!_canceled) {
 
-                _finishing = true;
-                
-                waitPaused();
+                synchronized (TRANSFERENCES_LOCK) {
 
-                Helpers.GUIRun(() -> {
-                    progress.setValue(progress.getMaximum());
-                    progress.setIndeterminate(true);
-                    action.setText("(FINISHING...)");
-                    folder_stats_textarea.setText("");
-                    folder_stats_scroll.setVisible(false);
-                    Main.MAIN_WINDOW.getUpload_button().setEnabled(false);
-                    Main.MAIN_WINDOW.getPause_button().setEnabled(false);
-                    Main.MAIN_WINDOW.getCancel_trans_button().setEnabled(false);
+                    _starting = true;
 
-                });
+                    Helpers.GUIRun(() -> {
+                        Main.MAIN_WINDOW.getVamos_button().setEnabled(false);
+                        Main.MAIN_WINDOW.getCuentas_textarea().setEnabled(false);
+                        action.setText("(STARTING...)");
+                    });
 
-                int verification_timeout = 0;
+                    Main.MAIN_WINDOW.login(_email);
 
-                while (!remoteFileExists(_rpath) && verification_timeout < WAIT_TIMEOUT) {
+                    Helpers.runProcess(new String[]{"mega-transfers", "-pa"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+                    if (!transferRunning()) {
+
+                        if (_action == 0) {
+                            Helpers.runProcess(new String[]{"mega-get", "-mq", "--ignore-quota-warn", _rpath, _lpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+                        } else {
+                            Helpers.runProcess(new String[]{"mega-put", "-cq", "--ignore-quota-warn", _lpath, _rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+                        }
+
+                    } else {
+
+                        _prog_init = -1;
+                    }
+
+                    readTransferTag();
+
+                    Helpers.runProcess(new String[]{"mega-transfers", "-ra"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+                    Helpers.GUIRun(() -> {
+                        progress.setIndeterminate(true);
+
+                    });
+
+                    waitTransferStart();
+
+                    if (isDirectory()) {
+
+                        waitRemoteExists();
+                    }
+
+                    Helpers.GUIRun(() -> {
+                        progress.setIndeterminate(false);
+                        folder_stats_scroll.setVisible(isDirectory());
+                    });
+
+                    _starting = false;
+
+                }
+
+                long start_timestamp = System.currentTimeMillis();
+
+                while (updateProgress()) {
                     try {
                         Thread.sleep(1000);
-                        verification_timeout++;
                     } catch (InterruptedException ex) {
                         Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
 
-                boolean c_error = false;
+                long finish_timestamp = System.currentTimeMillis();
 
-                if (verification_timeout == WAIT_TIMEOUT && !isDirectory()) {
-                    if (!isDirectory()) {
-                        c_error = waitCompletedTAG();
-                    } else {
-                        c_error = true;
+                synchronized (TRANSFERENCES_LOCK) {
+                    if (!_canceled) {
+
+                        _finishing = true;
+
+                        waitPaused();
+
+                        Helpers.GUIRun(() -> {
+                            progress.setValue(progress.getMaximum());
+                            progress.setIndeterminate(true);
+                            action.setText("(FINISHING...)");
+                            folder_stats_textarea.setText("");
+                            folder_stats_scroll.setVisible(false);
+                        });
+
+                        int verification_timeout = 0;
+
+                        while (!remoteFileExists(_rpath) && verification_timeout < WAIT_TIMEOUT) {
+                            try {
+                                Thread.sleep(1000);
+                                verification_timeout++;
+                            } catch (InterruptedException ex) {
+                                Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        }
+
+                        boolean c_error = false;
+
+                        if (verification_timeout == WAIT_TIMEOUT && !isDirectory()) {
+                            if (!isDirectory()) {
+                                c_error = waitCompletedTAG();
+                            } else {
+                                c_error = true;
+                            }
+                        }
+
+                        final boolean check_error = c_error;
+
+                        long folder_size = readRemoteFolderSize();
+
+                        final boolean warning_folder_size = (isDirectory() && folder_size != _size);
+
+                        Helpers.runProcess(new String[]{"mega-export", "-af", _rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+                        long speed = calculateSpeed(_size, _prog_init < 0 ? 0 : _prog_init, 10000, start_timestamp, finish_timestamp);
+
+                        Helpers.GUIRun(() -> {
+                            progress.setIndeterminate(false);
+
+                            status_icon.setVisible(true);
+
+                            local_path.setText("[" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + _lpath);
+
+                            action.setText("(Avg: " + Helpers.formatBytes(speed) + "/s)");
+
+                            if (check_error) {
+                                status_icon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/warning_transference.png")));
+                                this.setToolTipText("Unable to verify that the transfer was completed correctly");
+                            }
+
+                            if (warning_folder_size) {
+                                status_icon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/warning_transference.png")));
+                                this.setToolTipText("REMOTE FOLDER SIZE IS DIFFERENT FROM LOCAL SIZE");
+                            }
+
+                        });
+
+                        Main.MAIN_WINDOW.forceRefreshAccount(_email, "Refreshed after upload [" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + _rpath, false, false);
+
+                        _finishing = false;
                     }
+
+                    _running = false;
+
+                    _finished = true;
+
+                    TRANSFERENCES_LOCK.notifyAll();
+
                 }
-
-                final boolean check_error = c_error;
-
-                long folder_size = readRemoteFolderSize();
-
-                final boolean warning_folder_size = (isDirectory() && folder_size != _size);
-
-                Helpers.runProcess(new String[]{"mega-export", "-af", _rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
-
-                long speed = calculateSpeed(_size, _prog_init < 0 ? 0 : _prog_init, 10000, start_timestamp, finish_timestamp);
-
-                Helpers.GUIRun(() -> {
-                    progress.setIndeterminate(false);
-
-                    status_icon.setVisible(true);
-
-                    local_path.setText("[" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + _lpath);
-
-                    action.setText("(Avg: " + Helpers.formatBytes(speed) + "/s)");
-
-                    if (check_error) {
-                        status_icon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/warning_transference.png")));
-                        this.setToolTipText("Unable to verify that the transfer was completed correctly");
-                    }
-
-                    if (warning_folder_size) {
-                        status_icon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/warning_transference.png")));
-                        this.setToolTipText("REMOTE FOLDER SIZE IS DIFFERENT FROM LOCAL SIZE");
-                    }
-
-                });
-
-                Main.MAIN_WINDOW.forceRefreshAccount(_email, "Refreshed after upload [" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + _rpath, false, false);
-            }
-
-            Helpers.GUIRun(() -> {
-                Main.MAIN_WINDOW.getUpload_button().setEnabled(true);
-                Main.MAIN_WINDOW.getPause_button().setEnabled(Main.MAIN_WINDOW.getTransferences().getComponentCount() > 0);
-                Main.MAIN_WINDOW.getCancel_trans_button().setEnabled(Main.MAIN_WINDOW.getTransferences().getComponentCount() > 0);
-            });
-
-            _finishing = false;
-
-            _running = false;
-
-            _finished = true;
-
-            synchronized (TRANSFERENCES_LOCK) {
-
-                TRANSFERENCES_LOCK.notifyAll();
 
             }
         });
@@ -629,9 +633,9 @@ public final class Transference extends javax.swing.JPanel {
 
         return "";
     }
-    
-    private void waitPaused(){
-        while ((_paused || _size < 0) && !_canceled && !_finished) {
+
+    private void waitPaused() {
+        while ((Main.MAIN_WINDOW.isTransferences_paused() || _paused || _size < 0) && !_canceled && !_finished) {
 
             try {
                 Thread.sleep(1000);
@@ -901,7 +905,7 @@ public final class Transference extends javax.swing.JPanel {
 
             if (!_canceled && !_finished) {
 
-                if (Main.MAIN_WINDOW.getCancel_trans_button().isEnabled() && Helpers.mostrarMensajeInformativoSINO(Main.MAIN_WINDOW, "<b>" + filename + "</b><br><br><b>CANCEL</b> this transference?") == 0) {
+                if (Helpers.mostrarMensajeInformativoSINO(Main.MAIN_WINDOW, "<b>" + filename + "</b><br><br><b>CANCEL</b> this transference?") == 0) {
                     Helpers.threadRun(() -> {
                         stop();
                     });

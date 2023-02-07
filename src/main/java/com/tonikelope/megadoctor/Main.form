@@ -336,7 +336,7 @@
                               <EmptySpace type="separate" max="-2" attributes="0"/>
                               <Component id="pause_button" min="-2" max="-2" attributes="0"/>
                               <EmptySpace type="separate" max="-2" attributes="0"/>
-                              <Component id="cancel_trans_button" min="-2" max="-2" attributes="0"/>
+                              <Component id="cancel_all_button" min="-2" max="-2" attributes="0"/>
                               <EmptySpace pref="1134" max="32767" attributes="0"/>
                           </Group>
                       </Group>
@@ -346,7 +346,7 @@
                           <Group type="102" alignment="0" attributes="0">
                               <EmptySpace max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="3" attributes="0">
-                                  <Component id="cancel_trans_button" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="cancel_all_button" alignment="3" min="-2" max="-2" attributes="0"/>
                                   <Component id="clear_trans_button" alignment="3" min="-2" max="-2" attributes="0"/>
                                   <Component id="pause_button" alignment="3" min="-2" max="-2" attributes="0"/>
                               </Group>
@@ -356,7 +356,7 @@
                     </DimensionLayout>
                   </Layout>
                   <SubComponents>
-                    <Component class="javax.swing.JButton" name="cancel_trans_button">
+                    <Component class="javax.swing.JButton" name="cancel_all_button">
                       <Properties>
                         <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
                           <Color blue="0" green="33" red="ff" type="rgb"/>
@@ -374,7 +374,7 @@
                         <Property name="doubleBuffered" type="boolean" value="true"/>
                       </Properties>
                       <Events>
-                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="cancel_trans_buttonActionPerformed"/>
+                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="cancel_all_buttonActionPerformed"/>
                       </Events>
                     </Component>
                     <Component class="javax.swing.JButton" name="clear_trans_button">

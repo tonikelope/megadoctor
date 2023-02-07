@@ -52,7 +52,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.17";
+    public final static String VERSION = "1.18";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -82,6 +82,20 @@ public class Main extends javax.swing.JFrame {
     private final HashMap<Component, Transference> transferences_map = new HashMap<>();
     private final DragMouseAdapter transfers_dragdrop_adapter = new DragMouseAdapter(TRANSFERENCES_LOCK);
     private volatile boolean _check_only_new = false;
+    private volatile boolean _pausing_transference = false;
+    private volatile boolean _transferences_paused = false;
+
+    public boolean isPausing_transference() {
+        return _pausing_transference;
+    }
+
+    public boolean isTransferences_paused() {
+        return _transferences_paused;
+    }
+
+    public void setTransferences_paused(boolean _transferences_paused) {
+        this._transferences_paused = _transferences_paused;
+    }
 
     public HashMap<Component, Transference> getTransferences_map() {
         return transferences_map;
@@ -95,8 +109,8 @@ public class Main extends javax.swing.JFrame {
         return pause_button;
     }
 
-    public JButton getCancel_trans_button() {
-        return cancel_trans_button;
+    public JButton getCancel_all_button() {
+        return cancel_all_button;
     }
 
     public boolean busy() {
@@ -116,7 +130,7 @@ public class Main extends javax.swing.JFrame {
     }
 
     public boolean isTransferences_running() {
-        return _transferences_running;
+        return (_transferences_running && _current_transference != null);
     }
 
     public String getLast_email_force_refresh() {
@@ -168,7 +182,7 @@ public class Main extends javax.swing.JFrame {
         transferences.addMouseMotionListener((MouseMotionListener) transfers_dragdrop_adapter);
         transferences_panel.add(transferences);
         progressbar.setMinimum(0);
-        upload_button.setEnabled(false);
+        getUpload_button().setEnabled(false);
         transf_scroll.getVerticalScrollBar().setUnitIncrement(20);
         setTitle("MegaDoctor " + VERSION);
         status_label.setText("Checking if MEGACMD is present...");
@@ -192,6 +206,7 @@ public class Main extends javax.swing.JFrame {
             Helpers.GUIRun(() -> {
                 setEnabled(true);
                 status_label.setText("");
+                enableTOPControls(true);
             });
 
         });
@@ -221,6 +236,8 @@ public class Main extends javax.swing.JFrame {
 
                                 _transferences_running = false;
 
+                                _current_transference = null;
+
                                 for (Component tr : transferences.getComponents()) {
 
                                     Transference t = transferences_map.get(tr);
@@ -232,24 +249,17 @@ public class Main extends javax.swing.JFrame {
                                     }
                                 }
 
-                                if (!_transferences_running) {
+                                if (!isTransferences_running()) {
                                     for (Component tr : transferences.getComponents()) {
                                         Transference t = transferences_map.get(tr);
                                         if (!t.isRunning() && !t.isFinished() && !t.isCanceled()) {
                                             _transferences_running = true;
                                             _current_transference = t;
-                                            pause_button.setText("PAUSE");
                                             t.start();
                                             break;
                                         }
                                     }
                                 }
-
-                                cancel_trans_button.setEnabled(_transferences_running && !_current_transference.isStarting() && !_current_transference.isFinishing() && !_current_transference.isCanceled() && transferences.getComponentCount() > 0);
-
-                                pause_button.setEnabled(cancel_trans_button.isEnabled());
-
-                                clear_trans_button.setEnabled(transferences.getComponentCount() > 0);
 
                                 vamos_button.setEnabled(!busy() || (isRunning_global_check() && !isAborting_global_check()));
 
@@ -259,7 +269,13 @@ public class Main extends javax.swing.JFrame {
                         } else {
                             _transferences_running = false;
 
+                            _pausing_transference = false;
+
+                            _transferences_paused = false;
+
                             _current_transference = null;
+
+                            getPause_button().setText("PAUSE");
 
                             transferences_control_panel.setVisible(false);
 
@@ -339,7 +355,7 @@ public class Main extends javax.swing.JFrame {
 
         MEGA_SESSIONS.put(email, getCurrentSessionID());
 
-        if (_transferences_running && _current_transference.getEmail().equals(email) && _current_transference.isPaused()) {
+        if (isTransferences_running() && _current_transference.getEmail().equals(email) && _current_transference.isPaused()) {
             _current_transference.pause();
         }
 
@@ -422,14 +438,14 @@ public class Main extends javax.swing.JFrame {
         return session_output.replaceAll("^.+: +(.+)$", "$1").trim();
     }
 
-    private void enableButtons(boolean enable) {
+    private void enableTOPControls(boolean enable) {
         Helpers.GUIRun(() -> {
             MAIN_WINDOW.getCuentas_textarea().setEnabled(enable);
             clear_log_button.setEnabled(enable);
             check_only_new_checkbox.setEnabled(enable);
-            MAIN_WINDOW.getVamos_button().setEnabled(enable || isRunning_global_check());
-            upload_button.setEnabled(enable && !MEGA_ACCOUNTS.isEmpty());
-            MAIN_WINDOW.getSave_button().setEnabled(enable);
+            getVamos_button().setEnabled(enable || isRunning_global_check());
+            getUpload_button().setEnabled(enable && !MEGA_ACCOUNTS.isEmpty() && !isPausing_transference());
+            getSave_button().setEnabled(enable);
         });
     }
 
@@ -439,13 +455,9 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.GUIRun(() -> {
 
-            enableButtons(false);
+            enableTOPControls(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
             MAIN_WINDOW.getStatus_label().setText((move ? "MOVING" : "COPYING") + " SELECTED FOLDERS/FILES. PLEASE WAIT...");
-
-            if (_transferences_running) {
-                upload_button.setText("PAUSING CURRENT TRANSFER...");
-            }
 
         });
 
@@ -453,7 +465,7 @@ public class Main extends javax.swing.JFrame {
 
         if (!nodesToCopy.isEmpty() && MEGA_ACCOUNTS.size() > nodesToCopy.keySet().size()) {
 
-            if (_transferences_running) {
+            if (isTransferences_running()) {
                 _current_transference.pause();
             }
 
@@ -465,7 +477,7 @@ public class Main extends javax.swing.JFrame {
                 _email_dialog.setVisible(true);
             });
 
-            if (_transferences_running) {
+            if (isTransferences_running()) {
                 Helpers.threadRun(() -> {
                     _current_transference.resume();
                 });
@@ -583,8 +595,7 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.GUIRun(() -> {
 
-            enableButtons(true);
-            upload_button.setText("NEW UPLOAD");
+            enableTOPControls(true);
             MAIN_WINDOW.getProgressbar().setIndeterminate(false);
             MAIN_WINDOW.getStatus_label().setText("");
 
@@ -599,7 +610,7 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.threadRun(() -> {
 
-            if (_transferences_running) {
+            if (isTransferences_running()) {
                 Helpers.GUIRun(() -> {
                     setEnabled(false);
                 });
@@ -735,7 +746,7 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.GUIRun(() -> {
 
-            enableButtons(false);
+            enableTOPControls(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
             MAIN_WINDOW.getStatus_label().setText("COPYING SELECTED FOLDERS/FILES. PLEASE WAIT...");
 
@@ -820,7 +831,7 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.GUIRun(() -> {
 
-            enableButtons(true);
+            enableTOPControls(true);
             MAIN_WINDOW.getProgressbar().setIndeterminate(false);
             MAIN_WINDOW.getStatus_label().setText("");
 
@@ -833,7 +844,7 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.GUIRun(() -> {
 
-            enableButtons(false);
+            enableTOPControls(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
             MAIN_WINDOW.getStatus_label().setText("MOVING SELECTED FOLDERS/FILES. PLEASE WAIT...");
 
@@ -917,7 +928,7 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.GUIRun(() -> {
 
-            enableButtons(true);
+            enableTOPControls(true);
             MAIN_WINDOW.getProgressbar().setIndeterminate(false);
             MAIN_WINDOW.getStatus_label().setText("");
 
@@ -930,7 +941,7 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.GUIRun(() -> {
 
-            enableButtons(false);
+            enableTOPControls(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
             MAIN_WINDOW.getStatus_label().setText("RENAMING SELECTED FOLDERS/FILES. PLEASE WAIT...");
 
@@ -1005,7 +1016,7 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.GUIRun(() -> {
 
-            enableButtons(true);
+            enableTOPControls(true);
             MAIN_WINDOW.getProgressbar().setIndeterminate(false);
             MAIN_WINDOW.getStatus_label().setText("");
 
@@ -1020,7 +1031,7 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.GUIRun(() -> {
 
-            enableButtons(false);
+            enableTOPControls(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
             MAIN_WINDOW.getStatus_label().setText((enable ? "ENABLING" : "DISABLING") + " PUBLIC LINK ON SELECTED FOLDERS/FILES. PLEASE WAIT...");
 
@@ -1064,7 +1075,7 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.GUIRun(() -> {
 
-            enableButtons(true);
+            enableTOPControls(true);
             MAIN_WINDOW.getProgressbar().setIndeterminate(false);
             MAIN_WINDOW.getStatus_label().setText("");
 
@@ -1081,7 +1092,7 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.GUIRun(() -> {
 
-            enableButtons(false);
+            enableTOPControls(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
             MAIN_WINDOW.getStatus_label().setText("IMPORTING " + link + " -> " + email + " PLEASE WAIT...");
 
@@ -1103,7 +1114,7 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.GUIRun(() -> {
 
-            enableButtons(true);
+            enableTOPControls(true);
 
             if (old_status.isBlank()) {
                 MAIN_WINDOW.getProgressbar().setIndeterminate(false);
@@ -1125,7 +1136,7 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.GUIRun(() -> {
 
-            enableButtons(false);
+            enableTOPControls(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
             MAIN_WINDOW.getStatus_label().setText("TRUNCATING " + email + " PLEASE WAIT...");
 
@@ -1146,7 +1157,7 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.GUIRun(() -> {
 
-            enableButtons(true);
+            enableTOPControls(true);
 
             if (old_status.isBlank()) {
                 MAIN_WINDOW.getProgressbar().setIndeterminate(false);
@@ -1168,7 +1179,7 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.GUIRun(() -> {
 
-            enableButtons(false);
+            enableTOPControls(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
             MAIN_WINDOW.getStatus_label().setText("DELETING FOLDERS/FILES. PLEASE WAIT...");
 
@@ -1206,7 +1217,7 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.GUIRun(() -> {
 
-            enableButtons(true);
+            enableTOPControls(true);
 
             if (old_status.isBlank()) {
                 MAIN_WINDOW.getProgressbar().setIndeterminate(false);
@@ -1227,7 +1238,7 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.GUIRun(() -> {
 
-            enableButtons(false);
+            enableTOPControls(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
             MAIN_WINDOW.getStatus_label().setText("REFRESHING " + email + " PLEASE WAIT...");
 
@@ -1267,7 +1278,7 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.GUIRun(() -> {
 
-            enableButtons(true);
+            enableTOPControls(true);
 
             if (old_status.isBlank()) {
                 MAIN_WINDOW.getProgressbar().setIndeterminate(false);
@@ -1328,9 +1339,8 @@ public class Main extends javax.swing.JFrame {
                                 cuentas_textarea.append(account + "\n");
                             }
 
-                            upload_button.setEnabled(true);
-
                             session_menu.setSelected(true);
+                            getUpload_button().setEnabled(true);
 
                         });
                     } else {
@@ -1400,7 +1410,7 @@ public class Main extends javax.swing.JFrame {
         transf_scroll = new javax.swing.JScrollPane();
         jPanel1 = new javax.swing.JPanel();
         transferences_control_panel = new javax.swing.JPanel();
-        cancel_trans_button = new javax.swing.JButton();
+        cancel_all_button = new javax.swing.JButton();
         clear_trans_button = new javax.swing.JButton();
         pause_button = new javax.swing.JButton();
         transferences_panel = new javax.swing.JPanel();
@@ -1492,15 +1502,15 @@ public class Main extends javax.swing.JFrame {
         transf_scroll.setBorder(null);
         transf_scroll.setDoubleBuffered(true);
 
-        cancel_trans_button.setBackground(new java.awt.Color(255, 51, 0));
-        cancel_trans_button.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
-        cancel_trans_button.setForeground(new java.awt.Color(255, 255, 255));
-        cancel_trans_button.setText("CANCEL ALL");
-        cancel_trans_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-        cancel_trans_button.setDoubleBuffered(true);
-        cancel_trans_button.addActionListener(new java.awt.event.ActionListener() {
+        cancel_all_button.setBackground(new java.awt.Color(255, 51, 0));
+        cancel_all_button.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
+        cancel_all_button.setForeground(new java.awt.Color(255, 255, 255));
+        cancel_all_button.setText("CANCEL ALL");
+        cancel_all_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        cancel_all_button.setDoubleBuffered(true);
+        cancel_all_button.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cancel_trans_buttonActionPerformed(evt);
+                cancel_all_buttonActionPerformed(evt);
             }
         });
 
@@ -1537,7 +1547,7 @@ public class Main extends javax.swing.JFrame {
                 .addGap(18, 18, 18)
                 .addComponent(pause_button)
                 .addGap(18, 18, 18)
-                .addComponent(cancel_trans_button)
+                .addComponent(cancel_all_button)
                 .addContainerGap(1134, Short.MAX_VALUE))
         );
         transferences_control_panelLayout.setVerticalGroup(
@@ -1545,7 +1555,7 @@ public class Main extends javax.swing.JFrame {
             .addGroup(transferences_control_panelLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(transferences_control_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(cancel_trans_button)
+                    .addComponent(cancel_all_button)
                     .addComponent(clear_trans_button)
                     .addComponent(pause_button))
                 .addContainerGap())
@@ -1709,7 +1719,7 @@ public class Main extends javax.swing.JFrame {
                 vamos_button.setText("STOP");
                 vamos_button.setBackground(Color.red);
 
-                enableButtons(false);
+                enableTOPControls(false);
 
                 Helpers.threadRun(() -> {
                     final String regex = "(.*?)#(.+)";
@@ -1829,8 +1839,6 @@ public class Main extends javax.swing.JFrame {
 
                             output_textarea.append("\nCHECKING END -> " + Helpers.getFechaHoraActual() + "\n");
 
-                            upload_button.setEnabled(true);
-
                         });
 
                         Helpers.mostrarMensajeInformativo(this, isAborting_global_check() ? "CANCELED!" : "ALL ACCOUNTS CHECKED");
@@ -1845,7 +1853,7 @@ public class Main extends javax.swing.JFrame {
                         vamos_button.setBackground(new Color(0, 153, 0));
                         cuentas_textarea.setEnabled(true);
                         status_label.setText("");
-                        enableButtons(true);
+                        enableTOPControls(true);
                     });
 
                     _running_global_check = false;
@@ -1912,7 +1920,7 @@ public class Main extends javax.swing.JFrame {
 
                 if (Helpers.mostrarMensajeInformativoSINO(this, "EXIT NOW?") == 0) {
 
-                    if (_transferences_running) {
+                    if (isTransferences_running()) {
 
                         if (!session_menu.isSelected()) {
                             if (Helpers.mostrarMensajeInformativoSINO(this, "All transactions in progress or on hold will be lost. ARE YOU SURE?") == 0) {
@@ -1958,38 +1966,32 @@ public class Main extends javax.swing.JFrame {
 
         if (!Main.MEGA_ACCOUNTS.isEmpty()) {
 
-            upload_button.setEnabled(false);
+            getUpload_button().setEnabled(false);
 
-            if (_transferences_running) {
-
-                if (!_current_transference.isPaused()) {
-                    upload_button.setText("PAUSING CURRENT TRANSFER...");
-                }
-
-                getPause_button().setEnabled(false);
-                getCancel_trans_button().setEnabled(false);
-            }
+            getPause_button().setEnabled(false);
 
             Helpers.threadRun(() -> {
 
-                boolean resume = true;
-
-                if (_transferences_running) {
-
-                    if (!_current_transference.isPaused()) {
-                        _current_transference.pause();
-                    } else {
-                        resume = false;
+                while (isTransferences_running() && isPausing_transference()) {
+                    synchronized (TRANSFERENCES_LOCK) {
+                        try {
+                            TRANSFERENCES_LOCK.wait(1000);
+                        } catch (InterruptedException ex) {
+                            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                        }
                     }
                 }
 
-                boolean r = resume;
+                boolean auto_resume = false;
+
+                if (isTransferences_running() && !isTransferences_paused()) {
+                    _current_transference.pause();
+                    auto_resume = true;
+                }
+
+                boolean r = auto_resume;
 
                 Helpers.GUIRunAndWait(() -> {
-
-                    getPause_button().setEnabled(true);
-
-                    getCancel_trans_button().setEnabled(true);
 
                     UploadFileDialog dialog = new UploadFileDialog(this, true);
 
@@ -1997,15 +1999,29 @@ public class Main extends javax.swing.JFrame {
 
                     dialog.setVisible(true);
 
-                    upload_button.setText("PREPARING UPLOAD...");
+                    getUpload_button().setText("PREPARING UPLOAD/s...");
 
-                    if (_transferences_running && r) {
+                    tabbed_panel.setSelectedIndex(1);
+
+                    if (isTransferences_running() && r) {
+
                         Helpers.threadRun(() -> {
                             _current_transference.resume();
+
+                            Helpers.GUIRunAndWait(() -> {
+                                getPause_button().setEnabled(true);
+                            });
+
                         });
                     }
 
                     if (dialog.isOk()) {
+
+                        vamos_button.setEnabled(false);
+
+                        cuentas_textarea.setEnabled(false);
+
+                        progressbar.setIndeterminate(true);
 
                         if (Helpers.checkMEGALInk(dialog.getLocal_path())) {
 
@@ -2014,19 +2030,15 @@ public class Main extends javax.swing.JFrame {
                                 importLink(dialog.getEmail(), dialog.getLocal_path(), dialog.getRemote_path());
 
                                 Helpers.GUIRunAndWait(() -> {
-                                    status_label.setText("");
                                     progressbar.setIndeterminate(false);
-                                    upload_button.setEnabled(true);
-                                    upload_button.setText("NEW UPLOAD");
+                                    getUpload_button().setEnabled(true);
+                                    getPause_button().setEnabled(true);
+                                    getUpload_button().setText("NEW UPLOAD");
                                 });
 
                             });
 
                         } else {
-
-                            vamos_button.setEnabled(false);
-
-                            cuentas_textarea.setEnabled(false);
 
                             Helpers.threadRun(() -> {
 
@@ -2036,15 +2048,12 @@ public class Main extends javax.swing.JFrame {
 
                                     if (!f.isDirectory() || !dialog.isAuto() || !dialog.isSplit_folder()) {
                                         Helpers.GUIRunAndWait(() -> {
-                                            status_label.setText("");
-                                            progressbar.setIndeterminate(false);
+
                                             Transference trans = new Transference(dialog.getEmail(), dialog.getLocal_path(), dialog.getRemote_path(), 1);
                                             transferences_map.put(transferences.add(trans), trans);
                                             transferences.revalidate();
                                             transferences.repaint();
-                                            tabbed_panel.setSelectedIndex(1);
-                                            upload_button.setEnabled(true);
-                                            upload_button.setText("NEW UPLOAD");
+
                                         });
                                     } else {
 
@@ -2085,25 +2094,28 @@ public class Main extends javax.swing.JFrame {
 
                                             }
 
-                                            Helpers.GUIRunAndWait(() -> {
-                                                status_label.setText("");
-                                                progressbar.setIndeterminate(false);
-                                                tabbed_panel.setSelectedIndex(1);
-                                                upload_button.setEnabled(true);
-                                                upload_button.setText("NEW UPLOAD");
-                                            });
                                         } else {
                                             Helpers.mostrarMensajeError(null, "EMPTY FOLDER");
                                         }
                                     }
 
+                                    Helpers.GUIRunAndWait(() -> {
+
+                                        progressbar.setIndeterminate(false);
+                                        getUpload_button().setEnabled(true);
+                                        getPause_button().setEnabled(true);
+                                        getUpload_button().setText("NEW UPLOAD");
+                                    });
+
                                     TRANSFERENCES_LOCK.notifyAll();
                                 }
                             });
                         }
+
                     } else {
-                        upload_button.setText("NEW UPLOAD");
-                        upload_button.setEnabled(true);
+                        getUpload_button().setText("NEW UPLOAD");
+                        getUpload_button().setEnabled(true);
+                        getPause_button().setEnabled(true);
                     }
                 });
 
@@ -2151,8 +2163,11 @@ public class Main extends javax.swing.JFrame {
 
     }//GEN-LAST:event_clear_trans_buttonActionPerformed
 
-    private void cancel_trans_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancel_trans_buttonActionPerformed
+    private void cancel_all_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancel_all_buttonActionPerformed
         // TODO add your handling code here:
+
+        getCancel_all_button().setEnabled(false);
+
         Helpers.threadRun(() -> {
             synchronized (TRANSFERENCES_LOCK) {
                 Helpers.GUIRunAndWait(() -> {
@@ -2165,11 +2180,9 @@ public class Main extends javax.swing.JFrame {
                                 synchronized (TRANSFERENCES_LOCK) {
 
                                     Helpers.GUIRunAndWait(() -> {
+                                        transferences_control_panel.setVisible(false);
                                         progressbar.setIndeterminate(true);
-                                        cancel_trans_button.setEnabled(false);
-                                        pause_button.setEnabled(false);
-                                        clear_trans_button.setEnabled(false);
-                                        upload_button.setEnabled(false);
+                                        getUpload_button().setEnabled(false);
                                         transferences_map.clear();
                                         transferences.removeAll();
                                         transferences.revalidate();
@@ -2179,12 +2192,17 @@ public class Main extends javax.swing.JFrame {
                                     if (_current_transference != null) {
                                         _current_transference.stop();
                                     }
+                                    Helpers.GUIRunAndWait(() -> {
+                                        getCancel_all_button().setEnabled(true);
+                                    });
 
                                     TRANSFERENCES_LOCK.notifyAll();
                                 }
 
                             });
 
+                        } else {
+                            getCancel_all_button().setEnabled(true);
                         }
                     }
                 });
@@ -2192,7 +2210,7 @@ public class Main extends javax.swing.JFrame {
             }
         });
 
-    }//GEN-LAST:event_cancel_trans_buttonActionPerformed
+    }//GEN-LAST:event_cancel_all_buttonActionPerformed
 
     private void tabbed_panelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tabbed_panelMouseClicked
         // TODO add your handling code here:
@@ -2212,48 +2230,60 @@ public class Main extends javax.swing.JFrame {
 
     private void pause_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pause_buttonActionPerformed
         // TODO add your handling code here:
-        pause_button.setEnabled(false);
-        cancel_trans_button.setEnabled(false);
-        upload_button.setEnabled(false);
 
-        Helpers.threadRun(() -> {
-            synchronized (TRANSFERENCES_LOCK) {
+        if (!isPausing_transference()) {
 
-                if (_transferences_running) {
+            getPause_button().setEnabled(false);
 
-                    if (!_current_transference.isPaused()) {
+            _pausing_transference = true;
 
-                        _current_transference.pause();
+            _transferences_paused = pause_button.getText().equals("PAUSE");
 
-                        Helpers.GUIRun(() -> {
-                            pause_button.setText("RESUME");
-                            pause_button.setEnabled(true);
-                            upload_button.setEnabled(true);
-                            cancel_trans_button.setEnabled(true);
-                        });
+            getUpload_button().setEnabled(false);
+
+            Helpers.threadRun(() -> {
+                synchronized (TRANSFERENCES_LOCK) {
+
+                    if (isTransferences_running()) {
+
+                        if (this.isTransferences_paused()) {
+
+                            _current_transference.pause();
+
+                            Helpers.GUIRunAndWait(() -> {
+                                getPause_button().setText("RESUME");
+                                getPause_button().setEnabled(true);
+                                getUpload_button().setEnabled(true);
+
+                            });
+
+                        } else {
+
+                            _current_transference.resume();
+
+                            Helpers.GUIRunAndWait(() -> {
+                                getPause_button().setText("PAUSE");
+                                getPause_button().setEnabled(true);
+                                getUpload_button().setEnabled(true);
+
+                            });
+
+                        }
 
                     } else {
+                        Helpers.GUIRunAndWait(() -> {
+                            getPause_button().setEnabled(true);
+                            getUpload_button().setEnabled(true);
 
-                        _current_transference.resume();
-
-                        Helpers.GUIRun(() -> {
-                            pause_button.setText("PAUSE");
-                            pause_button.setEnabled(true);
-                            upload_button.setEnabled(true);
-                            cancel_trans_button.setEnabled(true);
                         });
-
                     }
 
-                } else {
-                    Helpers.GUIRun(() -> {
-                        pause_button.setEnabled(true);
-                        upload_button.setEnabled(true);
-                        cancel_trans_button.setEnabled(true);
-                    });
+                    _pausing_transference = false;
+
+                    TRANSFERENCES_LOCK.notifyAll();
                 }
-            }
-        });
+            });
+        }
     }//GEN-LAST:event_pause_buttonActionPerformed
 
     private void check_only_new_checkboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_check_only_new_checkboxActionPerformed
@@ -2302,7 +2332,7 @@ public class Main extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton cancel_trans_button;
+    private javax.swing.JButton cancel_all_button;
     private javax.swing.JCheckBox check_only_new_checkbox;
     private javax.swing.JButton clear_log_button;
     private javax.swing.JButton clear_trans_button;
