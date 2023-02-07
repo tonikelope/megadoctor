@@ -52,7 +52,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.28";
+    public final static String VERSION = "1.29";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -81,7 +81,7 @@ public class Main extends javax.swing.JFrame {
     private volatile JPanel transferences = null;
     private final HashMap<Component, Transference> transferences_map = new HashMap<>();
     private final DragMouseAdapter transfers_dragdrop_adapter = new DragMouseAdapter(TRANSFERENCES_LOCK);
-    private volatile boolean _check_only_new = false;
+    private volatile boolean _check_only_new = true;
     private volatile boolean _pausing_transference = false;
     private volatile boolean _transferences_paused = false;
     private volatile boolean _provisioning_upload = false;
