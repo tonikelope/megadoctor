@@ -28,7 +28,7 @@ import javax.swing.text.DefaultCaret;
  */
 public final class Transference extends javax.swing.JPanel {
 
-    public static final int WAIT_TIMEOUT = 15;
+    public static final int WAIT_TIMEOUT = 30;
     public static final int FOLDER_SIZE_WAIT = 1000;
     public static final int SECURE_PAUSE_WAIT_FOLDER = 5000;
     public static final int SECURE_PAUSE_WAIT_FILE = 2000;
@@ -529,12 +529,12 @@ public final class Transference extends javax.swing.JPanel {
 
                             if (check_error) {
                                 status_icon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/warning_transference.png")));
-                                this.setToolTipText("Unable to verify that the transfer was completed correctly");
+                                status_icon.setToolTipText("Unable to verify that the transfer was completed correctly (TIMEOUT)");
                             }
 
                             if (warning_folder_size) {
                                 status_icon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/warning_transference.png")));
-                                this.setToolTipText("REMOTE FOLDER SIZE IS DIFFERENT FROM LOCAL SIZE");
+                                status_icon.setToolTipText("REMOTE FOLDER SIZE IS DIFFERENT FROM LOCAL SIZE");
                             }
 
                         });

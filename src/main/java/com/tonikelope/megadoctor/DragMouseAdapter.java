@@ -22,14 +22,14 @@ class DragMouseAdapter extends MouseAdapter {
     private static final Rectangle R2 = new Rectangle();
     private static volatile Rectangle prevRect;
     private final JWindow window = new JWindow();
+    private final int gestureMotionThreshold = DragSource.getDragThreshold();
+    private final Object working_notifier;
     private volatile Component draggingComonent;
     private volatile int index = -1;
     private volatile Component gap;
     private volatile Point startPt;
     private volatile Point dragOffset;
-    private final int gestureMotionThreshold = DragSource.getDragThreshold();
     private volatile boolean working = false;
-    private final Object working_notifier;
 
     public boolean isWorking() {
         return working;

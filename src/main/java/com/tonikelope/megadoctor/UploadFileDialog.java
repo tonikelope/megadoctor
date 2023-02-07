@@ -348,11 +348,15 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
             vamos_button.setEnabled(false);
             progress.setVisible(true);
 
+            File f = new File(this._lpath);
+
             _rpath = remote_path.getText().isBlank() ? "/" : remote_path.getText().trim();
 
-            if (auto_select_account.isSelected()) {
+            if (f.isDirectory() && !_rpath.endsWith("/")) {
+                _rpath += "/";
+            }
 
-                File f = new File(this._lpath);
+            if (auto_select_account.isSelected()) {
 
                 if (!f.isDirectory() || !_split_folder) {
                     vamos_button.setText("SEARCHING ACCOUNT...");
