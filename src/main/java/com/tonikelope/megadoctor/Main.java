@@ -52,7 +52,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.27";
+    public final static String VERSION = "1.28";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -1650,9 +1650,11 @@ public class Main extends javax.swing.JFrame {
         });
 
         check_only_new_checkbox.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
+        check_only_new_checkbox.setSelected(true);
         check_only_new_checkbox.setText("Check only new accounts");
         check_only_new_checkbox.setToolTipText("Check only new accounts");
         check_only_new_checkbox.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        check_only_new_checkbox.setDoubleBuffered(true);
         check_only_new_checkbox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 check_only_new_checkboxActionPerformed(evt);
