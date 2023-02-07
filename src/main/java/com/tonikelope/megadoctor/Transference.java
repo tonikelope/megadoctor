@@ -28,7 +28,7 @@ import javax.swing.text.DefaultCaret;
  */
 public final class Transference extends javax.swing.JPanel {
 
-    public static final int WAIT_TIMEOUT = 30;
+    public static final int WAIT_TIMEOUT = 15;
     public static final int FOLDER_SIZE_WAIT = 1000;
     public static final int SECURE_PAUSE_WAIT_FOLDER = 5000;
     public static final int SECURE_PAUSE_WAIT_FILE = 2000;
@@ -122,7 +122,7 @@ public final class Transference extends javax.swing.JPanel {
         if (!isDirectory()) {
             String transfer_data = Helpers.runProcess(new String[]{"mega-transfers", "--limit=1", "--output-cols=TAG", _action == 0 ? "--only-downloads" : "--only-uploads"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-            if (!transfer_data.trim().isEmpty()) {
+            if (!transfer_data.isBlank()) {
                 String[] transfer_data_lines = transfer_data.split("\n");
                 try {
                     _tag = Integer.parseInt(transfer_data_lines[transfer_data_lines.length - 1].trim());
@@ -150,7 +150,29 @@ public final class Transference extends javax.swing.JPanel {
         return (timeout == WAIT_TIMEOUT);
     }
 
+    private boolean waitFreeSpaceChange(long old_free_space) {
+
+        Helpers.runProcess(new String[]{"mega-reload"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+        int timeout = 0;
+
+        while (Helpers.getAccountFreeSpace(_email) == old_free_space && timeout < WAIT_TIMEOUT) {
+
+            try {
+                Thread.sleep(1000);
+                timeout++;
+            } catch (InterruptedException ex) {
+                Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+        return (timeout == WAIT_TIMEOUT);
+
+    }
+
     private boolean waitRemoteExists() {
+
+        Helpers.runProcess(new String[]{"mega-reload"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
         int timeout = 0;
 
@@ -168,7 +190,9 @@ public final class Transference extends javax.swing.JPanel {
     }
 
     private boolean waitCompletedTAG() {
-        if (_tag > 0) {
+        if (!isDirectory() && _tag > 0) {
+
+            Helpers.runProcess(new String[]{"mega-reload"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
             int tag = 0;
 
@@ -183,15 +207,13 @@ public final class Transference extends javax.swing.JPanel {
                     Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
                 }
 
-                String transfer_data = Helpers.runProcess(new String[]{"mega-transfers", "--show-completed", "--limit=1", "--output-cols=TAG", _action == 0 ? "--only-downloads" : "--only-uploads"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+                String[] transfer_data = Helpers.runProcess(new String[]{"mega-transfers", "--show-completed", "--only-completed", "--limit=1", "--output-cols=TAG", _action == 0 ? "--only-downloads" : "--only-uploads"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-                if (!transfer_data.trim().isEmpty()) {
-                    String[] transfer_data_lines = transfer_data.split("\n");
+                if (Integer.parseInt(transfer_data[2]) == 0 && !transfer_data[1].isBlank()) {
 
-                    if (transfer_data_lines.length >= 4) {
-                        tag = Integer.parseInt(transfer_data_lines[3].trim());
-                    }
+                    String[] transfer_data_lines = transfer_data[1].split("\n");
 
+                    tag = Integer.parseInt(transfer_data_lines[transfer_data_lines.length - 1].trim());
                 }
             }
 
@@ -267,7 +289,7 @@ public final class Transference extends javax.swing.JPanel {
             Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        while ((current = Helpers.runProcess(new String[]{"mega-transfers", "--limit=1000000", "--show-completed", "--output-cols=TAG,STATE"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]).contains("COMPLETING") || !current.equals(last) || (current.trim().isEmpty() && readTotalRunningTransferences() > 0)) {
+        while ((current = Helpers.runProcess(new String[]{"mega-transfers", "--limit=1000000", "--show-completed", "--output-cols=TAG,STATE"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1]).contains("COMPLETING") || !current.equals(last) || (current.isBlank() && readTotalRunningTransferences() > 0)) {
 
             last = current;
 
@@ -377,7 +399,7 @@ public final class Transference extends javax.swing.JPanel {
     private int readTotalRunningTransferences() {
         String transfer_data = Helpers.runProcess(new String[]{"mega-transfers", "--summary"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-        if (!transfer_data.trim().isEmpty()) {
+        if (!transfer_data.isBlank()) {
 
             String[] transfer_data_lines = transfer_data.split("\n");
 
@@ -460,6 +482,8 @@ public final class Transference extends javax.swing.JPanel {
 
                 }
 
+                long free_space = Helpers.getAccountFreeSpace(_email);
+
                 long start_timestamp = System.currentTimeMillis();
 
                 while (updateProgress()) {
@@ -487,25 +511,15 @@ public final class Transference extends javax.swing.JPanel {
                             folder_stats_scroll.setVisible(false);
                         });
 
-                        int verification_timeout = 0;
-
-                        while (!remoteFileExists(_rpath) && verification_timeout < WAIT_TIMEOUT) {
-                            try {
-                                Thread.sleep(1000);
-                                verification_timeout++;
-                            } catch (InterruptedException ex) {
-                                Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
-                            }
-                        }
-
                         boolean c_error = false;
 
-                        if (verification_timeout == WAIT_TIMEOUT && !isDirectory()) {
-                            if (!isDirectory()) {
-                                c_error = waitCompletedTAG();
-                            } else {
-                                c_error = true;
-                            }
+                        if (isDirectory()) {
+
+                            c_error = (waitRemoteExists() && waitFreeSpaceChange(free_space));
+
+                        } else {
+
+                            c_error = (waitRemoteExists() && waitCompletedTAG() && waitFreeSpaceChange(free_space));
                         }
 
                         final boolean check_error = c_error;
@@ -534,7 +548,7 @@ public final class Transference extends javax.swing.JPanel {
 
                             if (warning_folder_size) {
                                 status_icon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/warning_transference.png")));
-                                status_icon.setToolTipText("REMOTE FOLDER SIZE IS DIFFERENT FROM LOCAL SIZE");
+                                status_icon.setToolTipText("REMOTE FOLDER SIZE IS DIFFERENT FROM FOLDER LOCAL SIZE");
                             }
 
                         });
@@ -564,7 +578,7 @@ public final class Transference extends javax.swing.JPanel {
 
         String transfer_data = Helpers.runProcess(new String[]{"mega-transfers", "--limit=1"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-        return (!transfer_data.trim().isEmpty() && readTotalRunningTransferences() > 0);
+        return (!transfer_data.isBlank() && readTotalRunningTransferences() > 0);
     }
 
     private long calculateSpeed(long size, int old_prog, int new_prog, long old_timestamp, long new_timestamp) {
@@ -612,7 +626,7 @@ public final class Transference extends javax.swing.JPanel {
 
             String fstats = Helpers.runProcess(new String[]{"mega-transfers", "--limit=1000000", "--path-display-size=10000", "--output-cols=SOURCEPATH,PROGRESS,STATE"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-            if (!fstats.trim().isEmpty()) {
+            if (!fstats.isBlank()) {
                 fstats = fstats.replace(_lpath, ".");
 
                 Pattern pattern_header = Pattern.compile("SOURCEPATH +PROGRESS");

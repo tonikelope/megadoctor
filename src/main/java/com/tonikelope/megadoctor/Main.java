@@ -52,7 +52,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.24";
+    public final static String VERSION = "1.25";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -405,7 +405,7 @@ public class Main extends javax.swing.JFrame {
 
         String du = Helpers.runProcess(new String[]{"mega-du", "-h", "--use-pcre", "/.*", "--path-display-size=" + String.valueOf(Math.max(50, max_path_width + 1))}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-        if (!du.trim().isEmpty() && !ls.trim().isEmpty()) {
+        if (!du.isBlank() && !ls.isBlank()) {
 
             final String regex = "(.+) <H:[^>]+>";
 
