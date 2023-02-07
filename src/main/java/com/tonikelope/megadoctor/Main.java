@@ -52,7 +52,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.22";
+    public final static String VERSION = "1.23";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -900,7 +900,7 @@ public class Main extends javax.swing.JFrame {
 
                         Helpers.runProcess(new String[]{"mega-mkdir", "-p", folder}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-                        Helpers.runProcess(new String[]{"mega-cp", node, new_full_path}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+                        Helpers.runProcess(new String[]{"mega-mv", node, new_full_path}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
                         conta++;
 
