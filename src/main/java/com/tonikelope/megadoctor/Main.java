@@ -52,7 +52,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.23";
+    public final static String VERSION = "1.24";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -84,7 +84,7 @@ public class Main extends javax.swing.JFrame {
     private volatile boolean _check_only_new = false;
     private volatile boolean _pausing_transference = false;
     private volatile boolean _transferences_paused = false;
-    private volatile boolean _provisioning_upload;
+    private volatile boolean _provisioning_upload = false;
 
     public boolean isProvisioning_upload() {
         return _provisioning_upload;
@@ -403,7 +403,7 @@ public class Main extends javax.swing.JFrame {
             }
         }
 
-        String du = Helpers.runProcess(new String[]{"mega-du", "-h", "--use-pcre", "/.*", "--path-display-size=" + String.valueOf(max_path_width + 1)}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+        String du = Helpers.runProcess(new String[]{"mega-du", "-h", "--use-pcre", "/.*", "--path-display-size=" + String.valueOf(Math.max(50, max_path_width + 1))}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
         if (!du.trim().isEmpty() && !ls.trim().isEmpty()) {
 
@@ -502,9 +502,7 @@ public class Main extends javax.swing.JFrame {
 
                 login(email);
 
-                String[] account_space = Helpers.getAccountSpaceData(email);
-
-                if (Helpers.getNodeMapTotalSize(nodesToCopy) <= (Long.parseLong(account_space[2]) - Long.parseLong(account_space[1]))) {
+                if (Helpers.getNodeMapTotalSize(nodesToCopy) <= Helpers.getAccountFreeSpace(email)) {
 
                     ArrayList<String[]> exported_links = new ArrayList<>();
 
@@ -597,10 +595,12 @@ public class Main extends javax.swing.JFrame {
                         Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL SELECTED FOLDERS/FILES COPIED");
                     }
                 } else {
-                    Helpers.mostrarMensajeError(MAIN_WINDOW, "THERE IS NO ENOUGH FREE SPACE IN DESTINATION ACCOUNT");
+                    Helpers.mostrarMensajeError(MAIN_WINDOW, "THERE IS NO ENOUGH FREE SPACE IN\n<b>" + email + "</b>");
                 }
 
             }
+
+            _email_dialog = null;
 
         } else if (nodesToCopy.isEmpty()) {
             Helpers.mostrarMensajeError(MAIN_WINDOW, "NO FOLDERS/FILES SELECTED (you must select with your mouse text that contains some H:XXXXXXXX MEGA NODE)");
@@ -779,66 +779,72 @@ public class Main extends javax.swing.JFrame {
 
                 ArrayList<String> node_list = nodesToCopy.get(email);
 
-                Helpers.GUIRunAndWait(() -> {
-                    _move_dialog = new MoveNodeDialog(MAIN_WINDOW, true, null, 1);
+                if (Helpers.getNodeListTotalSize(node_list) <= Helpers.getAccountFreeSpace(email)) {
 
-                    _move_dialog.setLocationRelativeTo(MAIN_WINDOW);
+                    Helpers.GUIRunAndWait(() -> {
+                        _move_dialog = new MoveNodeDialog(MAIN_WINDOW, true, null, 1);
 
-                    _move_dialog.setVisible(true);
-                });
+                        _move_dialog.setLocationRelativeTo(MAIN_WINDOW);
 
-                int conta = 0;
-
-                for (String node : node_list) {
-
-                    String old_full_path = Helpers.getNodeFullPath(node);
-
-                    String old_n = old_full_path.replaceAll("^.*/([^/]*)$", "$1");
-
-                    String new_full_path = _move_dialog.getNew_name().getText().trim() + old_n;
-
-                    if (_move_dialog.isOk() && !old_full_path.equals(new_full_path) && !new_full_path.isBlank()) {
-
-                        String folder = new_full_path.replaceAll("^(.*/)[^/]*$", "$1");
-
-                        Helpers.runProcess(new String[]{"mega-mkdir", "-p", folder}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
-
-                        Helpers.runProcess(new String[]{"mega-cp", node, new_full_path}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
-
-                        conta++;
-
-                    } else if (!_move_dialog.isOk()) {
-                        cancel = true;
-                        break;
-                    }
-                }
-
-                if (conta > 0) {
-
-                    String stats = currentAccountStats();
-
-                    parseAccountNodes(email);
-
-                    Helpers.GUIRun(() -> {
-
-                        output_textarea.append("\n[" + email + "] (Refreshed after copying)\n\n" + stats + "\n\n");
-
+                        _move_dialog.setVisible(true);
                     });
 
-                }
+                    int conta = 0;
 
-                if (cancel) {
-                    Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "CANCELED (SOME FOLDERS/FILES WERE NOT COPIED)");
+                    for (String node : node_list) {
+
+                        String old_full_path = Helpers.getNodeFullPath(node);
+
+                        String old_n = old_full_path.replaceAll("^.*/([^/]*)$", "$1");
+
+                        String new_full_path = _move_dialog.getNew_name().getText().trim() + old_n;
+
+                        if (_move_dialog.isOk() && !old_full_path.equals(new_full_path) && !new_full_path.isBlank()) {
+
+                            String folder = new_full_path.replaceAll("^(.*/)[^/]*$", "$1");
+
+                            Helpers.runProcess(new String[]{"mega-mkdir", "-p", folder}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+                            Helpers.runProcess(new String[]{"mega-cp", node, new_full_path}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+                            conta++;
+
+                        } else if (!_move_dialog.isOk()) {
+                            cancel = true;
+                            break;
+                        }
+                    }
+
+                    if (conta > 0) {
+
+                        String stats = currentAccountStats();
+
+                        parseAccountNodes(email);
+
+                        Helpers.GUIRun(() -> {
+
+                            output_textarea.append("\n[" + email + "] (Refreshed after copying)\n\n" + stats + "\n\n");
+
+                        });
+
+                    }
+
+                } else {
+                    Helpers.mostrarMensajeError(MAIN_WINDOW, "THERE IS NO ENOUGH FREE SPACE IN\n<b>" + email + "</b>");
+                    cancel = true;
                     break;
                 }
-
             }
 
             logout(true);
 
-            if (_move_dialog.isOk()) {
+            if (!cancel) {
                 Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL FOLDERS/FILES COPIED");
+            } else {
+                Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "CANCELED (SOME FOLDERS/FILES WERE NOT COPIED)");
             }
+
+            _move_dialog = null;
 
         } else if (nodesToCopy.isEmpty()) {
             Helpers.mostrarMensajeError(MAIN_WINDOW, "NO FOLDERS/FILES SELECTED (you must select with your mouse text that contains some H:xxxxxxxx MEGA NODE)");
@@ -924,18 +930,17 @@ public class Main extends javax.swing.JFrame {
 
                 }
 
-                if (cancel) {
-                    Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "CANCELED (SOME FOLDERS/FILES WERE NOT MOVED)");
-                    break;
-                }
-
             }
 
             logout(true);
 
-            if (_move_dialog.isOk()) {
+            if (!cancel) {
                 Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL FOLDERS/FILES MOVED");
+            } else {
+                Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "CANCELED (SOME FOLDERS/FILES WERE NOT MOVED)");
             }
+
+            _move_dialog = null;
 
         } else if (nodesToMove.isEmpty()) {
             Helpers.mostrarMensajeError(MAIN_WINDOW, "NO FOLDERS/FILES SELECTED (you must select with your mouse text that contains some H:xxxxxxxx MEGA NODE)");
@@ -965,6 +970,8 @@ public class Main extends javax.swing.JFrame {
         HashMap<String, ArrayList<String>> nodesToRename = Helpers.extractNodeMapFromText(text);
 
         if (!nodesToRename.isEmpty()) {
+
+            boolean cancel = false;
 
             for (String email : nodesToRename.keySet()) {
 
@@ -998,6 +1005,7 @@ public class Main extends javax.swing.JFrame {
                         conta++;
 
                     } else if (!_move_dialog.isOk()) {
+                        cancel = true;
                         Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "CANCELED (SOME FOLDERS/FILES WERE NOT RENAMED)");
                         break;
                     }
@@ -1021,9 +1029,13 @@ public class Main extends javax.swing.JFrame {
 
             logout(true);
 
-            if (_move_dialog.isOk()) {
+            if (!cancel) {
                 Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL FOLDERS/FILES RENAMED");
+            } else {
+                Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "CANCELED (SOME FOLDERS/FILES WERE NOT RENAMED)");
             }
+
+            _move_dialog = null;
 
         } else if (nodesToRename.isEmpty()) {
             Helpers.mostrarMensajeError(MAIN_WINDOW, "NO FOLDERS/FILES SELECTED (you must select with your mouse text that contains some H:xxxxxxxx MEGA NODE)");
@@ -1394,13 +1406,29 @@ public class Main extends javax.swing.JFrame {
 
         String ls = Helpers.runProcess(new String[]{"mega-ls", "-lr", "--show-handles"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-        final String regex = "([0-9]+|-) +[^ ]+ +[^ ]+ +(H:[^ ]+) (.+)";
+        final String regex = "(H:[^ ]+) (.+)";
         final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
         final Matcher matcher = pattern.matcher(ls);
 
         while (matcher.find()) {
-            MEGA_NODES.put(matcher.group(2), new Object[]{Long.parseLong(matcher.group(1).equals("-") ? "0" : matcher.group(1)), email, matcher.group(3)});
+            MEGA_NODES.put(matcher.group(1), new Object[]{getNodeSize(matcher.group(1)), email, matcher.group(2)});
         }
+    }
+
+    private long getNodeSize(String node) {
+
+        String[] du = Helpers.runProcess(new String[]{"mega-du", node}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+        if (Integer.parseInt(du[2]) == 0) {
+
+            String[] lines = du[1].split("\n");
+
+            String[] size = lines[lines.length - 1].split(":");
+
+            return Long.parseLong(size[1].trim());
+        }
+
+        return -1;
     }
 
     /**

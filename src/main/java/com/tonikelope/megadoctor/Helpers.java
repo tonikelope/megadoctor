@@ -318,6 +318,17 @@ public class Helpers {
         return total;
     }
 
+    public static long getNodeListTotalSize(ArrayList<String> node_list) {
+
+        long total = 0L;
+
+        for (String node : node_list) {
+            total += (long) ((Object[]) Main.MEGA_NODES.get(node))[0];
+        }
+
+        return total;
+    }
+
     public static void mostrarMensajeInformativo(JFrame frame, String m) {
 
         final String msg = m.replace("\n", "<br>");
@@ -788,6 +799,23 @@ public class Helpers {
                 }
             };
 
+            Action forceRefreshFastAccountAction = new AbstractAction("REFRESH (FAST) SELECTED ACCOUNT") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                        Helpers.threadRun(() -> {
+
+                            String email = Helpers.extractFirstEmailFromtext(txtArea.getSelectedText());
+
+                            if (email != null) {
+
+                                Main.MAIN_WINDOW.forceRefreshAccount(email, "Forced FAST REFRESH", true, false);
+                            }
+                        });
+                    }
+                }
+            };
+
             Action truncateAccountAction = new AbstractAction("TRUNCATE SELECTED ACCOUNT") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
@@ -895,6 +923,12 @@ public class Helpers {
             refreshAccount.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/refresh.png")));
 
             popup.add(refreshAccount);
+
+            JMenuItem refreshFastAccount = new JMenuItem(forceRefreshFastAccountAction);
+
+            refreshFastAccount.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/refresh.png")));
+
+            popup.add(refreshFastAccount);
 
             if (Main.MAIN_WINDOW != null && Main.MAIN_WINDOW.getLast_email_force_refresh() != null) {
                 Action forceRefreshLastAccountAction = new AbstractAction("REFRESH (FAST) LAST ACCOUNT -> " + Main.MAIN_WINDOW.getLast_email_force_refresh()) {
