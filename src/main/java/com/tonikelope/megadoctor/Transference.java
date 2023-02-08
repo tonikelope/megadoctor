@@ -19,6 +19,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 import javax.swing.text.DefaultCaret;
 
@@ -32,7 +33,6 @@ public final class Transference extends javax.swing.JPanel {
     public static final int FOLDER_SIZE_WAIT = 1000;
     public static final int SECURE_PAUSE_WAIT_FOLDER = 5000;
     public static final int SECURE_PAUSE_WAIT_FILE = 2000;
-
     private volatile int _tag = -1;
     private volatile int _action;
     private volatile int _prog = 0;
@@ -256,11 +256,11 @@ public final class Transference extends javax.swing.JPanel {
 
             _running = false;
             Helpers.GUIRunAndWait(() -> {
-                for (Component c : Main.MAIN_WINDOW.getTransferences_map().keySet()) {
+                for (Component c : Main.TRANSFERENCES_MAP.keySet()) {
 
-                    if (Main.MAIN_WINDOW.getTransferences_map().get(c) == this) {
-                        Main.MAIN_WINDOW.getTransferences_map().remove(c);
-                        Main.MAIN_WINDOW.getTransferences().remove(c);
+                    if (Main.TRANSFERENCES_MAP.get(c) == this) {
+                        Main.TRANSFERENCES_MAP.remove(c);
+                        Main.TRANSFERENCES_MAP.remove(c);
                     }
                 }
 
@@ -497,6 +497,11 @@ public final class Transference extends javax.swing.JPanel {
                 long finish_timestamp = System.currentTimeMillis();
 
                 synchronized (TRANSFERENCES_LOCK) {
+
+                    if (Main.MAIN_WINDOW.isProvisioning_upload()) {
+                        Main.FREE_SPACE_CACHE.put(_email, Helpers.getAccountFreeSpace(_email));
+                    }
+
                     if (!_canceled) {
 
                         _finishing = true;
@@ -549,6 +554,24 @@ public final class Transference extends javax.swing.JPanel {
                             if (warning_folder_size) {
                                 status_icon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/warning_transference.png")));
                                 status_icon.setToolTipText("REMOTE FOLDER SIZE IS DIFFERENT FROM FOLDER LOCAL SIZE");
+                            }
+
+                            boolean running = false;
+
+                            for (Component c : Main.TRANSFERENCES_MAP.keySet()) {
+
+                                Transference t = Main.TRANSFERENCES_MAP.get(c);
+
+                                if (t != this && !t.isFinished() && !t.isCanceled()) {
+                                    running = true;
+                                    break;
+                                }
+                            }
+
+                            if (!running) {
+                                Notification notification = new Notification(new javax.swing.JFrame(), false, "ALL TRANSFERS FINISHED", (Main.MAIN_WINDOW.getExtendedState() & JFrame.ICONIFIED) == 0 ? 3000 : 0, "finish.wav");
+                                Helpers.setWindowLowRightCorner(notification);
+                                notification.setVisible(true);
                             }
 
                         });

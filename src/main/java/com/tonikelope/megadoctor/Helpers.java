@@ -18,9 +18,13 @@ import java.awt.Container;
 import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -44,9 +48,11 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.LockSupport;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -56,6 +62,9 @@ import javax.sound.midi.MidiSystem;
 import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.Sequence;
 import javax.sound.midi.Sequencer;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.FloatControl;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JDialog;
@@ -75,14 +84,78 @@ import javax.swing.undo.UndoManager;
  */
 public class Helpers {
 
-    public static HashMap<String, Long> getReservedTransfersSpace() {
-        synchronized (Main.TRANSFERENCES_LOCK) {
-            HashMap<Component, Transference> transferences_map = Main.MAIN_WINDOW.getTransferences_map();
+    public static boolean playWavResource(String sound) {
 
-            HashMap<String, Long> reserved = new HashMap<>();
+        try (final BufferedInputStream bis = new BufferedInputStream(Helpers.class.getResourceAsStream("/sounds/" + sound)); final Clip clip = AudioSystem.getClip()) {
+
+            clip.open(AudioSystem.getAudioInputStream(bis));
+
+            FloatControl gainControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
+
+            float db = 20f * (float) Math.log10(1.0f);
+
+            gainControl.setValue(db >= gainControl.getMinimum() ? db : gainControl.getMinimum());
+
+            clip.start();
+
+            clip.loop(Clip.LOOP_CONTINUOUSLY);
+
+            Helpers.parkThreadMicros(clip.getMicrosecondLength());
+
+            clip.stop();
+
+            return true;
+
+        } catch (Exception ex) {
+            Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, ex.getMessage());
+            Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, "ERROR -> {0}", sound);
+        }
+
+        return false;
+    }
+
+    public static void parkThreadMillis(long millis) {
+
+        parkThreadNanos(millis * 1000000L);
+
+    }
+
+    public static void parkThreadMicros(long micros) {
+
+        parkThreadNanos(micros * 1000L);
+
+    }
+
+    public static void parkThreadNanos(long nanos) {
+
+        if (nanos > 0L) {
+            long end = System.nanoTime() + nanos;
+
+            while (System.nanoTime() < end) {
+                LockSupport.parkNanos(end - System.nanoTime());
+            }
+        }
+    }
+
+    public static void setWindowLowRightCorner(Window w) {
+        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        GraphicsDevice defaultScreen = ge.getDefaultScreenDevice();
+        Rectangle rect = defaultScreen.getDefaultConfiguration().getBounds();
+        int x = (int) rect.getMaxX() - w.getWidth();
+        int y = (int) rect.getMaxY() - w.getHeight();
+        w.setLocation(x, y);
+    }
+
+    public static ConcurrentHashMap<String, Long> getReservedTransfersSpace() {
+
+        synchronized (Main.TRANSFERENCES_LOCK) {
+
+            ConcurrentHashMap<Component, Transference> transferences_map = Main.TRANSFERENCES_MAP;
+
+            ConcurrentHashMap<String, Long> reserved = new ConcurrentHashMap<>();
 
             for (Transference t : transferences_map.values()) {
-                if (!t.isDirectory() && !t.isFinished() && !t.isCanceled()) {
+                if (!t.isDirectory() && !t.isFinishing() && !t.isFinished() && !t.isCanceled()) {
 
                     if (reserved.containsKey(t.getEmail())) {
                         long s = reserved.get(t.getEmail());
@@ -92,13 +165,16 @@ public class Helpers {
                     }
                 }
             }
+
             return reserved;
         }
 
     }
 
-    public static String findFirstAccountWithSpace(long required, HashMap<String, Long> reserved, HashMap<String, Long> free_space_cache) {
+    public static String findFirstAccountWithSpace(long required) {
         String bingo = null;
+
+        ConcurrentHashMap<String, Long> reserved = getReservedTransfersSpace();
 
         ArrayList<String> emails = new ArrayList<>();
 
@@ -110,22 +186,18 @@ public class Helpers {
 
         for (String email : emails) {
 
-            long r = 0;
+            Long r = reserved.get(email);
 
-            if (reserved != null && reserved.containsKey(email)) {
-                r = reserved.get(email);
-            }
+            Long s = Main.FREE_SPACE_CACHE.get(email);
 
-            long s;
+            if (s == null) {
 
-            if (free_space_cache != null) {
-                s = free_space_cache.containsKey(email) ? free_space_cache.get(email) : Helpers.getAccountFreeSpace(email);
-                free_space_cache.putIfAbsent(email, s);
-            } else {
                 s = Helpers.getAccountFreeSpace(email);
+
+                Main.FREE_SPACE_CACHE.put(email, s);
             }
 
-            if (s - r >= required) {
+            if (s - (r != null ? r : 0) >= required) {
                 bingo = email;
                 break;
             }
@@ -239,10 +311,16 @@ public class Helpers {
         return null;
     }
 
-    public static long getAccountFreeSpace(String email) {
-        String[] space_used = getAccountSpaceData(email);
+    public static long getAccountUsedSpace(String email) {
+        String[] space_stats = getAccountSpaceData(email);
 
-        return Long.parseLong(space_used[2]) - Long.parseLong(space_used[1]);
+        return Long.parseLong(space_stats[1]);
+    }
+
+    public static long getAccountFreeSpace(String email) {
+        String[] space_stats = getAccountSpaceData(email);
+
+        return Long.parseLong(space_stats[2]) - Long.parseLong(space_stats[1]);
     }
 
     public static String getFechaHoraActual() {

@@ -15,7 +15,7 @@ import java.awt.Dimension;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.swing.JFileChooser;
 
@@ -354,18 +354,27 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
             if (auto_select_account.isSelected()) {
 
-                if (f.isDirectory() && _split_folder && !_rpath.endsWith("/")) {
-                    _rpath += "/";
+                if (f.isDirectory() && _split_folder) {
+
+                    if (!_rpath.endsWith("/")) {
+                        _rpath += "/";
+                    }
+
+                    if (_rpath.equals("/")) {
+                        _rpath += f.getName() + "/";
+                    }
                 }
 
                 if (!f.isDirectory() || !_split_folder) {
-                    vamos_button.setText("SEARCHING ACCOUNT...");
+                    vamos_button.setText("WORKING...");
 
                     Helpers.threadRun(() -> {
 
-                        HashMap<String, Long> free_space_cache = new HashMap<>();
+                        Main.FREE_SPACE_CACHE.clear();
 
-                        String account = Helpers.findFirstAccountWithSpace(_local_size, Helpers.getReservedTransfersSpace(), free_space_cache);
+                        String account = Helpers.findFirstAccountWithSpace(_local_size);
+
+                        Main.FREE_SPACE_CACHE.clear();
 
                         if (account == null) {
                             Helpers.mostrarMensajeError(null, "THERE IS NO ACCOUNT WITH ENOUGH FREE SPACE");
@@ -548,7 +557,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
                 String stats = Main.MAIN_WINDOW.currentAccountStats();
 
-                HashMap<String, Long> reserved = Helpers.getReservedTransfersSpace();
+                ConcurrentHashMap<String, Long> reserved = Helpers.getReservedTransfersSpace();
 
                 _free_space = Helpers.getAccountFreeSpace(email) - (reserved.containsKey(email) ? reserved.get(email) : 0);
 

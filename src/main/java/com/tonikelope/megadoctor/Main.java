@@ -14,6 +14,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -34,12 +35,14 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
@@ -52,7 +55,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.29";
+    public final static String VERSION = "1.30";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -60,14 +63,17 @@ public class Main extends javax.swing.JFrame {
     public final static String SESSIONS_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_sessions";
     public final static String ACCOUNTS_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_accounts";
     public final static String TRANSFERS_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_transfers";
-    public volatile static String MEGA_CMD_VERSION = null;
+    public final static Object TRANSFERENCES_LOCK = new Object();
+    public final static ConcurrentHashMap<String, Object[]> MEGA_NODES = new ConcurrentHashMap<>();
+    public final static ConcurrentHashMap<String, Long> FREE_SPACE_CACHE = new ConcurrentHashMap<>();
+    public final static ConcurrentHashMap<Component, Transference> TRANSFERENCES_MAP = new ConcurrentHashMap<>();
+
     public volatile static Main MAIN_WINDOW;
-    public static final Object TRANSFERENCES_LOCK = new Object();
-    public static LinkedHashMap<String, String> MEGA_ACCOUNTS = new LinkedHashMap<>();
+    public volatile static String MEGA_CMD_VERSION = null;
+    public volatile static LinkedHashMap<String, String> MEGA_ACCOUNTS = new LinkedHashMap<>();
     public volatile static HashMap<String, String> MEGA_SESSIONS = new HashMap<>();
-    public final static HashMap<String, Object[]> MEGA_NODES = new HashMap<>();
-    private final static ArrayList<String[]> MEGA_ACCOUNTS_SPACE = new ArrayList<>();
-    private final static ArrayList<String> MEGA_ACCOUNTS_LOGIN_ERROR = new ArrayList<>();
+
+    private final DragMouseAdapter _transfer_drag_drop_adapter = new DragMouseAdapter(TRANSFERENCES_LOCK);
     private volatile boolean _running_main_action = false;
     private volatile boolean _running_global_check = false;
     private volatile boolean _aborting_global_check = false;
@@ -79,12 +85,12 @@ public class Main extends javax.swing.JFrame {
     private volatile Transference _current_transference = null;
     private volatile String _last_email_force_refresh = null;
     private volatile JPanel transferences = null;
-    private final HashMap<Component, Transference> transferences_map = new HashMap<>();
-    private final DragMouseAdapter transfers_dragdrop_adapter = new DragMouseAdapter(TRANSFERENCES_LOCK);
     private volatile boolean _check_only_new = true;
     private volatile boolean _pausing_transference = false;
     private volatile boolean _transferences_paused = false;
     private volatile boolean _provisioning_upload = false;
+    private volatile Dimension _pre_window_size = null;
+    private volatile Point _pre_window_position = null;
 
     public boolean isProvisioning_upload() {
         return _provisioning_upload;
@@ -100,10 +106,6 @@ public class Main extends javax.swing.JFrame {
 
     public void setTransferences_paused(boolean _transferences_paused) {
         this._transferences_paused = _transferences_paused;
-    }
-
-    public HashMap<Component, Transference> getTransferences_map() {
-        return transferences_map;
     }
 
     public JButton getUpload_button() {
@@ -183,8 +185,8 @@ public class Main extends javax.swing.JFrame {
         Helpers.JTextFieldRegularPopupMenu.addTo(output_textarea);
         transferences = new JPanel();
         transferences.setLayout(new BoxLayout(transferences, BoxLayout.Y_AXIS));
-        transferences.addMouseListener((MouseListener) transfers_dragdrop_adapter);
-        transferences.addMouseMotionListener((MouseMotionListener) transfers_dragdrop_adapter);
+        transferences.addMouseListener((MouseListener) _transfer_drag_drop_adapter);
+        transferences.addMouseMotionListener((MouseMotionListener) _transfer_drag_drop_adapter);
         transferences_panel.add(transferences);
         transferences_control_panel.setVisible(false);
         progressbar.setMinimum(0);
@@ -235,7 +237,7 @@ public class Main extends javax.swing.JFrame {
                 synchronized (TRANSFERENCES_LOCK) {
                     Helpers.GUIRunAndWait(() -> {
 
-                        if (!transfers_dragdrop_adapter.isWorking()) {
+                        if (!_transfer_drag_drop_adapter.isWorking()) {
 
                             if (transferences.getComponentCount() > 0) {
 
@@ -247,7 +249,7 @@ public class Main extends javax.swing.JFrame {
 
                                 for (Component tr : transferences.getComponents()) {
 
-                                    Transference t = transferences_map.get(tr);
+                                    Transference t = TRANSFERENCES_MAP.get(tr);
 
                                     if (t.isRunning() && !t.isCanceled()) {
                                         _transferences_running = true;
@@ -258,7 +260,7 @@ public class Main extends javax.swing.JFrame {
 
                                 if (!isTransferences_running()) {
                                     for (Component tr : transferences.getComponents()) {
-                                        Transference t = transferences_map.get(tr);
+                                        Transference t = TRANSFERENCES_MAP.get(tr);
                                         if (!t.isRunning() && !t.isFinished() && !t.isCanceled()) {
                                             _transferences_running = true;
                                             _current_transference = t;
@@ -670,7 +672,7 @@ public class Main extends javax.swing.JFrame {
         ArrayList<Object[]> trans = new ArrayList<>();
 
         Helpers.GUIRunAndWait(() -> {
-            if (transferences.getComponentCount() > 0) {
+            if (transferences.getComponentCount() > 0 && isTransferences_running()) {
 
                 trans.add(new Object[]{_current_transference.getEmail(), _current_transference.getLpath(), _current_transference.getRpath(), _current_transference.getAction()}
                 );
@@ -726,7 +728,7 @@ public class Main extends javax.swing.JFrame {
                                 for (Object[] o : trans) {
                                     if (MEGA_SESSIONS.containsKey((String) o[0])) {
                                         Transference t = new Transference((String) o[0], (String) o[1], (String) o[2], (int) o[3]);
-                                        transferences_map.put(transferences.add(t), t);
+                                        TRANSFERENCES_MAP.put(transferences.add(t), t);
                                         valid_trans.add(t);
                                     }
                                 }
@@ -735,7 +737,7 @@ public class Main extends javax.swing.JFrame {
                                 tabbed_panel.setSelectedIndex(1);
                                 vamos_button.setEnabled(false);
                                 cuentas_textarea.setEnabled(false);
-                                transferences_control_panel.setVisible(!transferences_map.isEmpty());
+                                transferences_control_panel.setVisible(!TRANSFERENCES_MAP.isEmpty());
 
                             } catch (Exception ex) {
                                 Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
@@ -1169,7 +1171,7 @@ public class Main extends javax.swing.JFrame {
 
         });
 
-        if (MEGA_ACCOUNTS.containsKey(email) && Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "CAUTION!! ALL CONTENT INSIDE <b>" + email + "</b> WILL BE <b>PERMANENTLY</b> DELETED.<br><br>ARE YOU SURE?") == 0 && Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "Sorry for asking you again... ARE YOU SURE?") == 0) {
+        if (MEGA_ACCOUNTS.containsKey(email) && Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "<font color='red'><b>CAUTION!!</b></font> ALL CONTENT (<b>" + Helpers.formatBytes(Helpers.getAccountUsedSpace(email)) + "</b>) INSIDE <b>" + email + "</b> WILL BE <font color='red'><b>PERMANENTLY</b> DELETED.</b></font><br><br>ARE YOU SURE?") == 0 && (Helpers.getAccountUsedSpace(email) == 0 || Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "Sorry for asking you again... ARE YOU SURE?") == 0)) {
 
             login(email);
 
@@ -1473,6 +1475,12 @@ public class Main extends javax.swing.JFrame {
             public void windowClosing(java.awt.event.WindowEvent evt) {
                 formWindowClosing(evt);
             }
+            public void windowDeiconified(java.awt.event.WindowEvent evt) {
+                formWindowDeiconified(evt);
+            }
+            public void windowIconified(java.awt.event.WindowEvent evt) {
+                formWindowIconified(evt);
+            }
         });
 
         logo_label.setBackground(new java.awt.Color(255, 255, 255));
@@ -1773,9 +1781,9 @@ public class Main extends javax.swing.JFrame {
 
                     LinkedHashMap<String, String> mega_accounts = new LinkedHashMap<>();
 
-                    MEGA_ACCOUNTS_SPACE.clear();
+                    ArrayList<String[]> accounts_space_info = new ArrayList<>();
 
-                    MEGA_ACCOUNTS_LOGIN_ERROR.clear();
+                    ArrayList<String> login_error_accounts = new ArrayList<>();
 
                     while (matcher.find()) {
 
@@ -1812,7 +1820,7 @@ public class Main extends javax.swing.JFrame {
                             boolean login_ok = login(email);
 
                             if (!login_ok) {
-                                MEGA_ACCOUNTS_LOGIN_ERROR.add(email + "#" + mega_accounts.get(email));
+                                login_error_accounts.add(email + "#" + mega_accounts.get(email));
                                 Helpers.GUIRun(() -> {
                                     output_textarea.append("\n[" + email + "] LOGIN ERROR\n\n");
                                 });
@@ -1831,7 +1839,7 @@ public class Main extends javax.swing.JFrame {
 
                                 });
 
-                                MEGA_ACCOUNTS_SPACE.add(Helpers.getAccountSpaceData(email));
+                                accounts_space_info.add(Helpers.getAccountSpaceData(email));
 
                                 parseAccountNodes(email);
                             }
@@ -1853,7 +1861,7 @@ public class Main extends javax.swing.JFrame {
 
                         logout(true);
 
-                        Collections.sort(MEGA_ACCOUNTS_SPACE, new Comparator<String[]>() {
+                        Collections.sort(accounts_space_info, new Comparator<String[]>() {
                             @Override
                             public int compare(String[] o1, String[] o2) {
 
@@ -1867,7 +1875,7 @@ public class Main extends javax.swing.JFrame {
                             output_textarea.append("--------------------------------------\n\n");
                             long total_space = 0;
                             long total_space_used = 0;
-                            for (String[] account : MEGA_ACCOUNTS_SPACE) {
+                            for (String[] account : accounts_space_info) {
                                 total_space_used += Long.parseLong(account[1]);
                                 total_space += Long.parseLong(account[2]);
                                 output_textarea.append(account[0] + " [" + Helpers.formatBytes(Long.parseLong(account[2]) - Long.parseLong(account[1])) + " FREE] (of " + Helpers.formatBytes(Long.parseLong(account[2])) + ")\n\n");
@@ -1875,14 +1883,18 @@ public class Main extends javax.swing.JFrame {
 
                             output_textarea.append("TOTAL FREE SPACE: " + Helpers.formatBytes(total_space - total_space_used) + " (of " + Helpers.formatBytes(total_space) + ")\n\n");
 
-                            if (!MEGA_ACCOUNTS_LOGIN_ERROR.isEmpty()) {
-                                output_textarea.append("(WARNING) LOGIN ERRORS: " + String.valueOf(MEGA_ACCOUNTS_LOGIN_ERROR.size()) + "\n");
-                                for (String errors : MEGA_ACCOUNTS_LOGIN_ERROR) {
+                            if (!login_error_accounts.isEmpty()) {
+                                output_textarea.append("(WARNING) LOGIN ERRORS: " + String.valueOf(login_error_accounts.size()) + "\n");
+                                for (String errors : login_error_accounts) {
                                     output_textarea.append("    ERROR: " + errors + "\n");
                                 }
                             }
 
                             output_textarea.append("\nCHECKING END -> " + Helpers.getFechaHoraActual() + "\n");
+
+                            Notification notification = new Notification(new javax.swing.JFrame(), false, "ALL ACCOUNTS CHECKED", (Main.MAIN_WINDOW.getExtendedState() & JFrame.ICONIFIED) == 0 ? 3000 : 0, "finish.wav");
+                            Helpers.setWindowLowRightCorner(notification);
+                            notification.setVisible(true);
 
                         });
 
@@ -2098,7 +2110,7 @@ public class Main extends javax.swing.JFrame {
                                         Helpers.GUIRunAndWait(() -> {
 
                                             Transference trans = new Transference(dialog.getEmail(), dialog.getLocal_path(), dialog.getRemote_path(), 1);
-                                            transferences_map.put(transferences.add(trans), trans);
+                                            TRANSFERENCES_MAP.put(transferences.add(trans), trans);
                                             transferences.revalidate();
                                             transferences.repaint();
 
@@ -2108,10 +2120,6 @@ public class Main extends javax.swing.JFrame {
                                         File[] directoryListing = f.listFiles();
 
                                         if (directoryListing != null) {
-
-                                            HashMap<String, Long> reserved = Helpers.getReservedTransfersSpace();
-
-                                            HashMap<String, Long> free_space_cache = new HashMap<>();
 
                                             ArrayList<Object[]> hijos = new ArrayList<>();
 
@@ -2131,25 +2139,20 @@ public class Main extends javax.swing.JFrame {
                                                 }
                                             });
 
+                                            Main.FREE_SPACE_CACHE.clear();
+
                                             for (Object[] h : hijos) {
 
                                                 long size = (long) h[1];
 
-                                                String email = Helpers.findFirstAccountWithSpace(size, reserved, free_space_cache);
+                                                String email = Helpers.findFirstAccountWithSpace(size);
 
                                                 if (email != null) {
-
-                                                    if (reserved.containsKey(email)) {
-                                                        long s = reserved.get(email);
-                                                        reserved.put(email, s + size);
-                                                    } else {
-                                                        reserved.put(email, size);
-                                                    }
 
                                                     Helpers.GUIRunAndWait(() -> {
 
                                                         Transference trans = new Transference(email, (String) h[0], dialog.getRemote_path(), 1);
-                                                        transferences_map.put(transferences.add(trans), trans);
+                                                        TRANSFERENCES_MAP.put(transferences.add(trans), trans);
                                                         transferences.revalidate();
                                                         transferences.repaint();
 
@@ -2160,6 +2163,8 @@ public class Main extends javax.swing.JFrame {
                                                 }
 
                                             }
+
+                                            Main.FREE_SPACE_CACHE.clear();
 
                                         } else {
                                             Helpers.mostrarMensajeError(null, "EMPTY FOLDER");
@@ -2210,10 +2215,10 @@ public class Main extends javax.swing.JFrame {
 
                         for (Component c : transferences.getComponents()) {
 
-                            Transference t = transferences_map.get(c);
+                            Transference t = TRANSFERENCES_MAP.get(c);
 
                             if (t.isFinished()) {
-                                transferences_map.remove(c);
+                                TRANSFERENCES_MAP.remove(c);
                                 transferences.remove(c);
                             }
                         }
@@ -2252,7 +2257,7 @@ public class Main extends javax.swing.JFrame {
                                         transferences_control_panel.setVisible(false);
                                         progressbar.setIndeterminate(true);
                                         getUpload_button().setEnabled(false);
-                                        transferences_map.clear();
+                                        TRANSFERENCES_MAP.clear();
                                         transferences.removeAll();
                                         transferences.revalidate();
                                         transferences.repaint();
@@ -2359,6 +2364,18 @@ public class Main extends javax.swing.JFrame {
         // TODO add your handling code here:
         this._check_only_new = check_only_new_checkbox.isSelected();
     }//GEN-LAST:event_check_only_new_checkboxActionPerformed
+
+    private void formWindowIconified(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowIconified
+        // TODO add your handling code here:
+        _pre_window_size = getSize();
+        _pre_window_position = getLocation();
+    }//GEN-LAST:event_formWindowIconified
+
+    private void formWindowDeiconified(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowDeiconified
+        // TODO add your handling code here:
+        setSize(_pre_window_size);
+        setLocation(_pre_window_position);
+    }//GEN-LAST:event_formWindowDeiconified
 
     /**
      * @param args the command line arguments
