@@ -56,7 +56,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.34";
+    public final static String VERSION = "1.35";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -565,7 +565,7 @@ public class Main extends javax.swing.JFrame {
                         Helpers.runProcess(new String[]{"mega-import", s[1], folder}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
                     }
 
-                    forceRefreshAccount(email, "Refreshed after deletion", false, false);
+                    forceRefreshAccount(email, "Refreshed after insertion", false, false);
 
                     if (move) {
 
@@ -825,7 +825,7 @@ public class Main extends javax.swing.JFrame {
                 if (Helpers.getNodeListTotalSize(node_list) <= Helpers.getAccountFreeSpace(email)) {
 
                     Helpers.GUIRunAndWait(() -> {
-                        _move_dialog = new MoveNodeDialog(MAIN_WINDOW, true, null, 1);
+                        _move_dialog = new MoveNodeDialog(MAIN_WINDOW, true, null, 1, email);
 
                         _move_dialog.setLocationRelativeTo(MAIN_WINDOW);
 
@@ -918,7 +918,7 @@ public class Main extends javax.swing.JFrame {
                 ArrayList<String> node_list = nodesToMove.get(email);
 
                 Helpers.GUIRunAndWait(() -> {
-                    _move_dialog = new MoveNodeDialog(MAIN_WINDOW, true, null, 2);
+                    _move_dialog = new MoveNodeDialog(MAIN_WINDOW, true, null, 2, email);
 
                     _move_dialog.setLocationRelativeTo(MAIN_WINDOW);
 
@@ -1025,7 +1025,7 @@ public class Main extends javax.swing.JFrame {
                     String old_path = old_full_path.replaceAll("^(.*/)[^/]*$", "$1");
 
                     Helpers.GUIRunAndWait(() -> {
-                        _move_dialog = new MoveNodeDialog(MAIN_WINDOW, true, old_full_path, 0);
+                        _move_dialog = new MoveNodeDialog(MAIN_WINDOW, true, old_full_path, 0, email);
 
                         _move_dialog.setLocationRelativeTo(MAIN_WINDOW);
 
@@ -1442,15 +1442,6 @@ public class Main extends javax.swing.JFrame {
             final Matcher matcher = pattern.matcher(ls);
 
             while (matcher.find()) {
-                if (MEGA_NODES.containsKey(matcher.group(1))) {
-
-                    String e = (String) MEGA_NODES.get(matcher.group(1))[1];
-
-                    if (!email.equals(e)) {
-                        Helpers.mostrarMensajeError(Main.MAIN_WINDOW, "WARNING!! NODE COLLISION " + matcher.group(1) + " PRESENT IN " + email + " AND " + e);
-                    }
-
-                }
 
                 MEGA_NODES.put(matcher.group(1), new Object[]{getNodeSize(matcher.group(1)), email, matcher.group(2)});
 

@@ -32,7 +32,7 @@ public class MoveNodeDialog extends javax.swing.JDialog {
     /**
      * Creates new form RenameNodeDialog
      */
-    public MoveNodeDialog(java.awt.Frame parent, boolean modal, String old_fpath, int mode) {
+    public MoveNodeDialog(java.awt.Frame parent, boolean modal, String old_fpath, int mode, String email) {
         super(parent, modal);
         initComponents();
 
@@ -40,7 +40,7 @@ public class MoveNodeDialog extends javax.swing.JDialog {
 
         Helpers.JTextFieldRegularPopupMenu.addTo(new_name);
 
-        file_tree.setText(Main.MAIN_WINDOW.getAccountStatistics(Helpers.megaWhoami()));
+        file_tree.setText(Main.MAIN_WINDOW.getAccountStatistics(email));
 
         if (mode == 2) {
             setTitle("MOVE TO DESTINATION");
