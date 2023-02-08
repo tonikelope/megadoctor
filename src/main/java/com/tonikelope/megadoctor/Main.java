@@ -56,7 +56,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.32";
+    public final static String VERSION = "1.33";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -205,7 +205,7 @@ public class Main extends javax.swing.JFrame {
         progressbar.setMinimum(0);
         getUpload_button().setEnabled(false);
         transf_scroll.getVerticalScrollBar().setUnitIncrement(20);
-        setTitle("MegaDoctor " + VERSION);
+        setTitle("MegaDoctor " + VERSION + " - MEGAcmd's best friend");
         status_label.setText("Checking if MEGACMD is present...");
         pack();
         setEnabled(false);
@@ -329,7 +329,7 @@ public class Main extends javax.swing.JFrame {
 
     public boolean login(String email) {
 
-        if (Helpers.megaWhoami().toLowerCase().equals(email.toLowerCase())) {
+        if (Helpers.megaWhoami().equals(email.toLowerCase())) {
             return true;
         }
 
@@ -341,7 +341,7 @@ public class Main extends javax.swing.JFrame {
 
         if (session != null) {
 
-            Helpers.GUIRunAndWait(() -> {
+            Helpers.GUIRun(() -> {
                 status_label.setForeground(new Color(0, 153, 0));
             });
 
@@ -349,14 +349,14 @@ public class Main extends javax.swing.JFrame {
 
             if (Integer.parseInt(login_session_output[2]) != 0) {
 
-                Helpers.GUIRunAndWait(() -> {
+                Helpers.GUIRun(() -> {
                     status_label.setForeground(Color.WHITE);
                 });
 
                 String[] login = Helpers.runProcess(new String[]{"mega-login", email, Helpers.escapeMEGAPassword(password)}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
                 if (Integer.parseInt(login[2]) != 0) {
-                    Helpers.GUIRunAndWait(() -> {
+                    Helpers.GUIRun(() -> {
                         status_label.setForeground(Color.BLACK);
                     });
                     return false;
@@ -365,14 +365,14 @@ public class Main extends javax.swing.JFrame {
 
         } else {
 
-            Helpers.GUIRunAndWait(() -> {
+            Helpers.GUIRun(() -> {
                 status_label.setForeground(Color.BLUE);
             });
 
             String[] login = Helpers.runProcess(new String[]{"mega-login", email, Helpers.escapeMEGAPassword(password)}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
             if (Integer.parseInt(login[2]) != 0) {
-                Helpers.GUIRunAndWait(() -> {
+                Helpers.GUIRun(() -> {
                     status_label.setForeground(Color.BLACK);
                 });
                 return false;
@@ -389,7 +389,7 @@ public class Main extends javax.swing.JFrame {
             _current_transference.pause();
         }
 
-        Helpers.GUIRunAndWait(() -> {
+        Helpers.GUIRun(() -> {
             status_label.setForeground(Color.BLACK);
         });
 
@@ -640,10 +640,11 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.threadRun(() -> {
 
+            Helpers.GUIRun(() -> {
+                setEnabled(false);
+            });
+
             if (isTransferences_running()) {
-                Helpers.GUIRun(() -> {
-                    setEnabled(false);
-                });
                 _current_transference.pause();
             } else {
                 Helpers.runProcess(new String[]{"mega-transfers", "-ca"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
@@ -651,8 +652,7 @@ public class Main extends javax.swing.JFrame {
 
             if (session_menu.isSelected() || Helpers.mostrarMensajeInformativoSINO(this, "Do you want to save your MEGA accounts/sessions/transfers to disk to speed up next time?\n\n(If you are using a public computer it is NOT recommended to do so for security reasons).") == 0) {
 
-                Helpers.GUIRunAndWait(() -> {
-                    cuentas_textarea.setEnabled(false);
+                Helpers.GUIRun(() -> {
                     progressbar.setIndeterminate(true);
                 });
 
@@ -1413,7 +1413,7 @@ public class Main extends javax.swing.JFrame {
 
                         Collections.sort(accounts);
 
-                        Helpers.GUIRunAndWait(() -> {
+                        Helpers.GUIRun(() -> {
 
                             if (!_firstAccountsTextareaClick) {
                                 _firstAccountsTextareaClick = true;
@@ -2121,14 +2121,12 @@ public class Main extends javax.swing.JFrame {
 
                     getUpload_button().setText("PREPARING UPLOAD/s...");
 
-                    tabbed_panel.setSelectedIndex(1);
-
                     if (isTransferences_running() && r) {
 
                         Helpers.threadRun(() -> {
                             _current_transference.resume();
 
-                            Helpers.GUIRunAndWait(() -> {
+                            Helpers.GUIRun(() -> {
                                 getPause_button().setEnabled(true);
                             });
 
@@ -2136,6 +2134,8 @@ public class Main extends javax.swing.JFrame {
                     }
 
                     if (dialog.isOk()) {
+
+                        tabbed_panel.setSelectedIndex(1);
 
                         vamos_button.setEnabled(false);
 

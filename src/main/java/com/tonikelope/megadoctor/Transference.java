@@ -249,14 +249,18 @@ public final class Transference extends javax.swing.JPanel {
             }
 
             _running = false;
+
             Helpers.GUIRunAndWait(() -> {
                 for (Component c : Main.TRANSFERENCES_MAP.keySet()) {
 
                     if (Main.TRANSFERENCES_MAP.get(c) == this) {
                         Main.TRANSFERENCES_MAP.remove(c);
-                        Main.TRANSFERENCES_MAP.remove(c);
+                        Main.MAIN_WINDOW.getTransferences().remove(c);
                     }
                 }
+
+                Main.MAIN_WINDOW.getTransferences().revalidate();
+                Main.MAIN_WINDOW.getTransferences().repaint();
 
             });
 

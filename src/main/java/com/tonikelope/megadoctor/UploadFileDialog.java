@@ -164,7 +164,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         split_folder_checkbox = new javax.swing.JCheckBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
-        setTitle("UPLOAD FILE");
+        setTitle("UPLOAD");
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
                 formWindowClosing(evt);
@@ -388,7 +388,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
                             _email = account;
                             _ok = true;
-                            Helpers.GUIRunAndWait(() -> {
+                            Helpers.GUIRun(() -> {
                                 dispose();
                             });
 

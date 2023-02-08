@@ -31,7 +31,7 @@ public class About extends javax.swing.JDialog {
     public About(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
-        this.setTitle("About MegaDoctor " + VERSION);
+        this.setTitle("About MegaDoctor " + VERSION + " - MEGAcmd's best friend");
         this.cmd_version.setText("");
         pack();
 
