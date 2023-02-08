@@ -545,7 +545,7 @@ public final class Transference extends javax.swing.JPanel {
 
                         long speed = calculateSpeed(_size, _prog_init < 0 ? 0 : _prog_init, 10000, start_timestamp, finish_timestamp);
 
-                        Helpers.GUIRun(() -> {
+                        Helpers.GUIRunAndWait(() -> {
                             progress.setIndeterminate(false);
 
                             status_icon.setVisible(true);

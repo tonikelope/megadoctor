@@ -56,7 +56,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.35";
+    public final static String VERSION = "1.36";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -64,6 +64,7 @@ public class Main extends javax.swing.JFrame {
     public final static String SESSIONS_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_sessions";
     public final static String ACCOUNTS_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_accounts";
     public final static String TRANSFERS_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_transfers";
+    public final static String LOG_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_log";
     public final static Object TRANSFERENCES_LOCK = new Object();
     public final static ConcurrentHashMap<String, Object[]> MEGA_NODES = new ConcurrentHashMap<>();
     public final static ConcurrentHashMap<String, Long> FREE_SPACE_CACHE = new ConcurrentHashMap<>();
@@ -224,7 +225,7 @@ public class Main extends javax.swing.JFrame {
                 System.exit(1);
             }
 
-            Helpers.GUIRun(() -> {
+            Helpers.GUIRunAndWait(() -> {
                 setEnabled(true);
                 status_label.setText("");
                 enableTOPControls(true);
@@ -325,6 +326,7 @@ public class Main extends javax.swing.JFrame {
         runMEGACMDCHecker();
         runTransferenceWatchdog();
         loadAccounts();
+        loadLog();
     }
 
     public boolean login(String email) {
@@ -486,7 +488,7 @@ public class Main extends javax.swing.JFrame {
 
         _running_main_action = true;
 
-        Helpers.GUIRun(() -> {
+        Helpers.GUIRunAndWait(() -> {
 
             enableTOPControls(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
@@ -607,7 +609,7 @@ public class Main extends javax.swing.JFrame {
             Helpers.mostrarMensajeError(MAIN_WINDOW, "NO FOLDERS/FILES SELECTED (you must select with your mouse text that contains some H:XXXXXXXX MEGA NODE)");
         }
 
-        Helpers.GUIRun(() -> {
+        Helpers.GUIRunAndWait(() -> {
 
             enableTOPControls(true);
             MAIN_WINDOW.getProgressbar().setIndeterminate(false);
@@ -682,6 +684,8 @@ public class Main extends javax.swing.JFrame {
                 removeSessionFILES();
                 logout(false);
             }
+
+            saveLog();
 
             System.exit(0);
 
@@ -801,7 +805,7 @@ public class Main extends javax.swing.JFrame {
 
     public void copyNodesInsideAccount(String text) {
 
-        Helpers.GUIRun(() -> {
+        Helpers.GUIRunAndWait(() -> {
 
             enableTOPControls(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
@@ -884,7 +888,7 @@ public class Main extends javax.swing.JFrame {
             Helpers.mostrarMensajeError(MAIN_WINDOW, "NO FOLDERS/FILES SELECTED (you must select with your mouse text that contains some H:xxxxxxxx MEGA NODE)");
         }
 
-        Helpers.GUIRun(() -> {
+        Helpers.GUIRunAndWait(() -> {
 
             enableTOPControls(true);
             MAIN_WINDOW.getProgressbar().setIndeterminate(false);
@@ -897,7 +901,7 @@ public class Main extends javax.swing.JFrame {
 
     public void moveNodesInsideAccount(String text) {
 
-        Helpers.GUIRun(() -> {
+        Helpers.GUIRunAndWait(() -> {
 
             enableTOPControls(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
@@ -981,7 +985,7 @@ public class Main extends javax.swing.JFrame {
             Helpers.mostrarMensajeError(MAIN_WINDOW, "NO FOLDERS/FILES SELECTED (you must select with your mouse text that contains some H:xxxxxxxx MEGA NODE)");
         }
 
-        Helpers.GUIRun(() -> {
+        Helpers.GUIRunAndWait(() -> {
 
             enableTOPControls(true);
             MAIN_WINDOW.getProgressbar().setIndeterminate(false);
@@ -994,7 +998,7 @@ public class Main extends javax.swing.JFrame {
 
     public void renameNodes(String text) {
 
-        Helpers.GUIRun(() -> {
+        Helpers.GUIRunAndWait(() -> {
 
             enableTOPControls(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
@@ -1068,7 +1072,7 @@ public class Main extends javax.swing.JFrame {
             Helpers.mostrarMensajeError(MAIN_WINDOW, "NO FOLDERS/FILES SELECTED (you must select with your mouse text that contains some H:xxxxxxxx MEGA NODE)");
         }
 
-        Helpers.GUIRun(() -> {
+        Helpers.GUIRunAndWait(() -> {
 
             enableTOPControls(true);
             MAIN_WINDOW.getProgressbar().setIndeterminate(false);
@@ -1083,7 +1087,7 @@ public class Main extends javax.swing.JFrame {
 
         _running_main_action = true;
 
-        Helpers.GUIRun(() -> {
+        Helpers.GUIRunAndWait(() -> {
 
             enableTOPControls(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
@@ -1122,7 +1126,7 @@ public class Main extends javax.swing.JFrame {
             Helpers.mostrarMensajeError(MAIN_WINDOW, "NO FOLDERS/FILES SELECTED (you must select with your mouse text that contains some H:xxxxxxxx MEGA NODE)");
         }
 
-        Helpers.GUIRun(() -> {
+        Helpers.GUIRunAndWait(() -> {
 
             enableTOPControls(true);
             MAIN_WINDOW.getProgressbar().setIndeterminate(false);
@@ -1139,7 +1143,7 @@ public class Main extends javax.swing.JFrame {
 
         String old_status = MAIN_WINDOW.getStatus_label().getText();
 
-        Helpers.GUIRun(() -> {
+        Helpers.GUIRunAndWait(() -> {
 
             enableTOPControls(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
@@ -1161,7 +1165,7 @@ public class Main extends javax.swing.JFrame {
             }
         }
 
-        Helpers.GUIRun(() -> {
+        Helpers.GUIRunAndWait(() -> {
 
             enableTOPControls(true);
 
@@ -1183,7 +1187,7 @@ public class Main extends javax.swing.JFrame {
 
         String old_status = MAIN_WINDOW.getStatus_label().getText();
 
-        Helpers.GUIRun(() -> {
+        Helpers.GUIRunAndWait(() -> {
 
             enableTOPControls(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
@@ -1204,7 +1208,7 @@ public class Main extends javax.swing.JFrame {
             Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "<b>" + email + "</b>\nTRUNCATED");
         }
 
-        Helpers.GUIRun(() -> {
+        Helpers.GUIRunAndWait(() -> {
 
             enableTOPControls(true);
 
@@ -1226,7 +1230,7 @@ public class Main extends javax.swing.JFrame {
 
         String old_status = MAIN_WINDOW.getStatus_label().getText();
 
-        Helpers.GUIRun(() -> {
+        Helpers.GUIRunAndWait(() -> {
 
             enableTOPControls(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
@@ -1264,7 +1268,7 @@ public class Main extends javax.swing.JFrame {
             Helpers.mostrarMensajeError(MAIN_WINDOW, "NO FOLDERS/FILES SELECTED (you must select with your mouse text that contains some H:xxxxxxxx MEGA NODE)");
         }
 
-        Helpers.GUIRun(() -> {
+        Helpers.GUIRunAndWait(() -> {
 
             enableTOPControls(true);
 
@@ -1285,7 +1289,7 @@ public class Main extends javax.swing.JFrame {
 
         String old_status = MAIN_WINDOW.getStatus_label().getText();
 
-        Helpers.GUIRun(() -> {
+        Helpers.GUIRunAndWait(() -> {
 
             enableTOPControls(false);
             MAIN_WINDOW.getProgressbar().setIndeterminate(true);
@@ -1325,7 +1329,7 @@ public class Main extends javax.swing.JFrame {
             Helpers.mostrarMensajeError(MAIN_WINDOW, "YOU MUST SELECT AN ALREADY CHECKED ACCOUNT");
         }
 
-        Helpers.GUIRun(() -> {
+        Helpers.GUIRunAndWait(() -> {
 
             enableTOPControls(true);
 
@@ -1355,6 +1359,30 @@ public class Main extends javax.swing.JFrame {
 
         } catch (Exception ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void saveLog() {
+
+        try {
+            Files.writeString(Paths.get(LOG_FILE), output_textarea.getText());
+        } catch (IOException ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void loadLog() {
+
+        if (Files.exists(Paths.get(LOG_FILE))) {
+            Helpers.GUIRun(() -> {
+
+                try {
+                    output_textarea.setText(Files.readString(Paths.get(LOG_FILE)));
+                } catch (IOException ex) {
+                    Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+            });
         }
     }
 
@@ -1389,7 +1417,10 @@ public class Main extends javax.swing.JFrame {
                                 cuentas_textarea.append(account + "\n");
                             }
 
+                            cuentas_textarea.setCaretPosition(0);
+
                             session_menu.setSelected(true);
+
                             getUpload_button().setEnabled(true);
 
                         });
@@ -1437,19 +1468,19 @@ public class Main extends javax.swing.JFrame {
 
             String ls = Helpers.runProcess(new String[]{"mega-ls", "-lr", "--show-handles"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-            final String regex = "(H:[^ ]+) (.+)";
+            final String regex = " (H:[^ ]+) (.+)";
             final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
             final Matcher matcher = pattern.matcher(ls);
 
             while (matcher.find()) {
 
-                MEGA_NODES.put(matcher.group(1), new Object[]{getNodeSize(matcher.group(1)), email, matcher.group(2)});
+                MEGA_NODES.put(matcher.group(1), new Object[]{getCurrentAccountNodeSize(matcher.group(1)), email, matcher.group(2)});
 
             }
         }
     }
 
-    private long getNodeSize(String node) {
+    private long getCurrentAccountNodeSize(String node) {
 
         String[] du = Helpers.runProcess(new String[]{"mega-du", node}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
@@ -1935,7 +1966,7 @@ public class Main extends javax.swing.JFrame {
                         Helpers.mostrarMensajeInformativo(this, "ALL ACCOUNTS CHECKED");
                     }
 
-                    Helpers.GUIRun(() -> {
+                    Helpers.GUIRunAndWait(() -> {
                         progressbar.setValue(0);
                         vamos_button.setText("CHECK ACCOUNTS");
                         vamos_button.setBackground(new Color(0, 153, 0));
