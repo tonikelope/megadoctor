@@ -679,13 +679,12 @@ public class Main extends javax.swing.JFrame {
 
                 saveAccounts();
                 saveTransfers();
+                saveLog();
                 logout(true);
             } else {
                 removeSessionFILES();
                 logout(false);
             }
-
-            saveLog();
 
             System.exit(0);
 
