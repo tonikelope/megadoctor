@@ -114,7 +114,7 @@ public class Notification extends javax.swing.JDialog {
             timer.stop();
         }
 
-        if (Main.MAIN_WINDOW!=null && (Main.MAIN_WINDOW.getExtendedState() & JFrame.ICONIFIED) != 0) {
+        if (Main.MAIN_WINDOW != null && (Main.MAIN_WINDOW.getExtendedState() & JFrame.ICONIFIED) != 0) {
 
             Main.MAIN_WINDOW.restoreWindowState();
         }

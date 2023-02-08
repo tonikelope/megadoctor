@@ -56,7 +56,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.31";
+    public final static String VERSION = "1.32";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -247,73 +247,75 @@ public class Main extends javax.swing.JFrame {
                     }
                 }
 
-                synchronized (TRANSFERENCES_LOCK) {
-                    Helpers.GUIRunAndWait(() -> {
+                if (!_closing) {
 
-                        if (!_transfer_drag_drop_adapter.isWorking()) {
+                    synchronized (TRANSFERENCES_LOCK) {
+                        Helpers.GUIRunAndWait(() -> {
 
-                            if (transferences.getComponentCount() > 0) {
+                            if (!_transfer_drag_drop_adapter.isWorking()) {
 
-                                transferences_control_panel.setVisible(true);
+                                if (transferences.getComponentCount() > 0) {
 
-                                _transferences_running = false;
+                                    transferences_control_panel.setVisible(true);
 
-                                _current_transference = null;
+                                    _transferences_running = false;
 
-                                for (Component tr : transferences.getComponents()) {
+                                    _current_transference = null;
 
-                                    Transference t = TRANSFERENCES_MAP.get(tr);
-
-                                    if (t.isRunning() && !t.isCanceled()) {
-                                        _transferences_running = true;
-                                        _current_transference = t;
-                                        break;
-                                    }
-                                }
-
-                                if (!isTransferences_running()) {
                                     for (Component tr : transferences.getComponents()) {
+
                                         Transference t = TRANSFERENCES_MAP.get(tr);
-                                        if (!t.isRunning() && !t.isFinished() && !t.isCanceled()) {
+
+                                        if (t.isRunning() && !t.isCanceled()) {
                                             _transferences_running = true;
                                             _current_transference = t;
-                                            t.start();
                                             break;
                                         }
                                     }
+
+                                    if (!isTransferences_running()) {
+                                        for (Component tr : transferences.getComponents()) {
+                                            Transference t = TRANSFERENCES_MAP.get(tr);
+                                            if (!t.isRunning() && !t.isFinished() && !t.isCanceled()) {
+                                                _transferences_running = true;
+                                                _current_transference = t;
+                                                t.start();
+                                                break;
+                                            }
+                                        }
+                                    }
+
+                                    vamos_button.setEnabled(!busy() || (isRunning_global_check() && !isAborting_global_check()));
+
+                                    cuentas_textarea.setEnabled(!busy());
+
+                                    getPause_button().setVisible(isTransferences_running());
+
+                                    getCancel_all_button().setVisible(isTransferences_running());
+
+                                } else {
+                                    _transferences_running = false;
+
+                                    _pausing_transference = false;
+
+                                    _transferences_paused = false;
+
+                                    _current_transference = null;
+
+                                    getPause_button().setText("PAUSE");
+
+                                    transferences_control_panel.setVisible(false);
+
+                                    vamos_button.setEnabled(!busy() || (isRunning_global_check() && !isAborting_global_check()));
+
+                                    cuentas_textarea.setEnabled(!busy());
                                 }
 
-                                vamos_button.setEnabled(!busy() || (isRunning_global_check() && !isAborting_global_check()));
-
-                                cuentas_textarea.setEnabled(!busy());
-
-                                getPause_button().setVisible(isTransferences_running());
-
-                                getCancel_all_button().setVisible(isTransferences_running());
-
-                            } else {
-                                _transferences_running = false;
-
-                                _pausing_transference = false;
-
-                                _transferences_paused = false;
-
-                                _current_transference = null;
-
-                                getPause_button().setText("PAUSE");
-
-                                transferences_control_panel.setVisible(false);
-
-                                vamos_button.setEnabled(!busy() || (isRunning_global_check() && !isAborting_global_check()));
-
-                                cuentas_textarea.setEnabled(!busy());
                             }
 
-                        }
-
-                    });
+                        });
+                    }
                 }
-
             }
 
         });
@@ -648,6 +650,47 @@ public class Main extends javax.swing.JFrame {
             }
 
             if (session_menu.isSelected() || Helpers.mostrarMensajeInformativoSINO(this, "Do you want to save your MEGA accounts/sessions/transfers to disk to speed up next time?\n\n(If you are using a public computer it is NOT recommended to do so for security reasons).") == 0) {
+
+                Helpers.GUIRunAndWait(() -> {
+                    cuentas_textarea.setEnabled(false);
+                    progressbar.setIndeterminate(true);
+                });
+
+                String cuentas_text = cuentas_textarea.getText();
+
+                final String regex = "(.*?)#(.+)";
+                final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+                final Matcher matcher = pattern.matcher(cuentas_text);
+
+                LinkedHashMap<String, String> new_accounts = new LinkedHashMap<>();
+
+                while (matcher.find()) {
+                    if (!MEGA_ACCOUNTS.containsKey(matcher.group(1))) {
+                        new_accounts.put(matcher.group(1), matcher.group(2));
+                    }
+                }
+
+                ArrayList<String> remove = new ArrayList<>();
+
+                for (String email : MEGA_ACCOUNTS.keySet()) {
+
+                    if (!cuentas_text.contains(email)) {
+                        remove.add(email);
+                    }
+                }
+
+                if ((!new_accounts.isEmpty() || !remove.isEmpty()) && Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "Changes detected in accounts list, do you want to save?") == 0) {
+
+                    for (String email : new_accounts.keySet()) {
+                        MEGA_ACCOUNTS.put(email, new_accounts.get(email));
+                    }
+
+                    for (String email : remove) {
+                        MEGA_ACCOUNTS.remove(email);
+                        MEGA_SESSIONS.remove(email);
+                    }
+                }
+
                 saveAccounts();
                 saveTransfers();
                 logout(true);
@@ -1336,6 +1379,7 @@ public class Main extends javax.swing.JFrame {
     private void saveAccounts() {
 
         try ( FileOutputStream fos = new FileOutputStream(ACCOUNTS_FILE);  ObjectOutputStream oos = new ObjectOutputStream(fos)) {
+
             oos.writeObject(MEGA_ACCOUNTS);
 
         } catch (Exception ex) {

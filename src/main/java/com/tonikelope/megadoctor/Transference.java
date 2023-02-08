@@ -152,8 +152,6 @@ public final class Transference extends javax.swing.JPanel {
 
     private boolean waitFreeSpaceChange(long old_free_space) {
 
-        Helpers.runProcess(new String[]{"mega-reload"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
-
         int timeout = 0;
 
         while (Helpers.getAccountFreeSpace(_email) == old_free_space && timeout < WAIT_TIMEOUT) {
@@ -172,8 +170,6 @@ public final class Transference extends javax.swing.JPanel {
 
     private boolean waitRemoteExists() {
 
-        Helpers.runProcess(new String[]{"mega-reload"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
-
         int timeout = 0;
 
         while (!remoteFileExists(_rpath) && timeout < WAIT_TIMEOUT) {
@@ -191,8 +187,6 @@ public final class Transference extends javax.swing.JPanel {
 
     private boolean waitCompletedTAG() {
         if (!isDirectory() && _tag > 0) {
-
-            Helpers.runProcess(new String[]{"mega-reload"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
             int tag = 0;
 
