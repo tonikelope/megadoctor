@@ -26,6 +26,7 @@ import java.util.regex.Pattern;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStreamWriter;
@@ -55,7 +56,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.30";
+    public final static String VERSION = "1.31";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -91,6 +92,18 @@ public class Main extends javax.swing.JFrame {
     private volatile boolean _provisioning_upload = false;
     private volatile Dimension _pre_window_size = null;
     private volatile Point _pre_window_position = null;
+    private volatile int _pre_state;
+
+    public void restoreWindowState() {
+        Helpers.GUIRun(() -> {
+            setExtendedState(_pre_state);
+
+            if (_pre_window_size != null && _pre_window_position != null && (getExtendedState() & JFrame.MAXIMIZED_BOTH) == 0) {
+                setSize(_pre_window_size);
+                setLocation(_pre_window_position);
+            }
+        });
+    }
 
     public boolean isProvisioning_upload() {
         return _provisioning_upload;
@@ -1392,6 +1405,11 @@ public class Main extends javax.swing.JFrame {
 
                     } catch (Exception ex) {
                         Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                        try {
+                            Files.deleteIfExists(Paths.get(SESSIONS_FILE));
+                        } catch (IOException ex1) {
+                            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex1);
+                        }
                     }
                 }
 
@@ -1471,15 +1489,14 @@ public class Main extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle("MegaDoctor");
         setIconImage(new javax.swing.ImageIcon(getClass().getResource("/images/megadoctor_51.png")).getImage() );
+        addWindowStateListener(new java.awt.event.WindowStateListener() {
+            public void windowStateChanged(java.awt.event.WindowEvent evt) {
+                formWindowStateChanged(evt);
+            }
+        });
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
                 formWindowClosing(evt);
-            }
-            public void windowDeiconified(java.awt.event.WindowEvent evt) {
-                formWindowDeiconified(evt);
-            }
-            public void windowIconified(java.awt.event.WindowEvent evt) {
-                formWindowIconified(evt);
             }
         });
 
@@ -2365,17 +2382,16 @@ public class Main extends javax.swing.JFrame {
         this._check_only_new = check_only_new_checkbox.isSelected();
     }//GEN-LAST:event_check_only_new_checkboxActionPerformed
 
-    private void formWindowIconified(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowIconified
+    private void formWindowStateChanged(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowStateChanged
         // TODO add your handling code here:
+
         _pre_window_size = getSize();
         _pre_window_position = getLocation();
-    }//GEN-LAST:event_formWindowIconified
 
-    private void formWindowDeiconified(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowDeiconified
-        // TODO add your handling code here:
-        setSize(_pre_window_size);
-        setLocation(_pre_window_position);
-    }//GEN-LAST:event_formWindowDeiconified
+        if ((getExtendedState() & JFrame.ICONIFIED) == 0) {
+            _pre_state = getExtendedState();
+        }
+    }//GEN-LAST:event_formWindowStateChanged
 
     /**
      * @param args the command line arguments

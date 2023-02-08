@@ -14,7 +14,7 @@ import javax.swing.Timer;
  * @author tonikelope
  */
 public class Notification extends javax.swing.JDialog {
-    
+
     private volatile Timer timer = null;
     private volatile String sound = null;
 
@@ -27,7 +27,7 @@ public class Notification extends javax.swing.JDialog {
         mensaje.setText(msg);
         sound = s;
         pack();
-        
+
         if (timeout > 0) {
             timer = new Timer(timeout, new ActionListener() {
                 public void actionPerformed(ActionEvent ae) {
@@ -113,21 +113,22 @@ public class Notification extends javax.swing.JDialog {
         if (timer != null) {
             timer.stop();
         }
-        
-        if ((Main.MAIN_WINDOW.getExtendedState() & JFrame.ICONIFIED) != 0) {
-            Main.MAIN_WINDOW.setExtendedState(JFrame.NORMAL);
+
+        if (Main.MAIN_WINDOW!=null && (Main.MAIN_WINDOW.getExtendedState() & JFrame.ICONIFIED) != 0) {
+
+            Main.MAIN_WINDOW.restoreWindowState();
         }
-        
+
         dispose();
     }//GEN-LAST:event_mensajeMouseClicked
-    
+
     private void formComponentShown(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_formComponentShown
         // TODO add your handling code here:
         if (sound != null) {
             Helpers.threadRun(() -> {
-                
+
                 Helpers.playWavResource(sound);
-                
+
             });
         }
     }//GEN-LAST:event_formComponentShown
@@ -170,7 +171,7 @@ public class Notification extends javax.swing.JDialog {
                     }
                 });
                 Helpers.setWindowLowRightCorner(dialog);
-                
+
                 dialog.setVisible(true);
             }
         });
