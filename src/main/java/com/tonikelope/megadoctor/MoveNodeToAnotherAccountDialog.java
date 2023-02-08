@@ -183,9 +183,7 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog implemen
 
             Helpers.threadRun(() -> {
 
-                Main.MAIN_WINDOW.login(email);
-
-                String stats = Main.MAIN_WINDOW.currentAccountStats();
+                String stats = Main.MAIN_WINDOW.getAccountStatistics(email);
 
                 _free_space = Helpers.getAccountFreeSpace(email);
 

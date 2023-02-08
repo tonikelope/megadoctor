@@ -553,9 +553,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
             Helpers.threadRun(() -> {
 
-                Main.MAIN_WINDOW.login(email);
-
-                String stats = Main.MAIN_WINDOW.currentAccountStats();
+                String stats = Main.MAIN_WINDOW.getAccountStatistics(email);
 
                 ConcurrentHashMap<String, Long> reserved = Helpers.getReservedTransfersSpace();
 

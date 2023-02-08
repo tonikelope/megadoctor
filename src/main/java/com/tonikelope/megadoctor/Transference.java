@@ -223,11 +223,20 @@ public final class Transference extends javax.swing.JPanel {
             synchronized (TRANSFERENCES_LOCK) {
 
                 Helpers.GUIRunAndWait(() -> {
-                    Main.MAIN_WINDOW.getTransferences().remove(this);
+                    Helpers.GUIRunAndWait(() -> {
+                        for (Component c : Main.TRANSFERENCES_MAP.keySet()) {
 
-                    Main.MAIN_WINDOW.getTransferences().revalidate();
+                            if (Main.TRANSFERENCES_MAP.get(c) == this) {
+                                Main.TRANSFERENCES_MAP.remove(c);
+                                Main.MAIN_WINDOW.getTransferences().remove(c);
+                                break;
+                            }
+                        }
 
-                    Main.MAIN_WINDOW.getTransferences().repaint();
+                        Main.MAIN_WINDOW.getTransferences().revalidate();
+                        Main.MAIN_WINDOW.getTransferences().repaint();
+
+                    });
                 });
 
                 TRANSFERENCES_LOCK.notifyAll();
@@ -256,6 +265,7 @@ public final class Transference extends javax.swing.JPanel {
                     if (Main.TRANSFERENCES_MAP.get(c) == this) {
                         Main.TRANSFERENCES_MAP.remove(c);
                         Main.MAIN_WINDOW.getTransferences().remove(c);
+                        break;
                     }
                 }
 

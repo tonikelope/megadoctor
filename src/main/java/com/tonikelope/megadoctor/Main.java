@@ -56,7 +56,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.33";
+    public final static String VERSION = "1.34";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -396,7 +396,10 @@ public class Main extends javax.swing.JFrame {
         return true;
     }
 
-    public String currentAccountStats() {
+    public String getAccountStatistics(String email) {
+
+        login(email);
+
         String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
         String du = DUWithHandles();
@@ -517,8 +520,6 @@ public class Main extends javax.swing.JFrame {
 
             if (_email_dialog.isOk() && email != null && !email.isBlank()) {
 
-                login(email);
-
                 if (Helpers.getNodeMapTotalSize(nodesToCopy) <= Helpers.getAccountFreeSpace(email)) {
 
                     ArrayList<String[]> exported_links = new ArrayList<>();
@@ -564,17 +565,7 @@ public class Main extends javax.swing.JFrame {
                         Helpers.runProcess(new String[]{"mega-import", s[1], folder}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
                     }
 
-                    String stats = currentAccountStats();
-
-                    parseAccountNodes(email);
-
-                    logout(true);
-
-                    Helpers.GUIRun(() -> {
-
-                        output_textarea.append("\n[" + email + "] (Refreshed after insertion)\n\n" + stats + "\n\n");
-
-                    });
+                    forceRefreshAccount(email, "Refreshed after deletion", false, false);
 
                     if (move) {
 
@@ -594,28 +585,21 @@ public class Main extends javax.swing.JFrame {
 
                             Helpers.runProcess(delete_command.toArray(String[]::new), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-                            String stats2 = currentAccountStats();
-
-                            parseAccountNodes(email_rm);
-
-                            Helpers.GUIRun(() -> {
-
-                                output_textarea.append("\n[" + email_rm + "] (Refreshed after deletion)\n\n" + stats2 + "\n\n");
-
-                            });
+                            forceRefreshAccount(email_rm, "Refreshed after deletion", false, false);
                         }
 
-                        logout(true);
-
                         Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL SELECTED FOLDERS/FILES MOVED");
+
                     } else {
+
                         Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL SELECTED FOLDERS/FILES COPIED");
                     }
                 } else {
                     Helpers.mostrarMensajeError(MAIN_WINDOW, "THERE IS NO ENOUGH FREE SPACE IN\n<b>" + email + "</b>");
                 }
-
             }
+
+            logout(true);
 
             _email_dialog = null;
 
@@ -831,6 +815,7 @@ public class Main extends javax.swing.JFrame {
 
         if (!nodesToCopy.isEmpty()) {
 
+            outer:
             for (String email : nodesToCopy.keySet()) {
 
                 login(email);
@@ -869,28 +854,19 @@ public class Main extends javax.swing.JFrame {
 
                         } else if (!_move_dialog.isOk()) {
                             cancel = true;
-                            break;
+                            break outer;
                         }
                     }
 
                     if (conta > 0) {
 
-                        String stats = currentAccountStats();
-
-                        parseAccountNodes(email);
-
-                        Helpers.GUIRun(() -> {
-
-                            output_textarea.append("\n[" + email + "] (Refreshed after copying)\n\n" + stats + "\n\n");
-
-                        });
-
+                        forceRefreshAccount(email, "Refreshed after copying", false, false);
                     }
 
                 } else {
                     Helpers.mostrarMensajeError(MAIN_WINDOW, "THERE IS NO ENOUGH FREE SPACE IN\n<b>" + email + "</b>");
                     cancel = true;
-                    break;
+                    break outer;
                 }
             }
 
@@ -935,6 +911,7 @@ public class Main extends javax.swing.JFrame {
 
         if (!nodesToMove.isEmpty()) {
 
+            outer:
             for (String email : nodesToMove.keySet()) {
 
                 login(email);
@@ -970,13 +947,13 @@ public class Main extends javax.swing.JFrame {
 
                     } else if (!_move_dialog.isOk()) {
                         cancel = true;
-                        break;
+                        break outer;
                     }
                 }
 
                 if (conta > 0) {
 
-                    String stats = currentAccountStats();
+                    String stats = getAccountStatistics(email);
 
                     parseAccountNodes(email);
 
@@ -1031,6 +1008,7 @@ public class Main extends javax.swing.JFrame {
 
             boolean cancel = false;
 
+            outer:
             for (String email : nodesToRename.keySet()) {
 
                 login(email);
@@ -1064,22 +1042,13 @@ public class Main extends javax.swing.JFrame {
 
                     } else if (!_move_dialog.isOk()) {
                         cancel = true;
-                        Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "CANCELED (SOME FOLDERS/FILES WERE NOT RENAMED)");
-                        break;
+                        break outer;
                     }
                 }
 
                 if (conta > 0) {
 
-                    String stats = currentAccountStats();
-
-                    parseAccountNodes(email);
-
-                    Helpers.GUIRun(() -> {
-
-                        output_textarea.append("\n[" + email + "] (Refreshed after rename)\n\n" + stats + "\n\n");
-
-                    });
+                    forceRefreshAccount(email, "Refreshed after copying", false, false);
 
                 }
 
@@ -1142,13 +1111,8 @@ public class Main extends javax.swing.JFrame {
 
                 Helpers.runProcess(export_command.toArray(String[]::new), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-                String stats = currentAccountStats();
+                forceRefreshAccount(email, "Refreshed after public links generated/removed", false, false);
 
-                Helpers.GUIRun(() -> {
-
-                    output_textarea.append("\n[" + email + "] (Refreshed after public links generated/removed)\n\n" + stats + "\n\n");
-
-                });
             }
 
             logout(true);
@@ -1340,7 +1304,7 @@ public class Main extends javax.swing.JFrame {
 
             login(email);
 
-            String stats = currentAccountStats();
+            String stats = getAccountStatistics(email);
 
             parseAccountNodes(email);
 
@@ -1468,14 +1432,29 @@ public class Main extends javax.swing.JFrame {
 
     public void parseAccountNodes(String email) {
 
-        String ls = Helpers.runProcess(new String[]{"mega-ls", "-lr", "--show-handles"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+        synchronized (MEGA_NODES) {
+            login(email);
 
-        final String regex = "(H:[^ ]+) (.+)";
-        final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
-        final Matcher matcher = pattern.matcher(ls);
+            String ls = Helpers.runProcess(new String[]{"mega-ls", "-lr", "--show-handles"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-        while (matcher.find()) {
-            MEGA_NODES.put(matcher.group(1), new Object[]{getNodeSize(matcher.group(1)), email, matcher.group(2)});
+            final String regex = "(H:[^ ]+) (.+)";
+            final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+            final Matcher matcher = pattern.matcher(ls);
+
+            while (matcher.find()) {
+                if (MEGA_NODES.containsKey(matcher.group(1))) {
+
+                    String e = (String) MEGA_NODES.get(matcher.group(1))[1];
+
+                    if (!email.equals(e)) {
+                        Helpers.mostrarMensajeError(Main.MAIN_WINDOW, "WARNING!! NODE COLLISION " + matcher.group(1) + " PRESENT IN " + email + " AND " + e);
+                    }
+
+                }
+
+                MEGA_NODES.put(matcher.group(1), new Object[]{getNodeSize(matcher.group(1)), email, matcher.group(2)});
+
+            }
         }
     }
 
@@ -1892,7 +1871,7 @@ public class Main extends javax.swing.JFrame {
                                     status_label.setText("Reading " + email + " info...");
                                 });
 
-                                String stats = currentAccountStats();
+                                String stats = getAccountStatistics(email);
 
                                 Helpers.GUIRun(() -> {
 

@@ -40,7 +40,7 @@ public class MoveNodeDialog extends javax.swing.JDialog {
 
         Helpers.JTextFieldRegularPopupMenu.addTo(new_name);
 
-        file_tree.setText(Main.MAIN_WINDOW.currentAccountStats());
+        file_tree.setText(Main.MAIN_WINDOW.getAccountStatistics(Helpers.megaWhoami()));
 
         if (mode == 2) {
             setTitle("MOVE TO DESTINATION");
