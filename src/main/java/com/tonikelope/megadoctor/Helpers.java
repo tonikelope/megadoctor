@@ -155,7 +155,7 @@ public class Helpers {
             ConcurrentHashMap<String, Long> reserved = new ConcurrentHashMap<>();
 
             for (Transference t : transferences_map.values()) {
-                if (!t.isDirectory() && !t.isFinishing() && !t.isFinished() && !t.isCanceled()) {
+                if (!t.isFinishing() && !t.isFinished() && !t.isCanceled()) {
 
                     if (reserved.containsKey(t.getEmail())) {
                         long s = reserved.get(t.getEmail());
