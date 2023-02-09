@@ -22,7 +22,10 @@ import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.Toolkit;
 import java.awt.Window;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -209,6 +212,24 @@ public class Helpers {
         }
 
         return bingo;
+    }
+
+    public static String exportPathFromCurrentAccount(String rpath) {
+        String[] export = Helpers.runProcess(new String[]{"mega-export", "-af", rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+        if (Integer.parseInt(export[2]) == 0) {
+            final String regex = "https://.+$";
+            final Pattern pattern = Pattern.compile(regex);
+            final Matcher matcher = pattern.matcher(export[1]);
+
+            if (matcher.find()) {
+
+                return matcher.group(0);
+            }
+        }
+
+        return null;
+
     }
 
     public static String adjustSpaces(String s, int n) {
@@ -662,6 +683,14 @@ public class Helpers {
         }
 
         return nodesMAP;
+    }
+
+    public static void copyTextToClipboard(String text) {
+
+        StringSelection stringSelection = new StringSelection(text);
+        Clipboard clpbrd = Toolkit.getDefaultToolkit().getSystemClipboard();
+        clpbrd.setContents(stringSelection, null);
+
     }
 
     public static String getNodeFullPath(String node) {
@@ -1175,6 +1204,68 @@ public class Helpers {
             popup.add(truncateAccount);
 
             txtArea.setComponentPopupMenu(popup);
+        }
+
+        public static void addTransferenceTo(Transference t) {
+            JPopupMenu popup = new JPopupMenu();
+
+            Transference _t = t;
+
+            Action copyPublicLinkAction = new AbstractAction("COPY PUBLIC LINK") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    if (_t.isFinished()) {
+                        Helpers.threadRun(() -> {
+                            Helpers.copyTextToClipboard(_t.getPublic_link() != null ? _t.getPublic_link() : "");
+                            Helpers.mostrarMensajeInformativo(Main.MAIN_WINDOW, _t.getPublic_link() + " COPIED TO CLIPBOARD");
+                        });
+                    }
+                }
+            };
+
+            Action cancelTransferenceLinkAction = new AbstractAction("CANCEL") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    File f = new File(_t.getLpath());
+                    if (!_t.isFinished() && !_t.isCanceled() && Helpers.mostrarMensajeInformativoSINO(Main.MAIN_WINDOW, "<b>" + f.getName() + "</b><br><br><b>CANCEL</b> this transference?") == 0) {
+                        Helpers.threadRun(() -> {
+                            _t.stop();
+                        });
+                    }
+                }
+            };
+
+            Action clearTransferenceLinkAction = new AbstractAction("CLEAR") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    File f = new File(_t.getLpath());
+                    if (_t.isFinished() && !_t.isCanceled()) {
+                        Helpers.threadRun(() -> {
+                            _t.stop();
+                        });
+                    }
+                }
+            };
+
+            JMenuItem cancelTransference = new JMenuItem(cancelTransferenceLinkAction);
+
+            popup.add(cancelTransference);
+
+            popup.addSeparator();
+
+            JMenuItem clearTransference = new JMenuItem(clearTransferenceLinkAction);
+
+            popup.add(clearTransference);
+
+            popup.addSeparator();
+
+            JMenuItem copyPublicLink = new JMenuItem(copyPublicLinkAction);
+
+            copyPublicLink.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/export_on.png")));
+
+            popup.add(copyPublicLink);
+
+            _t.setComponentPopupMenu(popup);
         }
 
         private JTextFieldRegularPopupMenu() {

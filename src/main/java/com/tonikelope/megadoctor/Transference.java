@@ -48,6 +48,11 @@ public final class Transference extends javax.swing.JPanel {
     private volatile boolean _finishing = false;
     private volatile long _prog_timestamp = 0;
     private final AtomicBoolean _terminate_walk_tree = new AtomicBoolean();
+    private volatile String _public_link = null;
+
+    public String getPublic_link() {
+        return _public_link;
+    }
 
     public boolean isStarting() {
         return _starting;
@@ -541,7 +546,7 @@ public final class Transference extends javax.swing.JPanel {
 
                         final boolean warning_folder_size = (isDirectory() && folder_size != _size);
 
-                        Helpers.runProcess(new String[]{"mega-export", "-af", _rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+                        _public_link = Helpers.exportPathFromCurrentAccount(_rpath);
 
                         long speed = calculateSpeed(_size, _prog_init < 0 ? 0 : _prog_init, 10000, start_timestamp, finish_timestamp);
 
@@ -758,10 +763,14 @@ public final class Transference extends javax.swing.JPanel {
      */
     public Transference(String email, String lpath, String rpath, int act) {
         initComponents();
+
         status_icon.setVisible(false);
 
         DefaultCaret caret = (DefaultCaret) folder_stats_textarea.getCaret();
+
         caret.setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
+
+        Helpers.JTextFieldRegularPopupMenu.addTransferenceTo(this);
 
         _terminate_walk_tree.set(false);
 
@@ -840,8 +849,8 @@ public final class Transference extends javax.swing.JPanel {
         main_panel.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         main_panel.setOpaque(false);
         main_panel.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                main_panelMouseClicked(evt);
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                main_panelMousePressed(evt);
             }
         });
 
@@ -938,29 +947,16 @@ public final class Transference extends javax.swing.JPanel {
         );
     }// </editor-fold>//GEN-END:initComponents
 
-    private void main_panelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_main_panelMouseClicked
+    private void main_panelMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_main_panelMousePressed
         // TODO add your handling code here:
-        if (isDirectory() && !isFinished() && !isFinishing() && !isStarting() && SwingUtilities.isLeftMouseButton(evt)) {
+        if (evt.isPopupTrigger()) {
+            getComponentPopupMenu().show(evt.getComponent(), evt.getX(), evt.getY());
+        } else if (isDirectory() && !isFinished() && !isFinishing() && !isStarting() && SwingUtilities.isLeftMouseButton(evt)) {
             folder_stats_scroll.setVisible(!folder_stats_scroll.isVisible());
             revalidate();
             repaint();
-        } else if (SwingUtilities.isRightMouseButton(evt)) {
-
-            String filename = new File(_lpath).getName();
-
-            if (!_canceled && !_finished) {
-
-                if (Helpers.mostrarMensajeInformativoSINO(Main.MAIN_WINDOW, "<b>" + filename + "</b><br><br><b>CANCEL</b> this transference?") == 0) {
-                    Helpers.threadRun(() -> {
-                        stop();
-                    });
-                }
-
-            } else if (!_canceled && _finished && Helpers.mostrarMensajeInformativoSINO(Main.MAIN_WINDOW, "<b>" + filename + "</b><br><br><b>Clear</b> this finished transference?") == 0) {
-                clearFinished();
-            }
         }
-    }//GEN-LAST:event_main_panelMouseClicked
+    }//GEN-LAST:event_main_panelMousePressed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel action;
