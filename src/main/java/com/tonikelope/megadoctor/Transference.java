@@ -257,8 +257,6 @@ public final class Transference extends javax.swing.JPanel {
                 Helpers.runProcess(new String[]{"mega-transfers", "-ca"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
             }
 
-            _running = false;
-
             Helpers.GUIRunAndWait(() -> {
                 for (Component c : Main.TRANSFERENCES_MAP.keySet()) {
 
@@ -274,12 +272,14 @@ public final class Transference extends javax.swing.JPanel {
 
             });
 
+            if (_running) {
+                Main.MAIN_WINDOW.forceRefreshAccount(_email, "Refreshed after upload CANCEL [" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + _rpath, false, false);
+            }
+
+            _running = false;
+
             TRANSFERENCES_LOCK.notifyAll();
 
-        }
-
-        if (Main.MAIN_WINDOW.getCurrent_transference() == this && Helpers.megaWhoami().equals(_email.toLowerCase())) {
-            Main.MAIN_WINDOW.forceRefreshAccount(_email, "Refreshed after upload CANCEL [" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + _rpath, false, false);
         }
 
     }

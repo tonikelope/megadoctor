@@ -64,13 +64,17 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
     private volatile String _rpath = null;
     private volatile boolean _split_folder = false;
     private volatile boolean _auto = false;
+    private volatile boolean _init = false;
     private final AtomicBoolean _terminate_walk_tree = new AtomicBoolean();
+    private static volatile String LAST_EMAIL = null;
 
     public UploadFileDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
 
         initComponents();
-        
+
+        _init = true;
+
         local_path_scroll_panel.getHorizontalScrollBar().setPreferredSize(new Dimension(0, 10));
 
         _terminate_walk_tree.set(false);
@@ -93,14 +97,21 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
             email_combobox.addItem(email);
         }
 
+        email_combobox.setSelectedItem(LAST_EMAIL != null ? LAST_EMAIL : emails.get(0));
+
         progress.setIndeterminate(true);
+
+        progress.setVisible(false);
 
         local_folder_progress.setIndeterminate(true);
 
         local_folder_progress.setVisible(false);
 
-        pack();
+        _init = false;
 
+        email_comboboxItemStateChanged(null);
+
+        pack();
     }
 
     private boolean checkFreeSpace() {
@@ -545,48 +556,52 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
     private void email_comboboxItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_email_comboboxItemStateChanged
         // TODO add your handling code here:
 
-        String email = (String) email_combobox.getSelectedItem();
+        if (!_init) {
+            String email = (String) email_combobox.getSelectedItem();
 
-        if (!email.isBlank() && email_combobox.isEnabled()) {
-            progress.setVisible(true);
-            email_combobox.setEnabled(false);
-            local_file_button.setEnabled(false);
-            local_folder_button.setEnabled(false);
-            mega_button.setEnabled(false);
-            vamos_button.setEnabled(false);
-            account_stats_textarea.setText("");
-            free_space.setText("");
-            auto_select_account.setEnabled(false);
+            if (email != null && !email.isBlank() && email_combobox.isEnabled()) {
+                LAST_EMAIL = email;
+                progress.setVisible(true);
+                email_combobox.setEnabled(false);
+                local_file_button.setEnabled(false);
+                local_folder_button.setEnabled(false);
+                mega_button.setEnabled(false);
+                vamos_button.setEnabled(false);
+                account_stats_textarea.setText("");
+                free_space.setText("");
+                auto_select_account.setEnabled(false);
 
-            Helpers.threadRun(() -> {
+                Helpers.threadRun(() -> {
 
-                String stats = Main.MAIN_WINDOW.getAccountStatistics(email);
+                    String stats = Main.MAIN_WINDOW.getAccountStatistics(email);
 
-                ConcurrentHashMap<String, Long> reserved = Helpers.getReservedTransfersSpace();
+                    ConcurrentHashMap<String, Long> reserved = Helpers.getReservedTransfersSpace();
 
-                _free_space = Helpers.getAccountFreeSpace(email) - (reserved.containsKey(email) ? reserved.get(email) : 0);
+                    _free_space = Helpers.getAccountFreeSpace(email) - (reserved.containsKey(email) ? reserved.get(email) : 0);
 
-                Main.MAIN_WINDOW.parseAccountNodes(email);
+                    Main.MAIN_WINDOW.parseAccountNodes(email);
 
-                Helpers.GUIRun(() -> {
+                    Helpers.GUIRun(() -> {
 
-                    free_space.setText(Helpers.formatBytes(_free_space));
-                    account_stats_textarea.setText("[" + email + "] \n\n" + stats + "\n\n");
-                    account_stats_textarea.setCaretPosition(0);
-                    progress.setVisible(false);
-                    email_combobox.setEnabled(true);
-                    local_file_button.setEnabled(true);
-                    local_folder_button.setEnabled(true);
-                    mega_button.setEnabled(true);
-                    vamos_button.setEnabled(true);
-                    auto_select_account.setEnabled(true);
-                    Helpers.smartPack(this);
+                        free_space.setText(Helpers.formatBytes(_free_space));
+                        account_stats_textarea.setText("[" + email + "] \n\n" + stats + "\n\n");
+                        account_stats_textarea.setCaretPosition(0);
+                        progress.setVisible(false);
+                        email_combobox.setEnabled(true);
+                        local_file_button.setEnabled(true);
+                        local_folder_button.setEnabled(true);
+                        mega_button.setEnabled(true);
+                        vamos_button.setEnabled(true);
+                        auto_select_account.setEnabled(true);
+                        Helpers.smartPack(this);
+
+                    });
+
+                    checkFreeSpace();
 
                 });
+            }
 
-                checkFreeSpace();
-
-            });
         }
     }//GEN-LAST:event_email_comboboxItemStateChanged
 
