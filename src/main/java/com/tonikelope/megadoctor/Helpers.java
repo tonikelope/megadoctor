@@ -52,7 +52,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.LockSupport;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -62,9 +61,12 @@ import javax.sound.midi.MidiSystem;
 import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.Sequence;
 import javax.sound.midi.Sequencer;
+import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.FloatControl;
+import javax.sound.sampled.LineEvent;
+import javax.sound.sampled.LineListener;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JDialog;
@@ -84,11 +86,41 @@ import javax.swing.undo.UndoManager;
  */
 public class Helpers {
 
-    public static boolean playWavResource(String sound) {
+    public static class ClipStateListener implements LineListener {
 
-        try (final BufferedInputStream bis = new BufferedInputStream(Helpers.class.getResourceAsStream("/sounds/" + sound)); final Clip clip = AudioSystem.getClip()) {
+        private final Object _notifier = new Object();
+        private volatile boolean _completed = false;
 
-            clip.open(AudioSystem.getAudioInputStream(bis));
+        public Object getNotifier() {
+            return _notifier;
+        }
+
+        public boolean isCompleted() {
+            return _completed;
+        }
+
+        @Override
+        public void update(LineEvent event) {
+            if (LineEvent.Type.STOP == event.getType()) {
+
+                _completed = true;
+
+                synchronized (_notifier) {
+                    _notifier.notifyAll();
+                }
+            }
+        }
+    }
+
+    public static void playWavResource(String sound) {
+
+        try ( BufferedInputStream bis = new BufferedInputStream(Helpers.class.getResourceAsStream("/sounds/" + sound));  AudioInputStream audioStream = AudioSystem.getAudioInputStream(bis);  Clip clip = AudioSystem.getClip()) {
+
+            ClipStateListener listener = new ClipStateListener();
+
+            clip.addLineListener(listener);
+
+            clip.open(audioStream);
 
             FloatControl gainControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
 
@@ -98,42 +130,15 @@ public class Helpers {
 
             clip.start();
 
-            clip.loop(Clip.LOOP_CONTINUOUSLY);
-
-            Helpers.parkThreadMicros(clip.getMicrosecondLength());
-
-            clip.stop();
-
-            return true;
+            while (!listener.isCompleted()) {
+                synchronized (listener._notifier) {
+                    listener._notifier.wait(1000);
+                }
+            }
 
         } catch (Exception ex) {
             Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, ex.getMessage());
             Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, "ERROR -> {0}", sound);
-        }
-
-        return false;
-    }
-
-    public static void parkThreadMillis(long millis) {
-
-        parkThreadNanos(millis * 1000000L);
-
-    }
-
-    public static void parkThreadMicros(long micros) {
-
-        parkThreadNanos(micros * 1000L);
-
-    }
-
-    public static void parkThreadNanos(long nanos) {
-
-        if (nanos > 0L) {
-            long end = System.nanoTime() + nanos;
-
-            while (System.nanoTime() < end) {
-                LockSupport.parkNanos(end - System.nanoTime());
-            }
         }
     }
 
