@@ -57,8 +57,8 @@
                       <Component id="mega_button" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="local_size" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
-                      <Component id="local_path" pref="538" max="32767" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="local_path_scroll_panel" max="32767" attributes="0"/>
                   </Group>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
@@ -69,12 +69,14 @@
       <Group type="103" groupAlignment="0" attributes="0">
           <Group type="102" alignment="1" attributes="0">
               <EmptySpace max="-2" attributes="0"/>
-              <Group type="103" groupAlignment="3" attributes="0">
-                  <Component id="local_file_button" alignment="3" min="-2" max="-2" attributes="0"/>
-                  <Component id="local_folder_button" alignment="3" min="-2" max="-2" attributes="0"/>
-                  <Component id="local_path" alignment="3" min="-2" max="-2" attributes="0"/>
-                  <Component id="local_size" alignment="3" min="-2" max="-2" attributes="0"/>
-                  <Component id="mega_button" alignment="3" min="-2" max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                  <Group type="103" groupAlignment="3" attributes="0">
+                      <Component id="local_file_button" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="local_folder_button" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="local_size" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="mega_button" alignment="3" min="-2" max="-2" attributes="0"/>
+                  </Group>
+                  <Component id="local_path_scroll_panel" max="32767" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
               <Component id="local_folder_progress" max="-2" attributes="0"/>
@@ -158,13 +160,6 @@
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="local_file_buttonActionPerformed"/>
       </Events>
-    </Component>
-    <Component class="javax.swing.JLabel" name="local_path">
-      <Properties>
-        <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-          <Font name="Noto Sans" size="18" style="0"/>
-        </Property>
-      </Properties>
     </Component>
     <Component class="javax.swing.JLabel" name="jLabel2">
       <Properties>
@@ -299,5 +294,21 @@
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="split_folder_checkboxActionPerformed"/>
       </Events>
     </Component>
+    <Container class="javax.swing.JScrollPane" name="local_path_scroll_panel">
+      <Properties>
+        <Property name="verticalScrollBarPolicy" type="int" value="21"/>
+      </Properties>
+
+      <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
+      <SubComponents>
+        <Component class="javax.swing.JLabel" name="local_path">
+          <Properties>
+            <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+              <Font name="Noto Sans" size="18" style="1"/>
+            </Property>
+          </Properties>
+        </Component>
+      </SubComponents>
+    </Container>
   </SubComponents>
 </Form>
