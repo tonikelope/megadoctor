@@ -20,6 +20,7 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.JFrame;
+import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.text.DefaultCaret;
 
@@ -49,6 +50,10 @@ public final class Transference extends javax.swing.JPanel {
     private volatile long _prog_timestamp = 0;
     private final AtomicBoolean _terminate_walk_tree = new AtomicBoolean();
     private volatile String _public_link = null;
+
+    public JPanel getMain_panel() {
+        return main_panel;
+    }
 
     public String getPublic_link() {
         return _public_link;

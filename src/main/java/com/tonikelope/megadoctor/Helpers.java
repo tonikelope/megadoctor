@@ -1269,7 +1269,7 @@ public class Helpers {
 
             popup.add(copyPublicLink);
 
-            _t.setComponentPopupMenu(popup);
+            _t.getMain_panel().setComponentPopupMenu(popup);
         }
 
         private JTextFieldRegularPopupMenu() {
