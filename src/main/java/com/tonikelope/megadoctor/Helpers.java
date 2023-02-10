@@ -1249,11 +1249,15 @@ public class Helpers {
 
             JMenuItem cancelTransference = new JMenuItem(cancelTransferenceLinkAction);
 
+            cancelTransference.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/cancel.png")));
+
             popup.add(cancelTransference);
 
             popup.addSeparator();
 
             JMenuItem clearTransference = new JMenuItem(clearTransferenceLinkAction);
+
+            clearTransference.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/clear.png")));
 
             popup.add(clearTransference);
 
