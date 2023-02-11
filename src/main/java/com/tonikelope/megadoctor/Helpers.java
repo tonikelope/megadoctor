@@ -15,6 +15,7 @@ import static com.tonikelope.megadoctor.Main.MEGA_NODES;
 import static com.tonikelope.megadoctor.Main.THREAD_POOL;
 import java.awt.Component;
 import java.awt.Container;
+import java.awt.Cursor;
 import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -804,6 +805,8 @@ public class Helpers {
             popup.add(selectAll);
 
             updateComponentFont(popup, popup.getFont(), 1.20f);
+            
+            popup.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
             txtField.setComponentPopupMenu(popup);
         }
@@ -1104,6 +1107,8 @@ public class Helpers {
             popup.add(truncateAccount);
 
             updateComponentFont(popup, popup.getFont(), 1.20f);
+            
+            popup.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
             txtArea.setComponentPopupMenu(popup);
         }
@@ -1229,6 +1234,8 @@ public class Helpers {
             popup.add(truncateAccount);
 
             updateComponentFont(popup, popup.getFont(), 1.20f);
+            
+            popup.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
             txtArea.setComponentPopupMenu(popup);
         }
@@ -1301,6 +1308,8 @@ public class Helpers {
             }
 
             updateComponentFont(popup, popup.getFont(), 1.20f);
+            
+            popup.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
             _t.getMain_panel().setComponentPopupMenu(popup);
         }
