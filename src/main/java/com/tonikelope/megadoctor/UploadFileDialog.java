@@ -388,9 +388,11 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
                     Helpers.threadRun(() -> {
 
+                        String filename = new File(_lpath).getName();
+
                         Main.FREE_SPACE_CACHE.clear();
 
-                        String account = Helpers.findFirstAccountWithSpace(_local_size);
+                        String account = Helpers.findFirstAccountWithSpace(_local_size, filename);
 
                         Main.FREE_SPACE_CACHE.clear();
 

@@ -180,7 +180,7 @@ public class Helpers {
 
     }
 
-    public static String findFirstAccountWithSpace(long required) {
+    public static String findFirstAccountWithSpace(long required, String filename) {
         String bingo = null;
 
         ConcurrentHashMap<String, Long> reserved = getReservedTransfersSpace();
@@ -194,6 +194,10 @@ public class Helpers {
         Collections.sort(emails);
 
         for (String email : emails) {
+
+            Helpers.GUIRunAndWait(() -> {
+                Main.MAIN_WINDOW.getStatus_label().setText("[" + Helpers.formatBytes(required) + "] " + filename + " -> " + email);
+            });
 
             Long r = reserved.get(email);
 
@@ -211,6 +215,10 @@ public class Helpers {
                 break;
             }
         }
+
+        Helpers.GUIRunAndWait(() -> {
+            Main.MAIN_WINDOW.getStatus_label().setText("");
+        });
 
         return bingo;
     }
@@ -1237,7 +1245,7 @@ public class Helpers {
                         File f = new File(_t.getLpath());
                         Helpers.threadRun(() -> {
                             Helpers.copyTextToClipboard(_t.getPublic_link() != null ? _t.getPublic_link() : "");
-                            Helpers.mostrarMensajeInformativo(Main.MAIN_WINDOW, "<b>" + f.getName() + "</b><br>" + _t.getPublic_link() + "<br>COPIED TO CLIPBOARD");
+                            Helpers.mostrarMensajeInformativo(Main.MAIN_WINDOW, "<b>" + f.getName() + "</b><br>" + _t.getPublic_link() + "<br><br>COPIED TO CLIPBOARD");
                         });
                     }
                 }

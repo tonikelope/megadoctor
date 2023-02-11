@@ -56,7 +56,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.44";
+    public final static String VERSION = "1.45";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -64,9 +64,10 @@ public class Main extends javax.swing.JFrame {
     public final static String SESSIONS_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_sessions";
     public final static String ACCOUNTS_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_accounts";
     public final static String TRANSFERS_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_transfers";
+    public final static String NODES_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_nodes";
     public final static String LOG_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_log";
     public final static Object TRANSFERENCES_LOCK = new Object();
-    public final static ConcurrentHashMap<String, Object[]> MEGA_NODES = new ConcurrentHashMap<>();
+
     public final static ConcurrentHashMap<String, Long> FREE_SPACE_CACHE = new ConcurrentHashMap<>();
     public final static ConcurrentHashMap<Component, Transference> TRANSFERENCES_MAP = new ConcurrentHashMap<>();
 
@@ -74,6 +75,7 @@ public class Main extends javax.swing.JFrame {
     public volatile static String MEGA_CMD_VERSION = null;
     public volatile static LinkedHashMap<String, String> MEGA_ACCOUNTS = new LinkedHashMap<>();
     public volatile static HashMap<String, String> MEGA_SESSIONS = new HashMap<>();
+    public volatile static ConcurrentHashMap<String, Object[]> MEGA_NODES = new ConcurrentHashMap<>();
 
     private final DragMouseAdapter _transfer_drag_drop_adapter = new DragMouseAdapter(TRANSFERENCES_LOCK);
     private volatile boolean _running_main_action = false;
@@ -1259,6 +1261,10 @@ public class Main extends javax.swing.JFrame {
 
                 Helpers.runProcess(delete_command.toArray(String[]::new), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
+                for (String n : node_list) {
+                    MEGA_NODES.remove(n);
+                }
+
                 forceRefreshAccount(email, "Refreshed after deletion", false, false);
             }
 
@@ -1361,6 +1367,13 @@ public class Main extends javax.swing.JFrame {
         } catch (Exception ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
+
+        try ( FileOutputStream fos = new FileOutputStream(NODES_FILE);  ObjectOutputStream oos = new ObjectOutputStream(fos)) {
+            oos.writeObject(MEGA_NODES);
+
+        } catch (Exception ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     private void saveLog() {
@@ -1433,6 +1446,14 @@ public class Main extends javax.swing.JFrame {
 
                 } catch (Exception ex) {
                     Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+                if (Files.exists(Paths.get(NODES_FILE))) {
+                    try ( FileInputStream fis = new FileInputStream(NODES_FILE);  ObjectInputStream ois = new ObjectInputStream(fis)) {
+                        MEGA_NODES = (ConcurrentHashMap<String, Object[]>) ois.readObject();
+                    } catch (Exception ex) {
+                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 }
 
                 if (Files.exists(Paths.get(SESSIONS_FILE))) {
@@ -2206,9 +2227,11 @@ public class Main extends javax.swing.JFrame {
 
                                             for (Object[] h : hijos) {
 
+                                                String filename = new File((String) h[0]).getName();
+
                                                 long size = (long) h[1];
 
-                                                String email = Helpers.findFirstAccountWithSpace(size);
+                                                String email = Helpers.findFirstAccountWithSpace(size, filename);
 
                                                 if (email != null) {
 
