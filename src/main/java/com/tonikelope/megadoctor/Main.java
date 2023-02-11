@@ -56,7 +56,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.45";
+    public final static String VERSION = "1.46";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
