@@ -77,6 +77,7 @@ import javax.swing.JFrame;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
+import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
@@ -594,18 +595,6 @@ public class Helpers {
         return null;
     }
 
-    public static void setContainerFont(Container container, Font font) {
-        for (Component c : container.getComponents()) {
-            if (c instanceof Container) {
-                setContainerFont((Container) c, font);
-            }
-            try {
-                c.setFont(font);
-            } catch (Exception e) {
-            }
-        }
-    }
-
     //Thanks -> https://stackoverflow.com/a/19877372 https://stackoverflow.com/a/1385498
     public static long getDirectorySize(final File folder, final AtomicBoolean terminate) {
 
@@ -710,9 +699,33 @@ public class Helpers {
         return null;
     }
 
+    public static void updateComponentFont(final Component component, final Font font, final Float zoom_factor) {
+
+        if (component != null) {
+
+            if (component instanceof Container) {
+
+                for (Component child : ((Container) component).getComponents()) {
+                    updateComponentFont(child, font, zoom_factor);
+                }
+            }
+
+            Font old_font = component.getFont();
+
+            Font new_font = font.deriveFont(old_font.getStyle(), zoom_factor != null ? Math.round(old_font.getSize() * zoom_factor) : old_font.getSize());
+
+            if (component instanceof JTable) {
+                ((JTable) component).getTableHeader().setFont(new_font);
+            }
+
+            component.setFont(new_font);
+
+        }
+    }
+
     public static class JTextFieldRegularPopupMenu {
 
-        public static void addTo(JTextField txtField) {
+        public static void addTextActionsPopupMenuTo(JTextField txtField) {
             JPopupMenu popup = new JPopupMenu();
 
             UndoManager undoManager = new UndoManager();
@@ -782,10 +795,12 @@ public class Helpers {
             selectAll.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/select_all.png")));
             popup.add(selectAll);
 
+            updateComponentFont(popup, popup.getFont(), 1.20f);
+
             txtField.setComponentPopupMenu(popup);
         }
 
-        public static void addTo(JTextArea txtArea) {
+        public static void addMainMEGAPopupMenuTo(JTextArea txtArea) {
             JPopupMenu popup = new JPopupMenu();
 
             UndoManager undoManager = new UndoManager();
@@ -1080,10 +1095,12 @@ public class Helpers {
 
             popup.add(truncateAccount);
 
+            updateComponentFont(popup, popup.getFont(), 1.20f);
+
             txtArea.setComponentPopupMenu(popup);
         }
 
-        public static void addRefreshableTo(JTextArea txtArea, Refresheable r) {
+        public static void addLiteMEGAAccountPopupMenuTo(JTextArea txtArea, Refresheable r) {
             JPopupMenu popup = new JPopupMenu();
             Refresheable _refresh = r;
 
@@ -1203,10 +1220,12 @@ public class Helpers {
 
             popup.add(truncateAccount);
 
+            updateComponentFont(popup, popup.getFont(), 1.20f);
+
             txtArea.setComponentPopupMenu(popup);
         }
 
-        public static void addTransferenceTo(Transference t) {
+        public static void addTransferencePopupMenuTo(Transference t) {
             JPopupMenu popup = new JPopupMenu();
 
             Transference _t = t;
@@ -1215,9 +1234,10 @@ public class Helpers {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
                     if (_t.isFinished()) {
+                        File f = new File(_t.getLpath());
                         Helpers.threadRun(() -> {
                             Helpers.copyTextToClipboard(_t.getPublic_link() != null ? _t.getPublic_link() : "");
-                            Helpers.mostrarMensajeInformativo(Main.MAIN_WINDOW, _t.getPublic_link() + " COPIED TO CLIPBOARD");
+                            Helpers.mostrarMensajeInformativo(Main.MAIN_WINDOW, "<b>" + f.getName() + "</b><br>" + _t.getPublic_link() + "<br>COPIED TO CLIPBOARD");
                         });
                     }
                 }
@@ -1247,27 +1267,32 @@ public class Helpers {
                 }
             };
 
-            JMenuItem cancelTransference = new JMenuItem(cancelTransferenceLinkAction);
+            if (!_t.isFinishing() && !_t.isFinished()) {
 
-            cancelTransference.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/cancel.png")));
+                JMenuItem cancelTransference = new JMenuItem(cancelTransferenceLinkAction);
 
-            popup.add(cancelTransference);
+                cancelTransference.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/cancel.png")));
 
-            popup.addSeparator();
+                popup.add(cancelTransference);
 
-            JMenuItem clearTransference = new JMenuItem(clearTransferenceLinkAction);
+            } else {
 
-            clearTransference.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/clear.png")));
+                JMenuItem clearTransference = new JMenuItem(clearTransferenceLinkAction);
 
-            popup.add(clearTransference);
+                clearTransference.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/clear.png")));
 
-            popup.addSeparator();
+                popup.add(clearTransference);
 
-            JMenuItem copyPublicLink = new JMenuItem(copyPublicLinkAction);
+                popup.addSeparator();
 
-            copyPublicLink.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/export_on.png")));
+                JMenuItem copyPublicLink = new JMenuItem(copyPublicLinkAction);
 
-            popup.add(copyPublicLink);
+                copyPublicLink.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/export_on.png")));
+
+                popup.add(copyPublicLink);
+            }
+
+            updateComponentFont(popup, popup.getFont(), 1.20f);
 
             _t.getMain_panel().setComponentPopupMenu(popup);
         }

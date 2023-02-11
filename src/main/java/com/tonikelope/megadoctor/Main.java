@@ -56,7 +56,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.43";
+    public final static String VERSION = "1.44";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -195,8 +195,8 @@ public class Main extends javax.swing.JFrame {
      */
     public Main() {
         initComponents();
-        Helpers.JTextFieldRegularPopupMenu.addTo(cuentas_textarea);
-        Helpers.JTextFieldRegularPopupMenu.addTo(output_textarea);
+        Helpers.JTextFieldRegularPopupMenu.addMainMEGAPopupMenuTo(cuentas_textarea);
+        Helpers.JTextFieldRegularPopupMenu.addMainMEGAPopupMenuTo(output_textarea);
         transferences = new JPanel();
         transferences.setLayout(new BoxLayout(transferences, BoxLayout.Y_AXIS));
         transferences.addMouseListener((MouseListener) _transfer_drag_drop_adapter);
@@ -775,12 +775,14 @@ public class Main extends javax.swing.JFrame {
                                         valid_trans.add(t);
                                     }
                                 }
-                                transferences.revalidate();
-                                transferences.repaint();
+
                                 tabbed_panel.setSelectedIndex(1);
                                 vamos_button.setEnabled(false);
                                 cuentas_textarea.setEnabled(false);
                                 transferences_control_panel.setVisible(!TRANSFERENCES_MAP.isEmpty());
+
+                                tabbed_panel.revalidate();
+                                tabbed_panel.repaint();
 
                             } catch (Exception ex) {
                                 Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
@@ -1316,8 +1318,8 @@ public class Main extends javax.swing.JFrame {
             Helpers.GUIRun(() -> {
 
                 output_textarea.append("\n[" + email + "] (" + reason + ")\n\n" + stats + "\n\n");
-                Helpers.JTextFieldRegularPopupMenu.addTo(output_textarea);
-                Helpers.JTextFieldRegularPopupMenu.addTo(cuentas_textarea);
+                Helpers.JTextFieldRegularPopupMenu.addMainMEGAPopupMenuTo(output_textarea);
+                Helpers.JTextFieldRegularPopupMenu.addMainMEGAPopupMenuTo(cuentas_textarea);
             });
 
             if (notification) {
@@ -2006,7 +2008,7 @@ public class Main extends javax.swing.JFrame {
 
         fileChooser.setPreferredSize(new Dimension(800, 600));
 
-        Helpers.setContainerFont(fileChooser, save_button.getFont().deriveFont(14f).deriveFont(Font.PLAIN));
+        Helpers.updateComponentFont(fileChooser, fileChooser.getFont(), 1.20f);
 
         int retval = fileChooser.showSaveDialog(this);
 
@@ -2472,6 +2474,7 @@ public class Main extends javax.swing.JFrame {
             public void run() {
                 MAIN_WINDOW = new Main();
                 MAIN_WINDOW.init();
+                MAIN_WINDOW.setExtendedState(JFrame.MAXIMIZED_BOTH);
                 MAIN_WINDOW.setVisible(true);
             }
         });

@@ -38,7 +38,7 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog implemen
         super(parent, modal);
         initComponents();
 
-        Helpers.JTextFieldRegularPopupMenu.addRefreshableTo(account_stats_textarea, this);
+        Helpers.JTextFieldRegularPopupMenu.addLiteMEGAAccountPopupMenuTo(account_stats_textarea, this);
 
         vamos_button.setEnabled(false);
 

@@ -28,7 +28,7 @@ public class TextDialog extends javax.swing.JDialog {
     public TextDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
-        Helpers.JTextFieldRegularPopupMenu.addTo(texto);
+        Helpers.JTextFieldRegularPopupMenu.addTextActionsPopupMenuTo(texto);
     }
 
     /**

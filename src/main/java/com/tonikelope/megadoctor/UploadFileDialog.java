@@ -81,7 +81,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
         split_folder_checkbox.setVisible(false);
 
-        Helpers.JTextFieldRegularPopupMenu.addRefreshableTo(account_stats_textarea, this);
+        Helpers.JTextFieldRegularPopupMenu.addLiteMEGAAccountPopupMenuTo(account_stats_textarea, this);
 
         vamos_button.setEnabled(false);
 
@@ -455,7 +455,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
             fileChooser.setCurrentDirectory(new File(LAST_FOLDER));
         }
 
-        Helpers.setContainerFont(fileChooser, remote_path.getFont().deriveFont(14f));
+        Helpers.updateComponentFont(fileChooser, fileChooser.getFont(), 1.20f);
 
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
@@ -508,7 +508,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
             fileChooser.setCurrentDirectory(new File(LAST_FOLDER));
         }
 
-        Helpers.setContainerFont(fileChooser, remote_path.getFont().deriveFont(14f));
+        Helpers.updateComponentFont(fileChooser, fileChooser.getFont(), 1.20f);
 
         fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 

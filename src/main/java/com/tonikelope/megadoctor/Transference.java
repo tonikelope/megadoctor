@@ -494,6 +494,7 @@ public final class Transference extends javax.swing.JPanel {
                     Helpers.GUIRun(() -> {
                         progress.setIndeterminate(false);
                         folder_stats_scroll.setVisible(isDirectory());
+                        Helpers.JTextFieldRegularPopupMenu.addTransferencePopupMenuTo(this);
                     });
 
                     _starting = false;
@@ -591,6 +592,8 @@ public final class Transference extends javax.swing.JPanel {
                                 Helpers.setWindowLowRightCorner(notification);
                                 notification.setVisible(true);
                             }
+
+                            Helpers.JTextFieldRegularPopupMenu.addTransferencePopupMenuTo(this);
 
                         });
 
@@ -774,8 +777,6 @@ public final class Transference extends javax.swing.JPanel {
         DefaultCaret caret = (DefaultCaret) folder_stats_textarea.getCaret();
 
         caret.setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
-
-        Helpers.JTextFieldRegularPopupMenu.addTransferenceTo(this);
 
         _terminate_walk_tree.set(false);
 

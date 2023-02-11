@@ -38,7 +38,7 @@ public class MoveNodeDialog extends javax.swing.JDialog {
 
         _mode = mode;
 
-        Helpers.JTextFieldRegularPopupMenu.addTo(new_name);
+        Helpers.JTextFieldRegularPopupMenu.addTextActionsPopupMenuTo(new_name);
 
         file_tree.setText(Main.MAIN_WINDOW.getAccountStatistics(email));
 
