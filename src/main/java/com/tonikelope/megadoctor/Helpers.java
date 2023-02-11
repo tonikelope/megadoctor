@@ -119,15 +119,15 @@ public class Helpers {
 
     public static void playWavResource(String sound) {
 
-        try ( BufferedInputStream bis = new BufferedInputStream(Helpers.class.getResourceAsStream("/sounds/" + sound));  AudioInputStream audioStream = AudioSystem.getAudioInputStream(bis);  Clip clip = AudioSystem.getClip()) {
+        try ( BufferedInputStream bis = new BufferedInputStream(Helpers.class.getResourceAsStream("/sounds/" + sound)); final AudioInputStream audioStream = AudioSystem.getAudioInputStream(bis); final Clip clip = AudioSystem.getClip()) {
 
-            ClipStateListener listener = new ClipStateListener();
+            final ClipStateListener listener = new ClipStateListener();
 
             clip.addLineListener(listener);
 
             clip.open(audioStream);
 
-            FloatControl gainControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
+            final var gainControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
 
             float db = 20f * (float) Math.log10(1.0f);
 
@@ -805,7 +805,7 @@ public class Helpers {
             popup.add(selectAll);
 
             updateComponentFont(popup, popup.getFont(), 1.20f);
-            
+
             popup.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
             txtField.setComponentPopupMenu(popup);
@@ -1107,7 +1107,7 @@ public class Helpers {
             popup.add(truncateAccount);
 
             updateComponentFont(popup, popup.getFont(), 1.20f);
-            
+
             popup.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
             txtArea.setComponentPopupMenu(popup);
@@ -1234,7 +1234,7 @@ public class Helpers {
             popup.add(truncateAccount);
 
             updateComponentFont(popup, popup.getFont(), 1.20f);
-            
+
             popup.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
             txtArea.setComponentPopupMenu(popup);
@@ -1308,7 +1308,7 @@ public class Helpers {
             }
 
             updateComponentFont(popup, popup.getFont(), 1.20f);
-            
+
             popup.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
             _t.getMain_panel().setComponentPopupMenu(popup);

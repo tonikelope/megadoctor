@@ -56,7 +56,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.47";
+    public final static String VERSION = "1.48";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -1547,6 +1547,7 @@ public class Main extends javax.swing.JFrame {
         upload_button = new javax.swing.JButton();
         clear_log_button = new javax.swing.JButton();
         check_only_new_checkbox = new javax.swing.JCheckBox();
+        show_accounts = new javax.swing.JLabel();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu2 = new javax.swing.JMenu();
         session_menu = new javax.swing.JCheckBoxMenuItem();
@@ -1652,6 +1653,7 @@ public class Main extends javax.swing.JFrame {
         clear_trans_button.setBackground(new java.awt.Color(0, 153, 0));
         clear_trans_button.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
         clear_trans_button.setForeground(new java.awt.Color(255, 255, 255));
+        clear_trans_button.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/menu/clear.png"))); // NOI18N
         clear_trans_button.setText("CLEAR ALL FINISHED");
         clear_trans_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         clear_trans_button.setDoubleBuffered(true);
@@ -1753,6 +1755,15 @@ public class Main extends javax.swing.JFrame {
             }
         });
 
+        show_accounts.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/vertical_less.png"))); // NOI18N
+        show_accounts.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        show_accounts.setDoubleBuffered(true);
+        show_accounts.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                show_accountsMouseClicked(evt);
+            }
+        });
+
         jMenuBar1.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
 
         jMenu2.setText("Options");
@@ -1789,7 +1800,10 @@ public class Main extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(cuentas_scrollpanel)
-                    .addComponent(progressbar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(show_accounts)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(progressbar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addComponent(tabbed_panel, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
@@ -1826,7 +1840,9 @@ public class Main extends javax.swing.JFrame {
                             .addComponent(check_only_new_checkbox)
                             .addComponent(status_label))))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(progressbar, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(progressbar, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(show_accounts))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(cuentas_scrollpanel, javax.swing.GroupLayout.PREFERRED_SIZE, 208, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -2376,6 +2392,7 @@ public class Main extends javax.swing.JFrame {
         // TODO add your handling code here:
         if (evt.getClickCount() == 2 && evt.getButton() == MouseEvent.BUTTON1) {
             cuentas_scrollpanel.setVisible(!cuentas_scrollpanel.isVisible());
+            show_accounts.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/vertical_" + (cuentas_scrollpanel.isVisible() ? "less" : "more") + ".png")));
             revalidate();
             repaint();
         }
@@ -2462,6 +2479,14 @@ public class Main extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_formWindowStateChanged
 
+    private void show_accountsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_show_accountsMouseClicked
+        // TODO add your handling code here:
+        cuentas_scrollpanel.setVisible(!cuentas_scrollpanel.isVisible());
+        show_accounts.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/vertical_" + (cuentas_scrollpanel.isVisible() ? "less" : "more") + ".png")));
+        revalidate();
+        repaint();
+    }//GEN-LAST:event_show_accountsMouseClicked
+
     /**
      * @param args the command line arguments
      */
@@ -2522,6 +2547,7 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JProgressBar progressbar;
     private javax.swing.JButton save_button;
     private javax.swing.JCheckBoxMenuItem session_menu;
+    private javax.swing.JLabel show_accounts;
     private javax.swing.JLabel status_label;
     private javax.swing.JTabbedPane tabbed_panel;
     private javax.swing.JScrollPane transf_scroll;
