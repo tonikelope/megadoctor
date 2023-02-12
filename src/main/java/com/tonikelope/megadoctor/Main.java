@@ -56,7 +56,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.49";
+    public final static String VERSION = "1.50";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -1304,36 +1304,47 @@ public class Main extends javax.swing.JFrame {
 
         });
 
-        if (MEGA_ACCOUNTS.containsKey(email)) {
+        if (MEGA_ACCOUNTS.containsKey(email) || refresh_session) {
 
             if (refresh_session) {
+
+                String[] account_data = Helpers.extractAccountLoginDataFromText(email, cuentas_textarea.getText());
+
+                if (!MEGA_ACCOUNTS.containsKey(email) || !account_data[1].equals(MEGA_ACCOUNTS.get(email))) {
+                    MEGA_ACCOUNTS.put(email, account_data[1]);
+                }
 
                 MEGA_SESSIONS.remove(email);
 
                 logout(false);
             }
 
-            login(email);
+            if (login(email)) {
 
-            String stats = getAccountStatistics(email);
+                String stats = getAccountStatistics(email);
 
-            parseAccountNodes(email);
+                parseAccountNodes(email);
 
-            _last_email_force_refresh = email;
+                _last_email_force_refresh = email;
 
-            Helpers.GUIRun(() -> {
+                Helpers.GUIRun(() -> {
 
-                output_textarea.append("\n[" + email + "] (" + reason + ")\n\n" + stats + "\n\n");
-                Helpers.JTextFieldRegularPopupMenu.addMainMEGAPopupMenuTo(output_textarea);
-                Helpers.JTextFieldRegularPopupMenu.addMainMEGAPopupMenuTo(cuentas_textarea);
-            });
+                    output_textarea.append("\n[" + email + "] (" + reason + ")\n\n" + stats + "\n\n");
+                    Helpers.JTextFieldRegularPopupMenu.addMainMEGAPopupMenuTo(output_textarea);
+                    Helpers.JTextFieldRegularPopupMenu.addMainMEGAPopupMenuTo(cuentas_textarea);
+                });
 
-            if (notification) {
-                Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "<b>" + email + "</b>\nREFRESHED");
+                if (notification) {
+                    Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "<b>" + email + "</b>\nREFRESHED");
+                }
+            } else {
+                output_textarea.append("\n[" + email + "] LOGIN ERROR\n\n");
+                Helpers.mostrarMensajeError(MAIN_WINDOW, "LOGIN ERROR WITH <b>" + email + "</b>");
             }
 
         } else {
-            Helpers.mostrarMensajeError(MAIN_WINDOW, "YOU MUST SELECT AN ALREADY CHECKED ACCOUNT");
+
+            Helpers.mostrarMensajeError(MAIN_WINDOW, "YOU MUST SELECT AN ALREADY CHECKED ACCOUNT OR FORCE A FULL REFRESH");
         }
 
         Helpers.GUIRunAndWait(() -> {
@@ -1924,7 +1935,6 @@ public class Main extends javax.swing.JFrame {
                                 Helpers.GUIRun(() -> {
                                     output_textarea.append("\n[" + email + "] LOGIN ERROR\n\n");
                                 });
-
                             } else {
 
                                 Helpers.GUIRun(() -> {

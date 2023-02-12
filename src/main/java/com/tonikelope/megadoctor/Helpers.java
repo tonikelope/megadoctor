@@ -156,6 +156,20 @@ public class Helpers {
         w.setLocation(x, y);
     }
 
+    public static String[] extractAccountLoginDataFromText(String email, String text) {
+        final String regex = Pattern.quote(email) + "#(.+)";
+        final Pattern pattern = Pattern.compile(regex);
+        final Matcher matcher = pattern.matcher(text);
+
+        if (matcher.find()) {
+
+            return new String[]{email, matcher.group(1)};
+
+        }
+
+        return null;
+    }
+
     public static ConcurrentHashMap<String, Long> getReservedTransfersSpace() {
 
         synchronized (Main.TRANSFERENCES_LOCK) {
