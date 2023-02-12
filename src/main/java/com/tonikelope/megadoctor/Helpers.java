@@ -1298,13 +1298,17 @@ public class Helpers {
 
                 popup.add(clearTransference);
 
-                popup.addSeparator();
+                if (_t.getPublic_link() != null) {
 
-                JMenuItem copyPublicLink = new JMenuItem(copyPublicLinkAction);
+                    popup.addSeparator();
 
-                copyPublicLink.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/export_on.png")));
+                    JMenuItem copyPublicLink = new JMenuItem(copyPublicLinkAction);
 
-                popup.add(copyPublicLink);
+                    copyPublicLink.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/export_on.png")));
+
+                    popup.add(copyPublicLink);
+
+                }
             }
 
             updateComponentFont(popup, popup.getFont(), 1.20f);
