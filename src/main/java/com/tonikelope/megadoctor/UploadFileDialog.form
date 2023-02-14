@@ -281,7 +281,7 @@
     <Component class="javax.swing.JCheckBox" name="split_folder_checkbox">
       <Properties>
         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-          <Font name="Noto Sans" size="24" style="0"/>
+          <Font name="Noto Sans" size="24" style="1"/>
         </Property>
         <Property name="text" type="java.lang.String" value="Split folder"/>
         <Property name="toolTipText" type="java.lang.String" value="Create a transfer for every folder child (first level)"/>

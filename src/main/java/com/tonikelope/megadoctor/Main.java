@@ -56,7 +56,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.50";
+    public final static String VERSION = "1.51";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -1554,6 +1554,7 @@ public class Main extends javax.swing.JFrame {
         cancel_all_button = new javax.swing.JButton();
         clear_trans_button = new javax.swing.JButton();
         pause_button = new javax.swing.JButton();
+        copy_all_button = new javax.swing.JButton();
         transferences_panel = new javax.swing.JPanel();
         upload_button = new javax.swing.JButton();
         clear_log_button = new javax.swing.JButton();
@@ -1685,6 +1686,17 @@ public class Main extends javax.swing.JFrame {
             }
         });
 
+        copy_all_button.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
+        copy_all_button.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/menu/export_on.png"))); // NOI18N
+        copy_all_button.setText("COPY ALL PUBLIC LINKS");
+        copy_all_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        copy_all_button.setDoubleBuffered(true);
+        copy_all_button.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                copy_all_buttonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout transferences_control_panelLayout = new javax.swing.GroupLayout(transferences_control_panel);
         transferences_control_panel.setLayout(transferences_control_panelLayout);
         transferences_control_panelLayout.setHorizontalGroup(
@@ -1693,10 +1705,12 @@ public class Main extends javax.swing.JFrame {
                 .addGap(0, 0, 0)
                 .addComponent(clear_trans_button)
                 .addGap(18, 18, 18)
+                .addComponent(copy_all_button)
+                .addGap(18, 18, 18)
                 .addComponent(pause_button)
                 .addGap(18, 18, 18)
                 .addComponent(cancel_all_button)
-                .addContainerGap(1134, Short.MAX_VALUE))
+                .addContainerGap(1019, Short.MAX_VALUE))
         );
         transferences_control_panelLayout.setVerticalGroup(
             transferences_control_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1705,7 +1719,8 @@ public class Main extends javax.swing.JFrame {
                 .addGroup(transferences_control_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(cancel_all_button)
                     .addComponent(clear_trans_button)
-                    .addComponent(pause_button))
+                    .addComponent(pause_button)
+                    .addComponent(copy_all_button))
                 .addContainerGap())
         );
 
@@ -2497,6 +2512,37 @@ public class Main extends javax.swing.JFrame {
         repaint();
     }//GEN-LAST:event_show_accountsMouseClicked
 
+    private void copy_all_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_copy_all_buttonActionPerformed
+        // TODO add your handling code here:
+        Helpers.threadRun(() -> {
+
+            synchronized (TRANSFERENCES_LOCK) {
+
+                Helpers.GUIRunAndWait(() -> {
+                    String links = "";
+
+                    for (Component c : transferences.getComponents()) {
+                        Transference t = Main.TRANSFERENCES_MAP.get(c);
+
+                        if (t.isFinished() && t.getPublic_link() != null) {
+                            String filename = new File(t.getLpath()).getName();
+                            links += filename + "   " + t.getPublic_link() + "\n";
+                        }
+                    }
+
+                    if (!links.isBlank()) {
+
+                        Helpers.copyTextToClipboard(links);
+                        Helpers.mostrarMensajeInformativo(Main.MAIN_WINDOW, "ALL LINKS COPIED TO CLIPBOARD");
+                    }
+
+                });
+
+            }
+
+        });
+    }//GEN-LAST:event_copy_all_buttonActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -2543,6 +2589,7 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JCheckBox check_only_new_checkbox;
     private javax.swing.JButton clear_log_button;
     private javax.swing.JButton clear_trans_button;
+    private javax.swing.JButton copy_all_button;
     private javax.swing.JScrollPane cuentas_scrollpanel;
     private javax.swing.JTextArea cuentas_textarea;
     private javax.swing.JMenu jMenu1;

@@ -272,7 +272,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
             }
         });
 
-        split_folder_checkbox.setFont(new java.awt.Font("Noto Sans", 0, 24)); // NOI18N
+        split_folder_checkbox.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
         split_folder_checkbox.setText("Split folder");
         split_folder_checkbox.setToolTipText("Create a transfer for every folder child (first level)");
         split_folder_checkbox.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
