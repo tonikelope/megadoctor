@@ -739,7 +739,7 @@ public class Main extends javax.swing.JFrame {
                     }
                 }
 
-                try ( FileOutputStream fos = new FileOutputStream(TRANSFERS_FILE);  ObjectOutputStream oos = new ObjectOutputStream(fos)) {
+                try (FileOutputStream fos = new FileOutputStream(TRANSFERS_FILE); ObjectOutputStream oos = new ObjectOutputStream(fos)) {
 
                     oos.writeObject(trans);
 
@@ -758,7 +758,7 @@ public class Main extends javax.swing.JFrame {
 
     public void loadTransfers() {
         if (Files.exists(Paths.get(TRANSFERS_FILE))) {
-            try ( FileInputStream fis = new FileInputStream(TRANSFERS_FILE);  ObjectInputStream ois = new ObjectInputStream(fis)) {
+            try (FileInputStream fis = new FileInputStream(TRANSFERS_FILE); ObjectInputStream ois = new ObjectInputStream(fis)) {
 
                 ArrayList<Object[]> trans = (ArrayList<Object[]>) ois.readObject();
 
@@ -1364,7 +1364,7 @@ public class Main extends javax.swing.JFrame {
 
     private void saveAccounts() {
 
-        try ( FileOutputStream fos = new FileOutputStream(ACCOUNTS_FILE);  ObjectOutputStream oos = new ObjectOutputStream(fos)) {
+        try (FileOutputStream fos = new FileOutputStream(ACCOUNTS_FILE); ObjectOutputStream oos = new ObjectOutputStream(fos)) {
 
             oos.writeObject(MEGA_ACCOUNTS);
 
@@ -1372,14 +1372,14 @@ public class Main extends javax.swing.JFrame {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        try ( FileOutputStream fos = new FileOutputStream(SESSIONS_FILE);  ObjectOutputStream oos = new ObjectOutputStream(fos)) {
+        try (FileOutputStream fos = new FileOutputStream(SESSIONS_FILE); ObjectOutputStream oos = new ObjectOutputStream(fos)) {
             oos.writeObject(MEGA_SESSIONS);
 
         } catch (Exception ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        try ( FileOutputStream fos = new FileOutputStream(NODES_FILE);  ObjectOutputStream oos = new ObjectOutputStream(fos)) {
+        try (FileOutputStream fos = new FileOutputStream(NODES_FILE); ObjectOutputStream oos = new ObjectOutputStream(fos)) {
             oos.writeObject(MEGA_NODES);
 
         } catch (Exception ex) {
@@ -1416,7 +1416,7 @@ public class Main extends javax.swing.JFrame {
         Helpers.threadRun(() -> {
 
             if (Files.exists(Paths.get(ACCOUNTS_FILE))) {
-                try ( FileInputStream fis = new FileInputStream(ACCOUNTS_FILE);  ObjectInputStream ois = new ObjectInputStream(fis)) {
+                try (FileInputStream fis = new FileInputStream(ACCOUNTS_FILE); ObjectInputStream ois = new ObjectInputStream(fis)) {
 
                     MEGA_ACCOUNTS = (LinkedHashMap<String, String>) ois.readObject();
 
@@ -1460,7 +1460,7 @@ public class Main extends javax.swing.JFrame {
                 }
 
                 if (Files.exists(Paths.get(NODES_FILE))) {
-                    try ( FileInputStream fis = new FileInputStream(NODES_FILE);  ObjectInputStream ois = new ObjectInputStream(fis)) {
+                    try (FileInputStream fis = new FileInputStream(NODES_FILE); ObjectInputStream ois = new ObjectInputStream(fis)) {
                         MEGA_NODES = (ConcurrentHashMap<String, Object[]>) ois.readObject();
                     } catch (Exception ex) {
                         Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
@@ -1468,7 +1468,7 @@ public class Main extends javax.swing.JFrame {
                 }
 
                 if (Files.exists(Paths.get(SESSIONS_FILE))) {
-                    try ( FileInputStream fis = new FileInputStream(SESSIONS_FILE);  ObjectInputStream ois = new ObjectInputStream(fis)) {
+                    try (FileInputStream fis = new FileInputStream(SESSIONS_FILE); ObjectInputStream ois = new ObjectInputStream(fis)) {
                         MEGA_SESSIONS = (HashMap<String, String>) ois.readObject();
 
                         if (!MEGA_SESSIONS.isEmpty()) {
@@ -2231,7 +2231,7 @@ public class Main extends javax.swing.JFrame {
 
                                 synchronized (TRANSFERENCES_LOCK) {
 
-                                    if (!f.isDirectory() || !dialog.isAuto() || !dialog.isSplit_folder()) {
+                                    if (dialog.getEmail() != null) {
                                         Helpers.GUIRunAndWait(() -> {
 
                                             Transference trans = new Transference(dialog.getEmail(), dialog.getLocal_path(), dialog.getRemote_path(), 1);
@@ -2242,60 +2242,84 @@ public class Main extends javax.swing.JFrame {
                                         });
                                     } else {
 
-                                        File[] directoryListing = f.listFiles();
+                                        if (f.isDirectory()) {
 
-                                        if (directoryListing != null) {
+                                            File[] directoryListing = f.listFiles();
 
-                                            ArrayList<Object[]> hijos = new ArrayList<>();
+                                            if (directoryListing != null) {
 
-                                            for (File child : directoryListing) {
+                                                ArrayList<Object[]> hijos = new ArrayList<>();
 
-                                                AtomicBoolean terminate_walk_tree = new AtomicBoolean();
+                                                for (File child : directoryListing) {
 
-                                                long size = child.isDirectory() ? Helpers.getDirectorySize(child, terminate_walk_tree) : child.length();
+                                                    AtomicBoolean terminate_walk_tree = new AtomicBoolean();
 
-                                                hijos.add(new Object[]{child.getAbsolutePath(), size});
-                                            }
+                                                    long size = child.isDirectory() ? Helpers.getDirectorySize(child, terminate_walk_tree) : child.length();
 
-                                            Collections.sort(hijos, new Comparator<Object[]>() {
-                                                @Override
-                                                public int compare(Object[] o1, Object[] o2) {
-                                                    return Long.compare((long) o2[1], (long) o1[1]);
-                                                }
-                                            });
-
-                                            Main.FREE_SPACE_CACHE.clear();
-
-                                            for (Object[] h : hijos) {
-
-                                                String filename = new File((String) h[0]).getName();
-
-                                                long size = (long) h[1];
-
-                                                String email = Helpers.findFirstAccountWithSpace(size, filename);
-
-                                                if (email != null) {
-
-                                                    Helpers.GUIRunAndWait(() -> {
-
-                                                        Transference trans = new Transference(email, (String) h[0], dialog.getRemote_path(), 1);
-                                                        TRANSFERENCES_MAP.put(transferences.add(trans), trans);
-                                                        transferences.revalidate();
-                                                        transferences.repaint();
-
-                                                    });
-
-                                                } else {
-                                                    Helpers.mostrarMensajeError(null, "THERE IS NO ACCOUNT WITH ENOUGH FREE SPACE FOR:\n" + (String) h[0]);
+                                                    hijos.add(new Object[]{child.getAbsolutePath(), size});
                                                 }
 
-                                            }
+                                                Collections.sort(hijos, new Comparator<Object[]>() {
+                                                    @Override
+                                                    public int compare(Object[] o1, Object[] o2) {
+                                                        return Long.compare((long) o2[1], (long) o1[1]);
+                                                    }
+                                                });
 
-                                            Main.FREE_SPACE_CACHE.clear();
+                                                Main.FREE_SPACE_CACHE.clear();
+
+                                                for (Object[] h : hijos) {
+
+                                                    String filename = new File((String) h[0]).getName();
+
+                                                    long size = (long) h[1];
+
+                                                    String email = Helpers.findFirstAccountWithSpace(size, filename);
+
+                                                    if (email != null) {
+
+                                                        Helpers.GUIRunAndWait(() -> {
+
+                                                            Transference trans = new Transference(email, (String) h[0], dialog.getRemote_path(), 1);
+                                                            TRANSFERENCES_MAP.put(transferences.add(trans), trans);
+                                                            transferences.revalidate();
+                                                            transferences.repaint();
+
+                                                        });
+
+                                                    } else {
+                                                        Helpers.mostrarMensajeError(null, "THERE IS NO ACCOUNT WITH ENOUGH FREE SPACE FOR:\n" + (String) h[0]);
+                                                    }
+
+                                                }
+
+                                                Main.FREE_SPACE_CACHE.clear();
+
+                                            } else {
+                                                Helpers.mostrarMensajeError(null, "EMPTY FOLDER");
+                                            }
 
                                         } else {
-                                            Helpers.mostrarMensajeError(null, "EMPTY FOLDER");
+                                            Main.FREE_SPACE_CACHE.clear();
+
+                                            String email = Helpers.findFirstAccountWithSpace(f.length(), f.getName());
+
+                                            Main.FREE_SPACE_CACHE.clear();
+
+                                            if (email != null) {
+                                                Helpers.GUIRunAndWait(() -> {
+
+                                                    Transference trans = new Transference(email, f.getAbsolutePath(), dialog.getRemote_path(), 1);
+                                                    TRANSFERENCES_MAP.put(transferences.add(trans), trans);
+                                                    transferences.revalidate();
+                                                    transferences.repaint();
+
+                                                });
+                                            } else {
+                                                Helpers.mostrarMensajeError(null, "THERE IS NO ACCOUNT WITH ENOUGH FREE SPACE FOR:\n" + f.getName());
+                                            }
                                         }
+
                                     }
 
                                     Helpers.GUIRunAndWait(() -> {

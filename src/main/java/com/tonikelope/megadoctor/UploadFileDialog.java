@@ -363,6 +363,10 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
         if (!_lpath.isBlank()) {
             auto_select_account.setEnabled(false);
+            split_folder_checkbox.setEnabled(false);
+            local_file_button.setEnabled(false);
+            local_folder_button.setEnabled(false);
+            mega_button.setEnabled(false);
             vamos_button.setEnabled(false);
             progress.setVisible(true);
 
@@ -383,41 +387,8 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                     }
                 }
 
-                if (!f.isDirectory() || !_split_folder) {
-                    vamos_button.setText("WORKING...");
-
-                    Helpers.threadRun(() -> {
-
-                        String filename = new File(_lpath).getName();
-
-                        Main.FREE_SPACE_CACHE.clear();
-
-                        String account = Helpers.findFirstAccountWithSpace(_local_size, filename);
-
-                        Main.FREE_SPACE_CACHE.clear();
-
-                        if (account == null) {
-                            Helpers.mostrarMensajeError(null, "THERE IS NO ACCOUNT WITH ENOUGH FREE SPACE");
-                            Helpers.GUIRun(() -> {
-                                vamos_button.setEnabled(true);
-                                progress.setVisible(false);
-                                auto_select_account.setEnabled(true);
-                                vamos_button.setText("LET'S GO");
-                            });
-                        } else {
-
-                            _email = account;
-                            _ok = true;
-                            Helpers.GUIRun(() -> {
-                                dispose();
-                            });
-
-                        }
-                    });
-                } else {
-                    _ok = true;
-                    dispose();
-                }
+                _ok = true;
+                dispose();
 
             } else {
                 _email = (String) email_combobox.getSelectedItem();

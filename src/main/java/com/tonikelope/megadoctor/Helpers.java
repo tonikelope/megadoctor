@@ -119,7 +119,7 @@ public class Helpers {
 
     public static void playWavResource(String sound) {
 
-        try ( BufferedInputStream bis = new BufferedInputStream(Helpers.class.getResourceAsStream("/sounds/" + sound)); final AudioInputStream audioStream = AudioSystem.getAudioInputStream(bis); final Clip clip = AudioSystem.getClip()) {
+        try (BufferedInputStream bis = new BufferedInputStream(Helpers.class.getResourceAsStream("/sounds/" + sound)); final AudioInputStream audioStream = AudioSystem.getAudioInputStream(bis); final Clip clip = AudioSystem.getClip()) {
 
             final ClipStateListener listener = new ClipStateListener();
 
