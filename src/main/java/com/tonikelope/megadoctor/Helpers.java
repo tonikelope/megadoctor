@@ -863,6 +863,18 @@ public class Helpers {
                     txtArea.selectAll();
                 }
             };
+
+            Action downloadMEGANodesAction = new AbstractAction("DOWNLOAD SELECTED MEGA FOLDERS/FILES") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                        Helpers.threadRun(() -> {
+                            Main.MAIN_WINDOW.downloadNodes(txtArea.getSelectedText());
+                        });
+                    }
+                }
+            };
+
             Action copyInsideMEGANodesAction = new AbstractAction("COPY SELECTED MEGA FOLDERS/FILES (INSIDE THE ACCOUNT)") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
@@ -1024,6 +1036,10 @@ public class Helpers {
 
             popup.addSeparator();
 
+            //JMenuItem downloadNodes = new JMenuItem(downloadMEGANodesAction);
+            //selectAll.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/select_all.png")));
+            //popup.add(downloadNodes);
+            //popup.addSeparator();
             JMenuItem renameNodes = new JMenuItem(renameMEGANodesAction);
             renameNodes.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/rename.png")));
 

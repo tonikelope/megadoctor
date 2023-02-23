@@ -465,7 +465,7 @@ public final class Transference extends javax.swing.JPanel {
                     if (!transferRunning()) {
 
                         if (_action == 0) {
-                            Helpers.runProcess(new String[]{"mega-get", "-mq", "--ignore-quota-warn", _rpath, _lpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+                            Helpers.runProcess(new String[]{"mega-get", "-q", "--ignore-quota-warn", _rpath, _lpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
                         } else {
                             Helpers.runProcess(new String[]{"mega-put", "-cq", "--ignore-quota-warn", _lpath, _rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
                         }
@@ -516,7 +516,7 @@ public final class Transference extends javax.swing.JPanel {
 
                 synchronized (TRANSFERENCES_LOCK) {
 
-                    if (Main.MAIN_WINDOW.isProvisioning_upload()) {
+                    if (_action == 1 && Main.MAIN_WINDOW.isProvisioning_upload()) {
                         Main.FREE_SPACE_CACHE.put(_email, Helpers.getAccountFreeSpace(_email));
                     }
 
@@ -536,20 +536,24 @@ public final class Transference extends javax.swing.JPanel {
 
                         boolean c_error = false;
 
-                        if (isDirectory()) {
-
-                            c_error = (waitRemoteExists() && waitFreeSpaceChange(free_space));
-
+                        if (_action == 0) {
+                            if (!isDirectory()) {
+                                c_error = waitCompletedTAG();
+                            }
                         } else {
+                            if (isDirectory()) {
 
-                            c_error = (waitRemoteExists() && waitCompletedTAG() && waitFreeSpaceChange(free_space));
+                                c_error = (waitRemoteExists() && waitFreeSpaceChange(free_space));
+
+                            } else {
+
+                                c_error = (waitRemoteExists() && waitCompletedTAG() && waitFreeSpaceChange(free_space));
+                            }
                         }
 
                         final boolean check_error = c_error;
 
-                        long folder_size = readRemoteFolderSize();
-
-                        final boolean warning_folder_size = (isDirectory() && folder_size != _size);
+                        final boolean warning_folder_size = (_action == 1 && isDirectory() && readRemoteFolderSize() != _size);
 
                         _public_link = Helpers.exportPathFromCurrentAccount(_rpath);
 
@@ -596,7 +600,9 @@ public final class Transference extends javax.swing.JPanel {
 
                         });
 
-                        Main.MAIN_WINDOW.forceRefreshAccount(_email, "Refreshed after upload [" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + _rpath, false, false);
+                        if (_action == 1) {
+                            Main.MAIN_WINDOW.forceRefreshAccount(_email, "Refreshed after upload [" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + _rpath, false, false);
+                        }
 
                         _finishing = false;
                     }

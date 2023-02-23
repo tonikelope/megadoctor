@@ -56,7 +56,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.52";
+    public final static String VERSION = "1.53";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -1290,6 +1290,74 @@ public class Main extends javax.swing.JFrame {
         _running_main_action = false;
     }
 
+    public void downloadNodes(String text) {
+
+        _running_main_action = true;
+
+        String old_status = MAIN_WINDOW.getStatus_label().getText();
+
+        Helpers.GUIRunAndWait(() -> {
+
+            enableTOPControls(false);
+            MAIN_WINDOW.getProgressbar().setIndeterminate(true);
+            MAIN_WINDOW.getStatus_label().setText("DOWNLOADING FOLDERS/FILES. PLEASE WAIT...");
+
+        });
+
+        HashMap<String, ArrayList<String>> nodesToDownload = Helpers.extractNodeMapFromText(text);
+
+        if (!nodesToDownload.isEmpty()) {
+
+            JFileChooser fileChooser = new JFileChooser("DOWNLOAD DIRECTORY");
+
+            fileChooser.setPreferredSize(new Dimension(800, 600));
+
+            Helpers.updateComponentFont(fileChooser, fileChooser.getFont(), 1.20f);
+
+            fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+
+            int option = fileChooser.showOpenDialog(this);
+
+            if (option == JFileChooser.APPROVE_OPTION) {
+
+                File download_directory = fileChooser.getSelectedFile();
+
+                for (String email : nodesToDownload.keySet()) {
+
+                    ArrayList<String> node_list = nodesToDownload.get(email);
+
+                    for (String n : node_list) {
+                        Helpers.GUIRunAndWait(() -> {
+
+                            Transference trans = new Transference(email, download_directory.getAbsolutePath(), n, 0); //ESTO NO FUNCIONA BIEN TODAVÍA
+                            TRANSFERENCES_MAP.put(transferences.add(trans), trans);
+                            transferences.revalidate();
+                            transferences.repaint();
+
+                        });
+
+                    }
+                }
+            }
+        } else if (nodesToDownload.isEmpty()) {
+            Helpers.mostrarMensajeError(MAIN_WINDOW, "NO FOLDERS/FILES SELECTED (you must select with your mouse text that contains some H:xxxxxxxx MEGA NODE)");
+        }
+
+        Helpers.GUIRunAndWait(() -> {
+
+            enableTOPControls(true);
+
+            if (old_status.isBlank()) {
+                MAIN_WINDOW.getProgressbar().setIndeterminate(false);
+            }
+
+            MAIN_WINDOW.getStatus_label().setText("");
+
+        });
+
+        _running_main_action = false;
+    }
+
     public void forceRefreshAccount(String email, String reason, boolean notification, boolean refresh_session) {
 
         _running_main_action = true;
@@ -2242,7 +2310,7 @@ public class Main extends javax.swing.JFrame {
                                         });
                                     } else {
 
-                                        if (f.isDirectory()) {
+                                        if (f.isDirectory() && dialog.isSplit_folder()) {
 
                                             File[] directoryListing = f.listFiles();
 
@@ -2302,7 +2370,7 @@ public class Main extends javax.swing.JFrame {
                                         } else {
                                             Main.FREE_SPACE_CACHE.clear();
 
-                                            String email = Helpers.findFirstAccountWithSpace(f.length(), f.getName());
+                                            String email = Helpers.findFirstAccountWithSpace(dialog.getLocal_size(), f.getName());
 
                                             Main.FREE_SPACE_CACHE.clear();
 
