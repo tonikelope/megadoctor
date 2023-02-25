@@ -56,7 +56,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.54";
+    public final static String VERSION = "1.55";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -2273,18 +2273,6 @@ public class Main extends javax.swing.JFrame {
 
                     getUpload_button().setText("PREPARING UPLOAD/s...");
 
-                    if (isTransferences_running() && r) {
-
-                        Helpers.threadRun(() -> {
-                            _current_transference.resume();
-
-                            Helpers.GUIRun(() -> {
-                                getPause_button().setEnabled(true);
-                            });
-
-                        });
-                    }
-
                     if (dialog.isOk()) {
 
                         tabbed_panel.setSelectedIndex(1);
@@ -2309,6 +2297,16 @@ public class Main extends javax.swing.JFrame {
                                 });
 
                                 _provisioning_upload = false;
+
+                                if (isTransferences_running() && r) {
+
+                                    _current_transference.resume();
+
+                                    Helpers.GUIRun(() -> {
+                                        getPause_button().setEnabled(true);
+                                    });
+
+                                }
                             });
 
                         } else {
@@ -2420,6 +2418,16 @@ public class Main extends javax.swing.JFrame {
 
                                     _provisioning_upload = false;
 
+                                    if (isTransferences_running() && r) {
+
+                                        _current_transference.resume();
+
+                                        Helpers.GUIRun(() -> {
+                                            getPause_button().setEnabled(true);
+                                        });
+
+                                    }
+
                                     TRANSFERENCES_LOCK.notifyAll();
                                 }
                             }
@@ -2429,7 +2437,20 @@ public class Main extends javax.swing.JFrame {
                         getUpload_button().setText("NEW UPLOAD");
                         getUpload_button().setEnabled(true);
                         getPause_button().setEnabled(true);
+
                         _provisioning_upload = false;
+
+                        if (isTransferences_running() && r) {
+
+                            Helpers.threadRun(() -> {
+                                _current_transference.resume();
+
+                                Helpers.GUIRun(() -> {
+                                    getPause_button().setEnabled(true);
+                                });
+
+                            });
+                        }
                     }
                 }
                 );
