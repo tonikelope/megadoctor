@@ -705,7 +705,9 @@ public class Helpers {
 
     }
 
-    public static String getNodeFullPath(String node) {
+    public static String getNodeFullPath(String node, String email) {
+
+        Main.MAIN_WINDOW.login(email);
 
         String[] f = Helpers.runProcess(new String[]{"mega-find", "--show-handles", node}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
@@ -1036,11 +1038,16 @@ public class Helpers {
 
             popup.addSeparator();
 
-            //JMenuItem downloadNodes = new JMenuItem(downloadMEGANodesAction);
-            //selectAll.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/select_all.png")));
-            //popup.add(downloadNodes);
-            //popup.addSeparator();
+            JMenuItem downloadNodes = new JMenuItem(downloadMEGANodesAction);
+
+            downloadNodes.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/download.png")));
+
+            popup.add(downloadNodes);
+
+            popup.addSeparator();
+
             JMenuItem renameNodes = new JMenuItem(renameMEGANodesAction);
+
             renameNodes.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/rename.png")));
 
             popup.add(renameNodes);

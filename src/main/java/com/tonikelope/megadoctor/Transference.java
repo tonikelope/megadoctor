@@ -486,7 +486,7 @@ public final class Transference extends javax.swing.JPanel {
 
                     waitTransferStart();
 
-                    if (isDirectory()) {
+                    if (_action == 1 && isDirectory()) {
 
                         waitRemoteExists();
                     }
@@ -555,7 +555,9 @@ public final class Transference extends javax.swing.JPanel {
 
                         final boolean warning_folder_size = (_action == 1 && isDirectory() && readRemoteFolderSize() != _size);
 
-                        _public_link = Helpers.exportPathFromCurrentAccount(_rpath);
+                        if (_action == 1) {
+                            _public_link = Helpers.exportPathFromCurrentAccount(_rpath);
+                        }
 
                         long speed = calculateSpeed(_size, _prog_init < 0 ? 0 : _prog_init, 10000, start_timestamp, finish_timestamp);
 
@@ -564,7 +566,7 @@ public final class Transference extends javax.swing.JPanel {
 
                             status_icon.setVisible(true);
 
-                            local_path.setText("[" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + _lpath);
+                            local_path.setText("[" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + (_action == 1 ? _lpath : (_lpath + (_rpath.startsWith("/") ? "" : "/") + _rpath)));
 
                             action.setText("(Avg: " + Helpers.formatBytes(speed) + "/s)");
 
@@ -675,7 +677,7 @@ public final class Transference extends javax.swing.JPanel {
 
             String fstats = Helpers.runProcess(new String[]{"mega-transfers", "--limit=1000000", "--path-display-size=10000", "--output-cols=SOURCEPATH,PROGRESS,STATE"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-            if (!fstats.isBlank()) {
+            if (_action == 1 && !fstats.isBlank()) {
                 fstats = fstats.replace(_lpath, ".");
 
                 Pattern pattern_header = Pattern.compile("SOURCEPATH +PROGRESS");
@@ -733,7 +735,7 @@ public final class Transference extends javax.swing.JPanel {
             long old_timestamp = _prog_timestamp;
 
             if (_size > 0) {
-                _prog = (int) (isDirectory() ? (((float) remoteFolderSize(_rpath) / _size) * 10000) : (Float.parseFloat(matcher.group((_action == 0 ? 4 : 8))) * 100));
+                _prog = (int) (isDirectory() ? (((float) (_action == 1 ? remoteFolderSize(_rpath) : Helpers.getDirectorySize(new File(_lpath), _terminate_walk_tree)) / _size) * 10000) : (Float.parseFloat(matcher.group((_action == 0 ? 4 : 8))) * 100));
             }
 
             if (_prog_init < 0) {
@@ -754,7 +756,7 @@ public final class Transference extends javax.swing.JPanel {
 
                 } else {
 
-                    action.setText(Integer.parseInt(matcher.group((_action == 0 ? 1 : 5))) + " files remaining (" + matcher.group((_action == 0 ? 3 : 7)).replaceAll("  *", " ") + ")");
+                    action.setText(Integer.valueOf(matcher.group((_action == 0 ? 1 : 5))) + " files remaining (" + matcher.group((_action == 0 ? 3 : 7)).replaceAll("  *", " ") + ")");
 
                     folder_stats_textarea.setText(fstats);
 
@@ -787,21 +789,21 @@ public final class Transference extends javax.swing.JPanel {
 
         _terminate_walk_tree.set(false);
 
-        rpath = rpath.isBlank() ? "/" : rpath.trim();
-
         _email = email.trim();
 
         _lpath = lpath;
 
+        local_path.setText(_lpath);
+
+        remote_path.setText("...");
+
         _action = act;
 
-        String fname = new File(_lpath).getName();
+        rpath = rpath.isBlank() ? "/" : rpath.trim();
 
-        _rpath = rpath.endsWith("/") ? rpath + fname : rpath;
+        String rp = rpath;
 
-        remote_path.setText("(" + _email + ") " + _rpath);
-
-        action.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/" + (act == 0 ? "left" : "right") + "-arrow.png")));
+        action.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/" + (_action == 0 ? "left" : "right") + "-arrow.png")));
 
         progress.setMinimum(0);
 
@@ -812,26 +814,44 @@ public final class Transference extends javax.swing.JPanel {
         folder_stats_scroll.setVisible(false);
 
         Helpers.threadRun(() -> {
-            File local = new File(lpath);
 
-            if (local.isDirectory()) {
-                _directory = true;
+            if (_action == 1) {
 
-                _size = Helpers.getDirectorySize(local, _terminate_walk_tree);
+                File local_file = new File(_lpath);
+
+                String fname = local_file.getName();
+
+                if (local_file.isDirectory()) {
+                    _directory = true;
+
+                    _size = Helpers.getDirectorySize(local_file, _terminate_walk_tree);
+
+                } else {
+                    _size = new File(lpath).length();
+                }
+
+                _rpath = rp.endsWith("/") ? rp + fname : rp;
 
             } else {
-                _size = new File(lpath).length();
+                _rpath = Helpers.getNodeFullPath(rp, _email);
+
+                Object[] node_info = Main.MEGA_NODES.get(rp);
+
+                _size = (long) node_info[0];
+
+                _directory = (boolean) node_info[3];
             }
 
             Helpers.GUIRun(() -> {
+
+                remote_path.setText("(" + _email + ") " + _rpath);
 
                 if (isDirectory()) {
                     local_path.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/folder.png")));
                 }
 
-                if (_size > 0) {
-                    local_path.setText("[" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + _lpath);
-                }
+                local_path.setText("[" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + (_action == 1 ? _lpath : (_lpath + (_rpath.startsWith("/") ? "" : "/") + _rpath)));
+
                 progress.setIndeterminate(false);
             });
 

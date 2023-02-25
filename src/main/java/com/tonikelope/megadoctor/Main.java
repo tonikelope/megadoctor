@@ -56,7 +56,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.53";
+    public final static String VERSION = "1.54";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -209,6 +209,7 @@ public class Main extends javax.swing.JFrame {
         getUpload_button().setEnabled(false);
         transf_scroll.getVerticalScrollBar().setUnitIncrement(20);
         setTitle("MegaDoctor " + VERSION + " - MEGAcmd's best friend");
+        progressbar.setIndeterminate(true);
         status_label.setText("Checking if MEGACMD is present...");
         pack();
         setEnabled(false);
@@ -229,6 +230,7 @@ public class Main extends javax.swing.JFrame {
 
             Helpers.GUIRunAndWait(() -> {
                 setEnabled(true);
+                progressbar.setIndeterminate(false);
                 status_label.setText("");
                 enableTOPControls(true);
             });
@@ -843,7 +845,7 @@ public class Main extends javax.swing.JFrame {
 
                     for (String node : node_list) {
 
-                        String old_full_path = Helpers.getNodeFullPath(node);
+                        String old_full_path = Helpers.getNodeFullPath(node, email);
 
                         String old_n = old_full_path.replaceAll("^.*/([^/]*)$", "$1");
 
@@ -936,7 +938,7 @@ public class Main extends javax.swing.JFrame {
 
                 for (String node : node_list) {
 
-                    String old_full_path = Helpers.getNodeFullPath(node);
+                    String old_full_path = Helpers.getNodeFullPath(node, email);
 
                     String old_n = old_full_path.replaceAll("^.*/([^/]*)$", "$1");
 
@@ -1025,7 +1027,7 @@ public class Main extends javax.swing.JFrame {
 
                 for (String node : node_list) {
 
-                    String old_full_path = Helpers.getNodeFullPath(node);
+                    String old_full_path = Helpers.getNodeFullPath(node, email);
 
                     String old_name = old_full_path.replaceAll("^.*/([^/]*)$", "$1");
 
@@ -1322,22 +1324,31 @@ public class Main extends javax.swing.JFrame {
 
                 File download_directory = fileChooser.getSelectedFile();
 
-                for (String email : nodesToDownload.keySet()) {
+                synchronized (TRANSFERENCES_LOCK) {
 
-                    ArrayList<String> node_list = nodesToDownload.get(email);
+                    for (String email : nodesToDownload.keySet()) {
 
-                    for (String n : node_list) {
-                        Helpers.GUIRunAndWait(() -> {
+                        ArrayList<String> node_list = nodesToDownload.get(email);
 
-                            Transference trans = new Transference(email, download_directory.getAbsolutePath(), n, 0); //ESTO NO FUNCIONA BIEN TODAVÍA
-                            TRANSFERENCES_MAP.put(transferences.add(trans), trans);
-                            transferences.revalidate();
-                            transferences.repaint();
+                        for (String n : node_list) {
+                            Helpers.GUIRunAndWait(() -> {
 
-                        });
+                                Transference trans = new Transference(email, download_directory.getAbsolutePath(), n, 0); //ESTO NO FUNCIONA BIEN TODAVÍA
+                                TRANSFERENCES_MAP.put(transferences.add(trans), trans);
+                                transferences.revalidate();
+                                transferences.repaint();
 
+                            });
+
+                        }
                     }
+
+                    TRANSFERENCES_LOCK.notifyAll();
+
                 }
+                Helpers.GUIRunAndWait(() -> {
+                    tabbed_panel.setSelectedIndex(1);
+                });
             }
         } else if (nodesToDownload.isEmpty()) {
             Helpers.mostrarMensajeError(MAIN_WINDOW, "NO FOLDERS/FILES SELECTED (you must select with your mouse text that contains some H:xxxxxxxx MEGA NODE)");
@@ -1530,6 +1541,15 @@ public class Main extends javax.swing.JFrame {
                 if (Files.exists(Paths.get(NODES_FILE))) {
                     try (FileInputStream fis = new FileInputStream(NODES_FILE); ObjectInputStream ois = new ObjectInputStream(fis)) {
                         MEGA_NODES = (ConcurrentHashMap<String, Object[]>) ois.readObject();
+
+                        Object[] test = (Object[]) MEGA_NODES.values().toArray()[0];
+
+                        if (test.length != 4) {
+                            MEGA_NODES.clear();
+                            Files.deleteIfExists(Paths.get(NODES_FILE));
+                            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "WRONG NODES FILE (DELETING...)");
+                        }
+
                     } catch (Exception ex) {
                         Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
                     }
@@ -1569,13 +1589,13 @@ public class Main extends javax.swing.JFrame {
 
             String ls = Helpers.runProcess(new String[]{"mega-ls", "-lr", "--show-handles"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-            final String regex = " (H:[^ ]+) (.+)";
+            final String regex = "^(.).* (H:[^ ]+) (.+)";
             final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
             final Matcher matcher = pattern.matcher(ls);
 
             while (matcher.find()) {
 
-                MEGA_NODES.put(matcher.group(1), new Object[]{getCurrentAccountNodeSize(matcher.group(1)), email, matcher.group(2)});
+                MEGA_NODES.put(matcher.group(2), new Object[]{getCurrentAccountNodeSize(matcher.group(2)), email, matcher.group(3), (matcher.group(1).toLowerCase().equals("d"))});
 
             }
         }
