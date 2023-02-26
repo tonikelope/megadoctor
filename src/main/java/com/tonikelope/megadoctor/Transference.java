@@ -368,6 +368,8 @@ public final class Transference extends javax.swing.JPanel {
 
                 Helpers.runProcess(new String[]{"mega-transfers", "-ra"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
+                waitTransferStart();
+
                 Helpers.GUIRun(() -> {
                     setBackground(null);
                 });
