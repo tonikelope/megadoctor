@@ -350,12 +350,49 @@ public class Helpers {
         Main.MAIN_WINDOW.login(email);
 
         String df = Helpers.runProcess(new String[]{"mega-df"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
-        final String regex = "USED STORAGE: *([0-9]+).*?of *([0-9]+)";
-        final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
-        final Matcher matcher = pattern.matcher(df);
+
+        long cloud = 0, inbox = 0, rubbish = 0, total;
+
+        String regex_cloud = "drive: *([0-9]+)";
+
+        Pattern pattern = Pattern.compile(regex_cloud, Pattern.MULTILINE);
+
+        Matcher matcher = pattern.matcher(df);
 
         if (matcher.find()) {
-            return new String[]{email, matcher.group(1), matcher.group(2)};
+            cloud = Long.parseLong(matcher.group(1));
+        }
+
+        String regex_inbox = "box: *([0-9]+)";
+
+        pattern = Pattern.compile(regex_inbox, Pattern.MULTILINE);
+
+        matcher = pattern.matcher(df);
+
+        if (matcher.find()) {
+            inbox = Long.parseLong(matcher.group(1));
+        }
+
+        String regex_rubbish = "bin: *([0-9]+)";
+
+        pattern = Pattern.compile(regex_rubbish, Pattern.MULTILINE);
+
+        matcher = pattern.matcher(df);
+
+        if (matcher.find()) {
+            rubbish = Long.parseLong(matcher.group(1));
+        }
+
+        total = cloud + inbox + rubbish;
+
+        String regex_used = "STORAGE: *([0-9]+).*?of *([0-9]+)";
+
+        pattern = Pattern.compile(regex_used, Pattern.MULTILINE);
+
+        matcher = pattern.matcher(df);
+
+        if (matcher.find()) {
+            return new String[]{email, String.valueOf(Math.max(Long.parseLong(matcher.group(1)), total)), matcher.group(2)};
         }
 
         return null;

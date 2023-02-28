@@ -56,7 +56,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.57";
+    public final static String VERSION = "1.58";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -2666,20 +2666,22 @@ public class Main extends javax.swing.JFrame {
             synchronized (TRANSFERENCES_LOCK) {
 
                 Helpers.GUIRunAndWait(() -> {
-                    String links = "";
+                    ArrayList<String> links = new ArrayList<>();
 
                     for (Component c : transferences.getComponents()) {
                         Transference t = Main.TRANSFERENCES_MAP.get(c);
 
                         if (t.isFinished() && t.getPublic_link() != null) {
                             String filename = new File(t.getLpath()).getName();
-                            links += filename + "   " + t.getPublic_link() + "\n";
+                            links.add(filename + "   " + t.getPublic_link());
                         }
                     }
 
-                    if (!links.isBlank()) {
+                    Collections.sort(links);
 
-                        Helpers.copyTextToClipboard(links);
+                    if (!links.isEmpty()) {
+
+                        Helpers.copyTextToClipboard(String.join("\n", links));
                         Helpers.mostrarMensajeInformativo(Main.MAIN_WINDOW, "ALL LINKS COPIED TO CLIPBOARD");
                     }
 
