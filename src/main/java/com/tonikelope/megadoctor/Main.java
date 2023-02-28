@@ -56,7 +56,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.56";
+    public final static String VERSION = "1.57";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -716,13 +716,13 @@ public class Main extends javax.swing.JFrame {
 
     public void saveTransfers() {
 
-        ArrayList<Object[]> trans = new ArrayList<>();
-
         Helpers.GUIRunAndWait(() -> {
-            if (transferences.getComponentCount() > 0 && isTransferences_running()) {
+            if (session_menu.isSelected() && transferences.getComponentCount() > 0 && isTransferences_running()) {
 
-                trans.add(new Object[]{_current_transference.getEmail(), _current_transference.getLpath(), _current_transference.getRpath(), _current_transference.getAction()}
-                );
+                final ArrayList<Object[]> trans = new ArrayList<>();
+
+                trans.add(new Object[]{_current_transference.getEmail(), _current_transference.getLpath(), _current_transference.getRpath(), _current_transference.getAction()});
+
                 for (Component c : transferences.getComponents()) {
 
                     Transference t = (Transference) c;
@@ -747,13 +747,17 @@ public class Main extends javax.swing.JFrame {
 
                 } catch (Exception ex) {
                     Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+
                 }
+
             } else {
+
                 try {
                     Files.deleteIfExists(Paths.get(TRANSFERS_FILE));
                 } catch (Exception ex) {
                     Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
                 }
+
             }
         });
     }
@@ -1333,7 +1337,7 @@ public class Main extends javax.swing.JFrame {
                         for (String n : node_list) {
                             Helpers.GUIRunAndWait(() -> {
 
-                                Transference trans = new Transference(email, download_directory.getAbsolutePath(), n, 0); //ESTO NO FUNCIONA BIEN TODAVÍA
+                                Transference trans = new Transference(email, download_directory.getAbsolutePath(), n, 0);
                                 TRANSFERENCES_MAP.put(transferences.add(trans), trans);
                                 transferences.revalidate();
                                 transferences.repaint();
@@ -1342,6 +1346,8 @@ public class Main extends javax.swing.JFrame {
 
                         }
                     }
+
+                    saveTransfers();
 
                     TRANSFERENCES_LOCK.notifyAll();
 
@@ -2210,6 +2216,8 @@ public class Main extends javax.swing.JFrame {
 
                 bye();
             }
+        } else {
+            System.exit(1); //Forzamos
         }
     }//GEN-LAST:event_formWindowClosing
 
@@ -2326,6 +2334,7 @@ public class Main extends javax.swing.JFrame {
                                             transferences.repaint();
 
                                         });
+                                        saveTransfers();
                                     } else {
 
                                         if (f.isDirectory() && dialog.isSplit_folder()) {
@@ -2381,6 +2390,8 @@ public class Main extends javax.swing.JFrame {
 
                                                 Main.FREE_SPACE_CACHE.clear();
 
+                                                saveTransfers();
+
                                             } else {
                                                 Helpers.mostrarMensajeError(null, "EMPTY FOLDER");
                                             }
@@ -2401,6 +2412,9 @@ public class Main extends javax.swing.JFrame {
                                                     transferences.repaint();
 
                                                 });
+
+                                                saveTransfers();
+
                                             } else {
                                                 Helpers.mostrarMensajeError(null, "THERE IS NO ACCOUNT WITH ENOUGH FREE SPACE FOR:\n" + f.getName());
                                             }
