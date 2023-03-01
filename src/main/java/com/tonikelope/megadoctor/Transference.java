@@ -47,9 +47,14 @@ public final class Transference extends javax.swing.JPanel {
     private volatile boolean _paused = false;
     private volatile boolean _starting = false;
     private volatile boolean _finishing = false;
+    private volatile boolean _error = false;
     private volatile long _prog_timestamp = 0;
     private final AtomicBoolean _terminate_walk_tree = new AtomicBoolean();
     private volatile String _public_link = null;
+
+    public boolean isError() {
+        return _error;
+    }
 
     public JPanel getMain_panel() {
         return main_panel;
@@ -437,7 +442,42 @@ public final class Transference extends javax.swing.JPanel {
         return 0;
     }
 
+    public void retry() {
+        Helpers.threadRun(() -> {
+            synchronized (TRANSFERENCES_LOCK) {
+
+                Helpers.GUIRunAndWait(() -> {
+                    status_icon.setVisible(false);
+                    progress.setValue(progress.getMinimum());
+                    progress.setIndeterminate(true);
+                    folder_stats_scroll.setVisible(false);
+                    action.setText("RETRY (QUEUED)");
+                });
+
+                _running = false;
+
+                _finished = false;
+
+                _canceled = false;
+
+                _error = false;
+
+                TRANSFERENCES_LOCK.notifyAll();
+            }
+        });
+    }
+
     public void start() {
+
+        Helpers.GUIRun(() -> {
+            status_icon.setVisible(false);
+            progress.setValue(progress.getMinimum());
+            progress.setIndeterminate(true);
+            folder_stats_scroll.setVisible(false);
+        });
+
+        Main.MAIN_WINDOW.setCurrent_transference(this);
+
         Helpers.threadRun(() -> {
 
             if (Main.MAIN_WINDOW.isTransferences_paused()) {
@@ -455,6 +495,7 @@ public final class Transference extends javax.swing.JPanel {
                     _starting = true;
 
                     Helpers.GUIRun(() -> {
+                        status_icon.setVisible(false);
                         Main.MAIN_WINDOW.getVamos_button().setEnabled(false);
                         Main.MAIN_WINDOW.getCuentas_textarea().setEnabled(false);
                         action.setText("(STARTING...)");
@@ -553,7 +594,7 @@ public final class Transference extends javax.swing.JPanel {
                             }
                         }
 
-                        final boolean check_error = c_error;
+                        _error = c_error;
 
                         final boolean warning_folder_size = (_action == 1 && isDirectory() && readRemoteFolderSize() != _size);
 
@@ -572,9 +613,9 @@ public final class Transference extends javax.swing.JPanel {
 
                             action.setText("(Avg: " + Helpers.formatBytes(speed) + "/s)");
 
-                            if (check_error) {
+                            if (_error) {
                                 status_icon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/warning_transference.png")));
-                                status_icon.setToolTipText("Unable to verify that the transfer was completed correctly (TIMEOUT)");
+                                status_icon.setToolTipText("Unable to verify that transfer was completed correctly (TIMEOUT)");
                             }
 
                             if (warning_folder_size) {

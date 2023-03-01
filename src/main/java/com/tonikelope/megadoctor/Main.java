@@ -56,7 +56,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.59";
+    public final static String VERSION = "1.60";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -216,6 +216,10 @@ public class Main extends javax.swing.JFrame {
 
     }
 
+    public void setCurrent_transference(Transference _current_transference) {
+        this._current_transference = _current_transference;
+    }
+
     private void runMEGACMDCHecker() {
 
         Helpers.threadRun(() -> {
@@ -283,7 +287,6 @@ public class Main extends javax.swing.JFrame {
                                             Transference t = TRANSFERENCES_MAP.get(tr);
                                             if (!t.isRunning() && !t.isFinished() && !t.isCanceled()) {
                                                 _transferences_running = true;
-                                                _current_transference = t;
                                                 t.start();
                                                 break;
                                             }
@@ -1392,7 +1395,7 @@ public class Main extends javax.swing.JFrame {
         });
 
         if (MEGA_ACCOUNTS.containsKey(email) || refresh_session) {
-            
+
             Main.FREE_SPACE_CACHE.remove(email);
 
             if (refresh_session) {
@@ -2397,7 +2400,7 @@ public class Main extends javax.swing.JFrame {
                                             }
 
                                         } else {
-                                           
+
                                             String email = Helpers.findFirstAccountWithSpace(dialog.getLocal_size(), f.getName());
 
                                             if (email != null) {

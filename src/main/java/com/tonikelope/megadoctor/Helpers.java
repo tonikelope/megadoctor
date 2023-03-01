@@ -1356,6 +1356,15 @@ public class Helpers {
                 }
             };
 
+            Action retryTransferenceLinkAction = new AbstractAction("RETRY TRANSFER") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+
+                    _t.retry();
+
+                }
+            };
+
             if (!_t.isFinishing() && !_t.isFinished()) {
 
                 JMenuItem cancelTransference = new JMenuItem(cancelTransferenceLinkAction);
@@ -1382,6 +1391,17 @@ public class Helpers {
 
                     popup.add(copyPublicLink);
 
+                } 
+                
+                if(_t.isError()) {
+                    
+                    popup.addSeparator();
+
+                    JMenuItem retryTransference = new JMenuItem(retryTransferenceLinkAction);
+
+                    retryTransference.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/refresh.png")));
+
+                    popup.add(retryTransference);
                 }
             }
 
