@@ -56,7 +56,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.58";
+    public final static String VERSION = "1.59";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -716,50 +716,52 @@ public class Main extends javax.swing.JFrame {
 
     public void saveTransfers() {
 
-        Helpers.GUIRunAndWait(() -> {
-            if (session_menu.isSelected() && transferences.getComponentCount() > 0 && isTransferences_running()) {
+        synchronized (TRANSFERENCES_LOCK) {
+            Helpers.GUIRunAndWait(() -> {
+                if (session_menu.isSelected() && transferences.getComponentCount() > 0 && isTransferences_running()) {
 
-                final ArrayList<Object[]> trans = new ArrayList<>();
+                    final ArrayList<Object[]> trans = new ArrayList<>();
 
-                trans.add(new Object[]{_current_transference.getEmail(), _current_transference.getLpath(), _current_transference.getRpath(), _current_transference.getAction()});
+                    trans.add(new Object[]{_current_transference.getEmail(), _current_transference.getLpath(), _current_transference.getRpath(), _current_transference.getAction()});
 
-                for (Component c : transferences.getComponents()) {
+                    for (Component c : transferences.getComponents()) {
 
-                    Transference t = (Transference) c;
+                        Transference t = TRANSFERENCES_MAP.get(c);
 
-                    if (t != _current_transference && !t.isFinished() && !t.isCanceled()) {
+                        if (t != _current_transference && !t.isFinished() && !t.isCanceled()) {
 
-                        String email = t.getEmail();
+                            String email = t.getEmail();
 
-                        String lpath = t.getLpath();
+                            String lpath = t.getLpath();
 
-                        String rpath = t.getRpath();
+                            String rpath = t.getRpath();
 
-                        int action = t.getAction();
+                            int action = t.getAction();
 
-                        trans.add(new Object[]{email, lpath, rpath, action});
+                            trans.add(new Object[]{email, lpath, rpath, action});
+                        }
                     }
+
+                    try (FileOutputStream fos = new FileOutputStream(TRANSFERS_FILE); ObjectOutputStream oos = new ObjectOutputStream(fos)) {
+
+                        oos.writeObject(trans);
+
+                    } catch (Exception ex) {
+                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+
+                    }
+
+                } else {
+
+                    try {
+                        Files.deleteIfExists(Paths.get(TRANSFERS_FILE));
+                    } catch (Exception ex) {
+                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+
                 }
-
-                try (FileOutputStream fos = new FileOutputStream(TRANSFERS_FILE); ObjectOutputStream oos = new ObjectOutputStream(fos)) {
-
-                    oos.writeObject(trans);
-
-                } catch (Exception ex) {
-                    Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-
-                }
-
-            } else {
-
-                try {
-                    Files.deleteIfExists(Paths.get(TRANSFERS_FILE));
-                } catch (Exception ex) {
-                    Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-                }
-
-            }
-        });
+            });
+        }
     }
 
     public void loadTransfers() {
@@ -1390,6 +1392,8 @@ public class Main extends javax.swing.JFrame {
         });
 
         if (MEGA_ACCOUNTS.containsKey(email) || refresh_session) {
+            
+            Main.FREE_SPACE_CACHE.remove(email);
 
             if (refresh_session) {
 
@@ -2361,8 +2365,6 @@ public class Main extends javax.swing.JFrame {
                                                     }
                                                 });
 
-                                                Main.FREE_SPACE_CACHE.clear();
-
                                                 for (Object[] h : hijos) {
 
                                                     String filename = new File((String) h[0]).getName();
@@ -2388,8 +2390,6 @@ public class Main extends javax.swing.JFrame {
 
                                                 }
 
-                                                Main.FREE_SPACE_CACHE.clear();
-
                                                 saveTransfers();
 
                                             } else {
@@ -2397,11 +2397,8 @@ public class Main extends javax.swing.JFrame {
                                             }
 
                                         } else {
-                                            Main.FREE_SPACE_CACHE.clear();
-
+                                           
                                             String email = Helpers.findFirstAccountWithSpace(dialog.getLocal_size(), f.getName());
-
-                                            Main.FREE_SPACE_CACHE.clear();
 
                                             if (email != null) {
                                                 Helpers.GUIRunAndWait(() -> {
