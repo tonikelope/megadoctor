@@ -448,6 +448,7 @@ public final class Transference extends javax.swing.JPanel {
 
                 Helpers.GUIRunAndWait(() -> {
                     status_icon.setVisible(false);
+                    status_icon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/ok.png")));
                     progress.setValue(progress.getMinimum());
                     progress.setIndeterminate(true);
                     folder_stats_scroll.setVisible(false);
@@ -468,13 +469,6 @@ public final class Transference extends javax.swing.JPanel {
     }
 
     public void start() {
-
-        Helpers.GUIRun(() -> {
-            status_icon.setVisible(false);
-            progress.setValue(progress.getMinimum());
-            progress.setIndeterminate(true);
-            folder_stats_scroll.setVisible(false);
-        });
 
         Main.MAIN_WINDOW.setCurrent_transference(this);
 

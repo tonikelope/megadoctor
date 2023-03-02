@@ -1391,10 +1391,10 @@ public class Helpers {
 
                     popup.add(copyPublicLink);
 
-                } 
-                
-                if(_t.isError()) {
-                    
+                }
+
+                if (_t.isError()) {
+
                     popup.addSeparator();
 
                     JMenuItem retryTransference = new JMenuItem(retryTransferenceLinkAction);
