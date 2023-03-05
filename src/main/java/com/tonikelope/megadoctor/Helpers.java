@@ -223,6 +223,13 @@ public class Helpers {
                 s = Helpers.getAccountFreeSpace(email);
 
                 Main.FREE_SPACE_CACHE.put(email, s);
+
+            } else if (s - (r != null ? r : 0) >= required) {
+
+                //Doble comprobación en caso de que el valor cacheado sea aparentemente válido para minimizar error al empezar transferencia
+                s = Helpers.getAccountFreeSpace(email);
+
+                Main.FREE_SPACE_CACHE.put(email, s);
             }
 
             if (s - (r != null ? r : 0) >= required) {

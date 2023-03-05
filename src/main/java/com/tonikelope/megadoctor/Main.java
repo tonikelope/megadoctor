@@ -56,7 +56,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.61";
+    public final static String VERSION = "1.62";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -65,10 +65,10 @@ public class Main extends javax.swing.JFrame {
     public final static String ACCOUNTS_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_accounts";
     public final static String TRANSFERS_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_transfers";
     public final static String NODES_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_nodes";
+    public final static String FREE_SPACE_CACHE_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_free_space_cache";
     public final static String LOG_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_log";
     public final static Object TRANSFERENCES_LOCK = new Object();
 
-    public final static ConcurrentHashMap<String, Long> FREE_SPACE_CACHE = new ConcurrentHashMap<>();
     public final static ConcurrentHashMap<Component, Transference> TRANSFERENCES_MAP = new ConcurrentHashMap<>();
 
     public volatile static Main MAIN_WINDOW;
@@ -76,6 +76,7 @@ public class Main extends javax.swing.JFrame {
     public volatile static LinkedHashMap<String, String> MEGA_ACCOUNTS = new LinkedHashMap<>();
     public volatile static HashMap<String, String> MEGA_SESSIONS = new HashMap<>();
     public volatile static ConcurrentHashMap<String, Object[]> MEGA_NODES = new ConcurrentHashMap<>();
+    public volatile static ConcurrentHashMap<String, Long> FREE_SPACE_CACHE = new ConcurrentHashMap<>();
 
     private final DragMouseAdapter _transfer_drag_drop_adapter = new DragMouseAdapter(TRANSFERENCES_LOCK);
     private volatile boolean _running_main_action = false;
@@ -1477,6 +1478,13 @@ public class Main extends javax.swing.JFrame {
         } catch (Exception ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
+
+        try (FileOutputStream fos = new FileOutputStream(FREE_SPACE_CACHE_FILE); ObjectOutputStream oos = new ObjectOutputStream(fos)) {
+            oos.writeObject(FREE_SPACE_CACHE);
+
+        } catch (Exception ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     private void saveLog() {
@@ -1580,6 +1588,20 @@ public class Main extends javax.swing.JFrame {
                         Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
                         try {
                             Files.deleteIfExists(Paths.get(SESSIONS_FILE));
+                        } catch (IOException ex1) {
+                            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex1);
+                        }
+                    }
+                }
+
+                if (Files.exists(Paths.get(FREE_SPACE_CACHE_FILE))) {
+                    try (FileInputStream fis = new FileInputStream(FREE_SPACE_CACHE_FILE); ObjectInputStream ois = new ObjectInputStream(fis)) {
+                        FREE_SPACE_CACHE = (ConcurrentHashMap<String, Long>) ois.readObject();
+
+                    } catch (Exception ex) {
+                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                        try {
+                            Files.deleteIfExists(Paths.get(FREE_SPACE_CACHE_FILE));
                         } catch (IOException ex1) {
                             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex1);
                         }
