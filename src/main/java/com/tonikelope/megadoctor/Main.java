@@ -56,7 +56,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.62";
+    public final static String VERSION = "1.63";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -2087,7 +2087,11 @@ public class Main extends javax.swing.JFrame {
 
                                 });
 
-                                accounts_space_info.add(Helpers.getAccountSpaceData(email));
+                                String[] space_stats = Helpers.getAccountSpaceData(email);
+
+                                accounts_space_info.add(space_stats);
+
+                                Main.FREE_SPACE_CACHE.put(email, Long.parseLong(space_stats[2]) - Long.parseLong(space_stats[1]));
 
                                 parseAccountNodes(email);
                             }
