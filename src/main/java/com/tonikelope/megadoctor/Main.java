@@ -56,7 +56,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.64";
+    public final static String VERSION = "1.65";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
@@ -742,10 +742,6 @@ public class Main extends javax.swing.JFrame {
 
                             trans.add(new Object[]{email, lpath, rpath, action});
                         }
-                    }
-
-                    for (Object[] o : trans) {
-                        System.out.println("Guardando transferencia " + o[0]);
                     }
 
                     try (FileOutputStream fos = new FileOutputStream(TRANSFERS_FILE); ObjectOutputStream oos = new ObjectOutputStream(fos)) {
