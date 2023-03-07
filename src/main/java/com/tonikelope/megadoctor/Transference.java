@@ -286,7 +286,9 @@ public final class Transference extends javax.swing.JPanel {
                 Main.MAIN_WINDOW.getTransferences().repaint();
 
             });
-
+            
+            Main.FREE_SPACE_CACHE.remove(_email);
+            
             if (_running) {
                 Main.MAIN_WINDOW.forceRefreshAccount(_email, "Refreshed after upload CANCEL [" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + _rpath, false, false);
             }
