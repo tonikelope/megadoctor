@@ -165,11 +165,11 @@ public final class Transference extends javax.swing.JPanel {
         return (timeout == WAIT_TIMEOUT);
     }
 
-    private boolean waitFreeSpaceChange(long old_free_space) {
+    private boolean waitUsedSpaceChange(long old_used_space) {
 
         int timeout = 0;
 
-        while (Helpers.getAccountFreeSpace(_email) == old_free_space && timeout < WAIT_TIMEOUT) {
+        while (Helpers.getAccountCloudDriveUsedSpace(_email) == old_used_space && timeout < WAIT_TIMEOUT) {
 
             try {
                 Thread.sleep(1000);
@@ -286,9 +286,9 @@ public final class Transference extends javax.swing.JPanel {
                 Main.MAIN_WINDOW.getTransferences().repaint();
 
             });
-            
+
             Main.FREE_SPACE_CACHE.remove(_email);
-            
+
             if (_running) {
                 Main.MAIN_WINDOW.forceRefreshAccount(_email, "Refreshed after upload CANCEL [" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + _rpath, false, false);
             }
@@ -539,7 +539,7 @@ public final class Transference extends javax.swing.JPanel {
 
                 }
 
-                long free_space = Helpers.getAccountFreeSpace(_email);
+                long used_space = Helpers.getAccountCloudDriveUsedSpace(_email);
 
                 long start_timestamp = System.currentTimeMillis();
 
@@ -582,11 +582,11 @@ public final class Transference extends javax.swing.JPanel {
                         } else {
                             if (isDirectory()) {
 
-                                c_error = (waitRemoteExists() && waitFreeSpaceChange(free_space));
+                                c_error = (waitRemoteExists() && waitUsedSpaceChange(used_space));
 
                             } else {
 
-                                c_error = (waitRemoteExists() && waitCompletedTAG() && waitFreeSpaceChange(free_space));
+                                c_error = (waitRemoteExists() && waitCompletedTAG() && waitUsedSpaceChange(used_space));
                             }
                         }
 

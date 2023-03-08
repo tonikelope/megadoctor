@@ -405,6 +405,24 @@ public class Helpers {
         return null;
     }
 
+    public static long getAccountCloudDriveUsedSpace(String email) {
+        Main.MAIN_WINDOW.login(email);
+
+        String df = Helpers.runProcess(new String[]{"mega-df"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+
+        String regex_cloud = "drive: *([0-9]+)";
+
+        Pattern pattern = Pattern.compile(regex_cloud, Pattern.MULTILINE);
+
+        Matcher matcher = pattern.matcher(df);
+
+        if (matcher.find()) {
+            return Long.parseLong(matcher.group(1));
+        }
+
+        return 0;
+    }
+
     public static long getAccountUsedSpace(String email) {
         String[] space_stats = getAccountSpaceData(email);
 
@@ -1332,7 +1350,7 @@ public class Helpers {
                     if (_t.isFinished()) {
                         File f = new File(_t.getLpath());
                         Helpers.threadRun(() -> {
-                            Helpers.copyTextToClipboard(_t.getPublic_link() != null ? _t.getPublic_link() : "");
+                            Helpers.copyTextToClipboard(_t.getPublic_link() != null ? f.getName() + "   " + t.getPublic_link() : "");
                             Helpers.mostrarMensajeInformativo(Main.MAIN_WINDOW, "<b>" + f.getName() + "</b><br>" + _t.getPublic_link() + "<br><br>COPIED TO CLIPBOARD");
                         });
                     }
