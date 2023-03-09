@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStreamWriter;
+import java.net.ServerSocket;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collections;
@@ -56,8 +57,9 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.67";
+    public final static String VERSION = "1.68";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
+    public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
@@ -2749,10 +2751,25 @@ public class Main extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                MAIN_WINDOW = new Main();
-                MAIN_WINDOW.init();
-                MAIN_WINDOW.setExtendedState(JFrame.MAXIMIZED_BOTH);
-                MAIN_WINDOW.setVisible(true);
+                ServerSocket socket = null;
+                try {
+                    socket = new ServerSocket(MEGADOCTOR_ONE_INSTANCE_PORT);
+                    MAIN_WINDOW = new Main();
+                    MAIN_WINDOW.init();
+                    MAIN_WINDOW.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                    MAIN_WINDOW.setVisible(true);
+                } catch (IOException ex) {
+                    System.out.println("Megadoctor is already running, exiting...");
+                } finally {
+                    try {
+                        if (socket != null) {
+                            socket.close();
+                        }
+                    } catch (Exception ex) {
+                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+
+                }
             }
         });
     }
