@@ -57,7 +57,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.68";
+    public final static String VERSION = "1.69";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -70,6 +70,7 @@ public class Main extends javax.swing.JFrame {
     public final static String FREE_SPACE_CACHE_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_free_space_cache";
     public final static String LOG_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_log";
     public final static Object TRANSFERENCES_LOCK = new Object();
+    public volatile static ServerSocket ONE_INSTANCE_SOCKET = null;
 
     public final static ConcurrentHashMap<Component, Transference> TRANSFERENCES_MAP = new ConcurrentHashMap<>();
 
@@ -232,6 +233,13 @@ public class Main extends javax.swing.JFrame {
             if (MEGA_CMD_VERSION == null || "".equals(MEGA_CMD_VERSION)) {
                 Helpers.mostrarMensajeError(this, "MEGA CMD IS REQUIRED");
                 Helpers.openBrowserURLAndWait(MEGA_CMD_URL);
+                if (ONE_INSTANCE_SOCKET != null) {
+                    try {
+                        ONE_INSTANCE_SOCKET.close();
+                    } catch (IOException ex) {
+                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
                 System.exit(1);
             }
 
@@ -694,6 +702,14 @@ public class Main extends javax.swing.JFrame {
             } else {
                 removeSessionFILES();
                 logout(false);
+            }
+
+            if (ONE_INSTANCE_SOCKET != null) {
+                try {
+                    ONE_INSTANCE_SOCKET.close();
+                } catch (IOException ex) {
+                    Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
 
             System.exit(0);
@@ -2250,6 +2266,15 @@ public class Main extends javax.swing.JFrame {
                 bye();
             }
         } else {
+
+            if (ONE_INSTANCE_SOCKET != null) {
+                try {
+                    ONE_INSTANCE_SOCKET.close();
+                } catch (IOException ex) {
+                    Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+
             System.exit(1); //Forzamos
         }
     }//GEN-LAST:event_formWindowClosing
@@ -2747,31 +2772,34 @@ public class Main extends javax.swing.JFrame {
             java.util.logging.Logger.getLogger(Main.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
+        try {
+            ONE_INSTANCE_SOCKET = new ServerSocket(MEGADOCTOR_ONE_INSTANCE_PORT);
 
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                ServerSocket socket = null;
-                try {
-                    socket = new ServerSocket(MEGADOCTOR_ONE_INSTANCE_PORT);
+            /* Create and display the form */
+            java.awt.EventQueue.invokeLater(new Runnable() {
+                public void run() {
+
                     MAIN_WINDOW = new Main();
                     MAIN_WINDOW.init();
                     MAIN_WINDOW.setExtendedState(JFrame.MAXIMIZED_BOTH);
                     MAIN_WINDOW.setVisible(true);
-                } catch (IOException ex) {
-                    System.out.println("Megadoctor is already running, exiting...");
-                } finally {
-                    try {
-                        if (socket != null) {
-                            socket.close();
-                        }
-                    } catch (Exception ex) {
-                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-                    }
 
                 }
+            });
+
+        } catch (Exception ex) {
+            Helpers.mostrarMensajeError(null, "THERE IS ANOTHER MEGADOCTOR INSTANCE ALREADY RUNNING");
+
+            if (ONE_INSTANCE_SOCKET != null) {
+                try {
+                    ONE_INSTANCE_SOCKET.close();
+                } catch (IOException ex2) {
+                    Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
-        });
+
+            System.exit(1);
+        }
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
