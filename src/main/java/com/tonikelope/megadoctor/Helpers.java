@@ -862,19 +862,19 @@ public class Helpers {
                 popup.add(undo);
 
                 popup.addSeparator();
-            }
 
-            JMenuItem cut = new JMenuItem(cutAction);
-            cut.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/cut.png")));
-            popup.add(cut);
+                JMenuItem cut = new JMenuItem(cutAction);
+                cut.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/cut.png")));
+                popup.add(cut);
+
+                JMenuItem paste = new JMenuItem(pasteAction);
+                paste.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/paste.png")));
+                popup.add(paste);
+            }
 
             JMenuItem copy = new JMenuItem(copyAction);
             copy.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/copy.png")));
             popup.add(copy);
-
-            JMenuItem paste = new JMenuItem(pasteAction);
-            paste.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/paste.png")));
-            popup.add(paste);
 
             popup.addSeparator();
 
@@ -1078,19 +1078,19 @@ public class Helpers {
                 popup.add(undo);
 
                 popup.addSeparator();
-            }
 
-            JMenuItem cut = new JMenuItem(cutAction);
-            cut.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/cut.png")));
-            popup.add(cut);
+                JMenuItem cut = new JMenuItem(cutAction);
+                cut.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/cut.png")));
+                popup.add(cut);
+
+                JMenuItem paste = new JMenuItem(pasteAction);
+                paste.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/paste.png")));
+                popup.add(paste);
+            }
 
             JMenuItem copy = new JMenuItem(copyAction);
             copy.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/copy.png")));
             popup.add(copy);
-
-            JMenuItem paste = new JMenuItem(pasteAction);
-            paste.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/paste.png")));
-            popup.add(paste);
 
             popup.addSeparator();
 
@@ -1296,19 +1296,19 @@ public class Helpers {
                 popup.add(undo);
 
                 popup.addSeparator();
-            }
 
-            JMenuItem cut = new JMenuItem(cutAction);
-            cut.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/cut.png")));
-            popup.add(cut);
+                JMenuItem cut = new JMenuItem(cutAction);
+                cut.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/cut.png")));
+                popup.add(cut);
+
+                JMenuItem paste = new JMenuItem(pasteAction);
+                paste.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/paste.png")));
+                popup.add(paste);
+            }
 
             JMenuItem copy = new JMenuItem(copyAction);
             copy.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/copy.png")));
             popup.add(copy);
-
-            JMenuItem paste = new JMenuItem(pasteAction);
-            paste.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/paste.png")));
-            popup.add(paste);
 
             popup.addSeparator();
 
