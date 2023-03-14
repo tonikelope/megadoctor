@@ -315,6 +315,11 @@ public class Helpers {
     public static String megaWhoami() {
         String[] whoami = Helpers.runProcess(new String[]{"mega-whoami"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
+        if (String.join("", whoami).contains("security needs upgrading")) {
+            Helpers.runProcess(new String[]{"mega-confirm", "--security"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+            whoami = Helpers.runProcess(new String[]{"mega-whoami"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+        }
+
         if (Integer.parseInt(whoami[2]) == 0) {
 
             return whoami[1].replaceAll("^.+: +(.+)$", "$1").trim().toLowerCase();
