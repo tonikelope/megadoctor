@@ -315,7 +315,7 @@ public class Helpers {
     public static String megaWhoami() {
         String[] whoami = Helpers.runProcess(new String[]{"mega-whoami"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-        if (String.join("", whoami).contains("security needs upgrading")) {
+        if (whoami[1].contains("security needs upgrading")) {
             Helpers.runProcess(new String[]{"mega-confirm", "--security"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
             whoami = Helpers.runProcess(new String[]{"mega-whoami"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
         }
@@ -635,6 +635,8 @@ public class Helpers {
         try {
 
             ProcessBuilder processbuilder = new ProcessBuilder(Helpers.buildCommand(command));
+
+            processbuilder.redirectErrorStream(true);
 
             if (path != null && !"".equals(path)) {
 
