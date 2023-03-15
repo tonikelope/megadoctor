@@ -321,8 +321,6 @@ public class Helpers {
         if (whoami[1].contains("security needs upgrading")) {
             Helpers.runProcess(new String[]{"mega-reload"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
             Helpers.runProcess(new String[]{"mega-confirm", "--security"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
-            Main.MAIN_WINDOW.logout(false, email);
-            return megaWhoami(null);
         }
         if (Integer.parseInt(whoami[2]) == 0) {
 
