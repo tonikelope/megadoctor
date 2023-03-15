@@ -313,7 +313,7 @@ public class Helpers {
     }
 
     public static String megaWhoami() {
-        String[] whoami = Helpers.runProcess(new String[]{"mega-whoami"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+        String[] whoami = Helpers.runProcess(new String[]{"mega-whoami"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null, true);
 
         if (whoami[1].contains("security needs upgrading")) {
             Helpers.runProcess(new String[]{"mega-confirm", "--security"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
@@ -632,24 +632,21 @@ public class Helpers {
     }
 
     public static String[] runProcess(String[] command, String path) {
+        return runProcess(command, path, false);
+    }
+
+    public static String[] runProcess(String[] command, String path, boolean redirectstream) {
         try {
-
             ProcessBuilder processbuilder = new ProcessBuilder(Helpers.buildCommand(command));
-
-            processbuilder.redirectErrorStream(true);
-
             if (path != null && !"".equals(path)) {
-
                 processbuilder.environment().put("PATH", path + File.pathSeparator + System.getenv("PATH"));
-
             }
 
+            processbuilder.redirectErrorStream(redirectstream);
+
             Process process = processbuilder.start();
-
             long pid = process.pid();
-
             StringBuilder sb = new StringBuilder();
-
             try {
                 BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
 
@@ -661,14 +658,10 @@ public class Helpers {
             } catch (Exception ex) {
                 Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
             }
-
             process.waitFor();
-
             return new String[]{String.valueOf(pid), sb.toString(), String.valueOf(process.exitValue())};
-
         } catch (Exception ex) {
         }
-
         return null;
     }
 
