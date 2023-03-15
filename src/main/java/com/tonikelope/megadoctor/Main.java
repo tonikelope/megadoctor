@@ -349,7 +349,7 @@ public class Main extends javax.swing.JFrame {
 
     public boolean login(String email) {
 
-        if (Helpers.megaWhoami().equals(email.toLowerCase())) {
+        if (Helpers.megaWhoami(email).equals(email.toLowerCase())) {
             return true;
         }
 
@@ -370,7 +370,7 @@ public class Main extends javax.swing.JFrame {
             if (login_session_output[1].contains("security needs upgrading")) {
                 Helpers.runProcess(new String[]{"mega-reload"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
                 Helpers.runProcess(new String[]{"mega-confirm", "--security"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
-                logout(false);
+                logout(false, email);
                 return login(email);
             }
 
@@ -385,7 +385,7 @@ public class Main extends javax.swing.JFrame {
                 if (login[1].contains("security needs upgrading")) {
                     Helpers.runProcess(new String[]{"mega-reload"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
                     Helpers.runProcess(new String[]{"mega-confirm", "--security"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
-                    logout(false);
+                    logout(false, email);
                     return login(email);
                 }
 
@@ -409,7 +409,7 @@ public class Main extends javax.swing.JFrame {
             if (login[1].contains("security needs upgrading")) {
                 Helpers.runProcess(new String[]{"mega-reload"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
                 Helpers.runProcess(new String[]{"mega-confirm", "--security"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
-                logout(false);
+                logout(false, email);
                 return login(email);
             }
 
@@ -500,10 +500,18 @@ public class Main extends javax.swing.JFrame {
     }
 
     public void logout(boolean keep_session) {
+        logout(keep_session, null);
+    }
+
+    public void logout(boolean keep_session, String email) {
         if (keep_session) {
             Helpers.runProcess(new String[]{"mega-logout", "--keep-session"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
         } else {
             Helpers.runProcess(new String[]{"mega-logout"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+            if (email != null) {
+                MEGA_SESSIONS.remove(email);
+            }
         }
     }
 

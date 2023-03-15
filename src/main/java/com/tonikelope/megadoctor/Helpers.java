@@ -313,20 +313,21 @@ public class Helpers {
     }
 
     public static String megaWhoami() {
-        String[] whoami = Helpers.runProcess(new String[]{"mega-whoami"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null, true);
+        return megaWhoami(null);
+    }
 
+    public static String megaWhoami(String email) {
+        String[] whoami = Helpers.runProcess(new String[]{"mega-whoami"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null, true);
         if (whoami[1].contains("security needs upgrading")) {
             Helpers.runProcess(new String[]{"mega-reload"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
             Helpers.runProcess(new String[]{"mega-confirm", "--security"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
-            Main.MAIN_WINDOW.logout(false);
-            return megaWhoami();
+            Main.MAIN_WINDOW.logout(false, email);
+            return megaWhoami(null);
         }
-
         if (Integer.parseInt(whoami[2]) == 0) {
 
             return whoami[1].replaceAll("^.+: +(.+)$", "$1").trim().toLowerCase();
         }
-
         return "";
     }
 
