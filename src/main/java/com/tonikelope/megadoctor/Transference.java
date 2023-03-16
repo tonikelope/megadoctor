@@ -14,6 +14,7 @@ import static com.tonikelope.megadoctor.Main.MEGA_CMD_WINDOWS_PATH;
 import static com.tonikelope.megadoctor.Main.TRANSFERENCES_LOCK;
 import java.awt.Component;
 import java.io.File;
+import java.net.URLDecoder;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -870,6 +871,8 @@ public final class Transference extends javax.swing.JPanel {
                 }
 
                 _rpath = rp.endsWith("/") ? rp + fname : rp;
+                
+                _rpath = URLDecoder.decode(_rpath);
 
             } else {
                 _rpath = Helpers.getNodeFullPath(rp, _email);
@@ -880,7 +883,7 @@ public final class Transference extends javax.swing.JPanel {
 
                 _directory = (boolean) node_info[3];
             }
-
+            
             Helpers.GUIRun(() -> {
 
                 remote_path.setText("(" + _email + ") " + _rpath);
