@@ -466,6 +466,8 @@ public final class Transference extends javax.swing.JPanel {
                 _canceled = false;
 
                 _error = false;
+                
+                _error_msg="";
 
                 TRANSFERENCES_LOCK.notifyAll();
             }
