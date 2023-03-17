@@ -49,6 +49,7 @@ public final class Transference extends javax.swing.JPanel {
     private volatile boolean _starting = false;
     private volatile boolean _finishing = false;
     private volatile boolean _error = false;
+    private volatile String _error_msg = null;
     private volatile long _prog_timestamp = 0;
     private final AtomicBoolean _terminate_walk_tree = new AtomicBoolean();
     private volatile String _public_link = null;
@@ -591,12 +592,24 @@ public final class Transference extends javax.swing.JPanel {
                             }
                         }
 
+                        if (c_error) {
+                            _error_msg = _error_msg + "#Unable to verify that transfer was completed correctly (TIMEOUT)";
+                        }
+
                         _error = c_error;
 
-                        final boolean warning_folder_size = (_action == 1 && isDirectory() && readRemoteFolderSize() != _size);
+                        if (_action == 1 && isDirectory() && readRemoteFolderSize() != _size) {
+                            _error = true;
+                            _error_msg = _error_msg + "#REMOTE FOLDER SIZE IS DIFFERENT FROM FOLDER LOCAL SIZE";
+                        }
 
                         if (_action == 1) {
                             _public_link = Helpers.exportPathFromCurrentAccount(_rpath);
+
+                            if (_public_link == null) {
+                                _error = true;
+                                _error_msg = _error_msg + "REMOTE FOLDER SIZE IS DIFFERENT FROM FOLDER LOCAL SIZE";
+                            }
                         }
 
                         long speed = calculateSpeed(_size, _prog_init < 0 ? 0 : _prog_init, 10000, start_timestamp, finish_timestamp);
@@ -612,12 +625,7 @@ public final class Transference extends javax.swing.JPanel {
 
                             if (_error) {
                                 status_icon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/warning_transference.png")));
-                                status_icon.setToolTipText("Unable to verify that transfer was completed correctly (TIMEOUT)");
-                            }
-
-                            if (warning_folder_size) {
-                                status_icon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/warning_transference.png")));
-                                status_icon.setToolTipText("REMOTE FOLDER SIZE IS DIFFERENT FROM FOLDER LOCAL SIZE");
+                                status_icon.setToolTipText(_error_msg);
                             }
 
                             boolean running = false;
@@ -871,7 +879,7 @@ public final class Transference extends javax.swing.JPanel {
                 }
 
                 _rpath = rp.endsWith("/") ? rp + fname : rp;
-                
+
                 _rpath = URLDecoder.decode(_rpath);
 
             } else {
@@ -883,7 +891,7 @@ public final class Transference extends javax.swing.JPanel {
 
                 _directory = (boolean) node_info[3];
             }
-            
+
             Helpers.GUIRun(() -> {
 
                 remote_path.setText("(" + _email + ") " + _rpath);
