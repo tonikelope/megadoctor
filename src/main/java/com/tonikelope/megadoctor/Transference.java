@@ -49,7 +49,7 @@ public final class Transference extends javax.swing.JPanel {
     private volatile boolean _starting = false;
     private volatile boolean _finishing = false;
     private volatile boolean _error = false;
-    private volatile String _error_msg = null;
+    private volatile String _error_msg = "";
     private volatile long _prog_timestamp = 0;
     private final AtomicBoolean _terminate_walk_tree = new AtomicBoolean();
     private volatile String _public_link = null;
@@ -608,7 +608,7 @@ public final class Transference extends javax.swing.JPanel {
 
                             if (_public_link == null) {
                                 _error = true;
-                                _error_msg = _error_msg + "REMOTE FOLDER SIZE IS DIFFERENT FROM FOLDER LOCAL SIZE";
+                                _error_msg = _error_msg + "#PUBLIC LINK GENERATION FAILED";
                             }
                         }
 
