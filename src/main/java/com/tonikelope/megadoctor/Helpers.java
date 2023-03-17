@@ -13,6 +13,7 @@ package com.tonikelope.megadoctor;
 import static com.tonikelope.megadoctor.Main.MEGA_CMD_WINDOWS_PATH;
 import static com.tonikelope.megadoctor.Main.MEGA_NODES;
 import static com.tonikelope.megadoctor.Main.THREAD_POOL;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Cursor;
@@ -313,12 +314,11 @@ public class Helpers {
     }
 
     public static String megaWhoami() {
-        return megaWhoami(null);
-    }
-
-    public static String megaWhoami(String email) {
         String[] whoami = Helpers.runProcess(new String[]{"mega-whoami"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null, true);
         if (whoami[1].contains("security needs upgrading")) {
+            Helpers.GUIRun(() -> {
+                Main.MAIN_WINDOW.getStatus_label().setForeground(Color.PINK);
+            });
             Helpers.runProcess(new String[]{"mega-reload"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
             Helpers.runProcess(new String[]{"mega-confirm", "--security"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
         }
