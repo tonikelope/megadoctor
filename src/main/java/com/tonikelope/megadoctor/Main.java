@@ -2292,7 +2292,7 @@ public class Main extends javax.swing.JFrame {
 
                                 bye();
                             }
-                        } else {
+                        } else if (Helpers.mostrarMensajeInformativoSINO(this, "WARNING: RUNNING TRANSFERENCE PORGRESS WILL BE LOST") == 0) {
                             bye();
                         }
                     } else {
@@ -2340,7 +2340,7 @@ public class Main extends javax.swing.JFrame {
     private void upload_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_upload_buttonActionPerformed
         // TODO add your handling code here:
 
-        if (!Main.MEGA_ACCOUNTS.isEmpty()) {
+        if (!Main.MEGA_ACCOUNTS.isEmpty() && (!isTransferences_running() || Helpers.mostrarMensajeInformativoSINO(this, "WARNING: IF YOU ADD NEW UPLOADS, THE CURRENT RUNNING UPLOAD PROGRESS WILL BE LOST. CONTINUE?") == 0)) {
 
             _provisioning_upload = true;
 
@@ -2360,14 +2360,10 @@ public class Main extends javax.swing.JFrame {
                     }
                 }
 
-                boolean auto_resume = false;
-
                 if (isTransferences_running() && !isTransferences_paused()) {
                     _current_transference.pause();
-                    auto_resume = true;
-                }
 
-                boolean r = auto_resume;
+                }
 
                 Helpers.GUIRunAndWait(() -> {
 
@@ -2404,15 +2400,6 @@ public class Main extends javax.swing.JFrame {
 
                                 _provisioning_upload = false;
 
-                                if (isTransferences_running() && r) {
-
-                                    _current_transference.resume();
-
-                                    Helpers.GUIRun(() -> {
-                                        getPause_button().setEnabled(true);
-                                    });
-
-                                }
                             });
 
                         } else {
@@ -2523,16 +2510,6 @@ public class Main extends javax.swing.JFrame {
 
                                     _provisioning_upload = false;
 
-                                    if (isTransferences_running() && r) {
-
-                                        _current_transference.resume();
-
-                                        Helpers.GUIRun(() -> {
-                                            getPause_button().setEnabled(true);
-                                        });
-
-                                    }
-
                                     TRANSFERENCES_LOCK.notifyAll();
                                 }
                             }
@@ -2545,17 +2522,6 @@ public class Main extends javax.swing.JFrame {
 
                         _provisioning_upload = false;
 
-                        if (isTransferences_running() && r) {
-
-                            Helpers.threadRun(() -> {
-                                _current_transference.resume();
-
-                                Helpers.GUIRun(() -> {
-                                    getPause_button().setEnabled(true);
-                                });
-
-                            });
-                        }
                     }
                 }
                 );
