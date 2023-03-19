@@ -57,7 +57,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.83";
+    public final static String VERSION = "1.84";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -2191,11 +2191,18 @@ public class Main extends javax.swing.JFrame {
 
                             output_textarea.append("TOTAL FREE SPACE: " + Helpers.formatBytes(total_space - total_space_used) + " (of " + Helpers.formatBytes(total_space) + ")\n\n");
 
+                            String cuentas_text = cuentas_textarea.getText();
+
                             if (!login_error_accounts.isEmpty()) {
+
                                 output_textarea.append("(WARNING) LOGIN ERRORS: " + String.valueOf(login_error_accounts.size()) + "\n");
-                                for (String errors : login_error_accounts) {
-                                    output_textarea.append("    ERROR: " + errors + "\n");
+
+                                for (String error_account : login_error_accounts) {
+                                    output_textarea.append("    ERROR: " + error_account + "\n");
+                                    cuentas_text.replace(error_account, "");
                                 }
+
+                                cuentas_textarea.setText(cuentas_text);
                             }
 
                             output_textarea.append("\nCHECKING END -> " + Helpers.getFechaHoraActual() + "\n");
