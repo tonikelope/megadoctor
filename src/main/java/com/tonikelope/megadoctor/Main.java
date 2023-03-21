@@ -57,7 +57,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.87";
+    public final static String VERSION = "1.88";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -100,7 +100,7 @@ public class Main extends javax.swing.JFrame {
     private volatile Dimension _pre_window_size = null;
     private volatile Point _pre_window_position = null;
     private volatile int _pre_state;
-    private volatile boolean _upload_warning=false;
+    private volatile boolean _upload_warning = false;
 
     public void restoreWindowState() {
         Helpers.GUIRun(() -> {
@@ -2350,8 +2350,8 @@ public class Main extends javax.swing.JFrame {
 
         if (!Main.MEGA_ACCOUNTS.isEmpty() && (!isTransferences_running() || _upload_warning || Helpers.mostrarMensajeInformativoSINO(this, "WARNING: IF YOU ADD NEW UPLOADS, THE CURRENT RUNNING UPLOAD PROGRESS WILL BE LOST. CONTINUE?") == 0)) {
 
-            _upload_warning=true;
-            
+            _upload_warning = true;
+
             _provisioning_upload = true;
 
             getUpload_button().setEnabled(false);
@@ -2537,7 +2537,7 @@ public class Main extends javax.swing.JFrame {
                 );
 
             });
-        } else if(MEGA_ACCOUNTS.isEmpty()) {
+        } else if (MEGA_ACCOUNTS.isEmpty()) {
             Helpers.mostrarMensajeError(this, "YOU HAVE TO FIRST ADD SOME ACCOUNTS AND CHECK THEM");
         }
     }//GEN-LAST:event_upload_buttonActionPerformed

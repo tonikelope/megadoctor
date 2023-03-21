@@ -459,6 +459,16 @@ public final class Transference extends javax.swing.JPanel {
                     action.setText("RETRY (QUEUED)");
                 });
 
+                _tag = -1;
+
+                _prog = 0;
+
+                _prog_init = 0;
+
+                _starting = false;
+
+                _finishing = false;
+
                 _running = false;
 
                 _finished = false;
