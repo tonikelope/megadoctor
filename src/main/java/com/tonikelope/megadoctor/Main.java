@@ -57,7 +57,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.88";
+    public final static String VERSION = "1.89";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -2300,7 +2300,7 @@ public class Main extends javax.swing.JFrame {
 
                                 bye();
                             }
-                        } else if (Helpers.mostrarMensajeInformativoSINO(this, "WARNING: RUNNING TRANSFERENCE PROGRESS WILL BE LOST") == 0) {
+                        } else if (Helpers.mostrarMensajeInformativoSINO(this, "WARNING: RUNNING TRANSFERENCE PROGRESS MIGHT BE LOST") == 0) {
                             bye();
                         }
                     } else {
@@ -2347,10 +2347,12 @@ public class Main extends javax.swing.JFrame {
 
     private void upload_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_upload_buttonActionPerformed
         // TODO add your handling code here:
+        
+        int warning_ret=-1;
+        
+        if (!Main.MEGA_ACCOUNTS.isEmpty() && (!isTransferences_running() || _upload_warning || (warning_ret=Helpers.mostrarMensajeInformativoSINO(this, "WARNING: IF YOU ADD NEW UPLOADS, THE CURRENT RUNNING UPLOAD PROGRESS MIGHT BE LOST. CONTINUE?")) == 0)) {
 
-        if (!Main.MEGA_ACCOUNTS.isEmpty() && (!isTransferences_running() || _upload_warning || Helpers.mostrarMensajeInformativoSINO(this, "WARNING: IF YOU ADD NEW UPLOADS, THE CURRENT RUNNING UPLOAD PROGRESS WILL BE LOST. CONTINUE?") == 0)) {
-
-            _upload_warning = true;
+            _upload_warning = (warning_ret!=-1);
 
             _provisioning_upload = true;
 
