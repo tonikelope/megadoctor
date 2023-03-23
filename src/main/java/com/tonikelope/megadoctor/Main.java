@@ -57,7 +57,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.89";
+    public final static String VERSION = "1.90";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -2352,7 +2352,7 @@ public class Main extends javax.swing.JFrame {
         
         if (!Main.MEGA_ACCOUNTS.isEmpty() && (!isTransferences_running() || _upload_warning || (warning_ret=Helpers.mostrarMensajeInformativoSINO(this, "WARNING: IF YOU ADD NEW UPLOADS, THE CURRENT RUNNING UPLOAD PROGRESS MIGHT BE LOST. CONTINUE?")) == 0)) {
 
-            _upload_warning = (warning_ret!=-1);
+            _upload_warning = (warning_ret == 0 || _upload_warning);
 
             _provisioning_upload = true;
 
