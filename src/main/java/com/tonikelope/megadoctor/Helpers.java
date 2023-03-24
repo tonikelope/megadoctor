@@ -892,6 +892,83 @@ public class Helpers {
             txtField.setComponentPopupMenu(popup);
         }
 
+        public static void addTextActionsPopupMenuTo(JTextArea txtField) {
+            JPopupMenu popup = new JPopupMenu();
+
+            UndoManager undoManager = new UndoManager();
+            txtField.getDocument().addUndoableEditListener(undoManager);
+            Action undoAction = new AbstractAction("Undo") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    if (undoManager.canUndo() && txtField.isEditable()) {
+                        undoManager.undo();
+                    }
+                }
+            };
+
+            Action copyAction = new AbstractAction("Copy") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    txtField.copy();
+                }
+            };
+            Action cutAction = new AbstractAction("Cut") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    txtField.cut();
+                }
+            };
+            Action pasteAction = new AbstractAction("Paste") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    txtField.paste();
+                }
+            };
+            Action selectAllAction = new AbstractAction("Sellect all") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    txtField.selectAll();
+                }
+            };
+
+            cutAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control X"));
+            copyAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control C"));
+            pasteAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control V"));
+            selectAllAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control A"));
+
+            if (txtField.isEditable()) {
+                JMenuItem undo = new JMenuItem(undoAction);
+                undo.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/undo.png")));
+                popup.add(undo);
+
+                popup.addSeparator();
+
+                JMenuItem cut = new JMenuItem(cutAction);
+                cut.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/cut.png")));
+                popup.add(cut);
+
+                JMenuItem paste = new JMenuItem(pasteAction);
+                paste.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/paste.png")));
+                popup.add(paste);
+            }
+
+            JMenuItem copy = new JMenuItem(copyAction);
+            copy.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/copy.png")));
+            popup.add(copy);
+
+            popup.addSeparator();
+
+            JMenuItem selectAll = new JMenuItem(selectAllAction);
+            selectAll.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/select_all.png")));
+            popup.add(selectAll);
+
+            updateComponentFont(popup, popup.getFont(), 1.20f);
+
+            popup.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+            txtField.setComponentPopupMenu(popup);
+        }
+
         public static void addMainMEGAPopupMenuTo(JTextArea txtArea) {
             JPopupMenu popup = new JPopupMenu();
 

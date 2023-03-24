@@ -29,6 +29,8 @@ public class AutoUploadExcludedDialog extends javax.swing.JDialog {
         super(parent, modal);
         initComponents();
 
+        Helpers.JTextFieldRegularPopupMenu.addTextActionsPopupMenuTo(excluded_accounts);
+
         for (String s : Main.MEGA_EXCLUDED_ACCOUNTS) {
             excluded_accounts.append(s + "\n");
         }
