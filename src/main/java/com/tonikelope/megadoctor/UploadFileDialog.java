@@ -582,7 +582,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         // TODO add your handling code here:
         boolean vamos_button_enabled = vamos_button.isEnabled();
 
-        TextDialog dialog = new TextDialog(null, true);
+        UploadMegaLinkDialog dialog = new UploadMegaLinkDialog(null, true);
         Helpers.setCenterOfParent(this, dialog);
         dialog.setVisible(true);
 

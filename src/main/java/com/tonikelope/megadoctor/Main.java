@@ -38,6 +38,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -57,7 +58,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.90";
+    public final static String VERSION = "1.91";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -65,6 +66,7 @@ public class Main extends javax.swing.JFrame {
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
     public final static String SESSIONS_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_sessions";
     public final static String ACCOUNTS_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_accounts";
+    public final static String EXCLUDED_ACCOUNTS_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_excluded_accounts";
     public final static String TRANSFERS_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_transfers";
     public final static String NODES_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_nodes";
     public final static String FREE_SPACE_CACHE_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_free_space_cache";
@@ -77,6 +79,7 @@ public class Main extends javax.swing.JFrame {
     public volatile static Main MAIN_WINDOW;
     public volatile static String MEGA_CMD_VERSION = null;
     public volatile static LinkedHashMap<String, String> MEGA_ACCOUNTS = new LinkedHashMap<>();
+    public volatile static ConcurrentLinkedQueue<String> MEGA_EXCLUDED_ACCOUNTS = new ConcurrentLinkedQueue<>();
     public volatile static HashMap<String, String> MEGA_SESSIONS = new HashMap<>();
     public volatile static ConcurrentHashMap<String, Object[]> MEGA_NODES = new ConcurrentHashMap<>();
     public volatile static ConcurrentHashMap<String, Long> FREE_SPACE_CACHE = new ConcurrentHashMap<>();
@@ -1522,6 +1525,14 @@ public class Main extends javax.swing.JFrame {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
 
+        try (FileOutputStream fos = new FileOutputStream(EXCLUDED_ACCOUNTS_FILE); ObjectOutputStream oos = new ObjectOutputStream(fos)) {
+
+            oos.writeObject(MEGA_EXCLUDED_ACCOUNTS);
+
+        } catch (Exception ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
         try (FileOutputStream fos = new FileOutputStream(SESSIONS_FILE); ObjectOutputStream oos = new ObjectOutputStream(fos)) {
             oos.writeObject(MEGA_SESSIONS);
 
@@ -1614,6 +1625,14 @@ public class Main extends javax.swing.JFrame {
 
                 } catch (Exception ex) {
                     Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+                if (Files.exists(Paths.get(EXCLUDED_ACCOUNTS_FILE))) {
+                    try (FileInputStream fis = new FileInputStream(EXCLUDED_ACCOUNTS_FILE); ObjectInputStream ois = new ObjectInputStream(fis)) {
+                        MEGA_EXCLUDED_ACCOUNTS = (ConcurrentLinkedQueue<String>) ois.readObject();
+                    } catch (Exception ex) {
+                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 }
 
                 if (Files.exists(Paths.get(NODES_FILE))) {
@@ -1742,6 +1761,7 @@ public class Main extends javax.swing.JFrame {
         show_accounts = new javax.swing.JLabel();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu2 = new javax.swing.JMenu();
+        jMenuItem2 = new javax.swing.JMenuItem();
         session_menu = new javax.swing.JCheckBoxMenuItem();
         jMenu1 = new javax.swing.JMenu();
         jMenuItem1 = new javax.swing.JMenuItem();
@@ -1974,6 +1994,15 @@ public class Main extends javax.swing.JFrame {
 
         jMenu2.setText("Options");
         jMenu2.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
+
+        jMenuItem2.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
+        jMenuItem2.setText("Auto upload excluded accounts");
+        jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem2ActionPerformed(evt);
+            }
+        });
+        jMenu2.add(jMenuItem2);
 
         session_menu.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
         session_menu.setSelected(true);
@@ -2347,10 +2376,10 @@ public class Main extends javax.swing.JFrame {
 
     private void upload_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_upload_buttonActionPerformed
         // TODO add your handling code here:
-        
-        int warning_ret=-1;
-        
-        if (!Main.MEGA_ACCOUNTS.isEmpty() && (!isTransferences_running() || _upload_warning || (warning_ret=Helpers.mostrarMensajeInformativoSINO(this, "WARNING: IF YOU ADD NEW UPLOADS, THE CURRENT RUNNING UPLOAD PROGRESS MIGHT BE LOST. CONTINUE?")) == 0)) {
+
+        int warning_ret = -1;
+
+        if (!Main.MEGA_ACCOUNTS.isEmpty() && (!isTransferences_running() || _upload_warning || (warning_ret = Helpers.mostrarMensajeInformativoSINO(this, "WARNING: IF YOU ADD NEW UPLOADS, THE CURRENT RUNNING TRANSFERENCE PROGRESS MIGHT BE LOST. CONTINUE?")) == 0)) {
 
             _upload_warning = (warning_ret == 0 || _upload_warning);
 
@@ -2761,6 +2790,30 @@ public class Main extends javax.swing.JFrame {
         });
     }//GEN-LAST:event_copy_all_buttonActionPerformed
 
+    private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
+        // TODO add your handling code here:
+        AutoUploadExcludedDialog dialog = new AutoUploadExcludedDialog(this, true);
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+
+        String cuentas = dialog.getExcluded_accounts().getText().trim();
+
+        MEGA_EXCLUDED_ACCOUNTS.clear();
+
+        if (!cuentas.isEmpty()) {
+
+            final String regex = "([^#\r\n]+)(?:#.+)?";
+            final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+            final Matcher matcher = pattern.matcher(dialog.getExcluded_accounts().getText().trim());
+
+            while (matcher.find()) {
+                if (!MEGA_EXCLUDED_ACCOUNTS.contains(matcher.group(1))) {
+                    MEGA_EXCLUDED_ACCOUNTS.add(matcher.group(1));
+                }
+            }
+        }
+    }//GEN-LAST:event_jMenuItem2ActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -2832,6 +2885,7 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItem1;
+    private javax.swing.JMenuItem jMenuItem2;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JLabel logo_label;

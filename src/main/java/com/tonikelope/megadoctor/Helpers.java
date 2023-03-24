@@ -204,7 +204,9 @@ public class Helpers {
         ArrayList<String> emails = new ArrayList<>();
 
         for (String email : Main.MEGA_ACCOUNTS.keySet()) {
-            emails.add(email);
+            if (!Main.MEGA_EXCLUDED_ACCOUNTS.contains(email)) {
+                emails.add(email);
+            }
         }
 
         Collections.sort(emails);

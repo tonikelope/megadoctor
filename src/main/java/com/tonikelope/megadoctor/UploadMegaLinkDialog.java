@@ -14,7 +14,7 @@ package com.tonikelope.megadoctor;
  *
  * @author tonikelope
  */
-public class TextDialog extends javax.swing.JDialog {
+public class UploadMegaLinkDialog extends javax.swing.JDialog {
 
     private volatile String link = null;
 
@@ -25,7 +25,7 @@ public class TextDialog extends javax.swing.JDialog {
     /**
      * Creates new form MegaLinkImport
      */
-    public TextDialog(java.awt.Frame parent, boolean modal) {
+    public UploadMegaLinkDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
         Helpers.JTextFieldRegularPopupMenu.addTextActionsPopupMenuTo(texto);
