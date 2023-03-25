@@ -319,7 +319,7 @@ public class Helpers {
         String[] whoami = Helpers.runProcess(new String[]{"mega-whoami"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null, true);
         if (whoami[1].contains("security needs upgrading")) {
             Helpers.GUIRun(() -> {
-                Main.MAIN_WINDOW.getStatus_label().setForeground(Color.PINK);
+                Main.MAIN_WINDOW.getStatus_label().setForeground(Color.MAGENTA);
             });
             Helpers.runProcess(new String[]{"mega-reload"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
             Helpers.runProcess(new String[]{"mega-confirm", "--security"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);

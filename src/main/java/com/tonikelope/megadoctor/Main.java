@@ -58,7 +58,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.91";
+    public final static String VERSION = "1.92";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -374,7 +374,7 @@ public class Main extends javax.swing.JFrame {
             if (login_session_output[1].contains("security needs upgrading")) {
 
                 Helpers.GUIRun(() -> {
-                    status_label.setForeground(Color.PINK);
+                    status_label.setForeground(Color.MAGENTA);
                 });
 
                 Helpers.runProcess(new String[]{"mega-reload"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
@@ -392,7 +392,7 @@ public class Main extends javax.swing.JFrame {
                 if (login[1].contains("security needs upgrading")) {
 
                     Helpers.GUIRun(() -> {
-                        status_label.setForeground(Color.PINK);
+                        status_label.setForeground(Color.MAGENTA);
                     });
 
                     Helpers.runProcess(new String[]{"mega-reload"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
@@ -419,7 +419,7 @@ public class Main extends javax.swing.JFrame {
             if (login[1].contains("security needs upgrading")) {
 
                 Helpers.GUIRun(() -> {
-                    status_label.setForeground(Color.PINK);
+                    status_label.setForeground(Color.MAGENTA);
                 });
 
                 Helpers.runProcess(new String[]{"mega-reload"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);

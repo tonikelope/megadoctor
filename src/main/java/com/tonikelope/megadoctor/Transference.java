@@ -450,15 +450,6 @@ public final class Transference extends javax.swing.JPanel {
         Helpers.threadRun(() -> {
             synchronized (TRANSFERENCES_LOCK) {
 
-                Helpers.GUIRunAndWait(() -> {
-                    status_icon.setVisible(false);
-                    status_icon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/ok.png")));
-                    progress.setValue(progress.getMinimum());
-                    progress.setIndeterminate(true);
-                    folder_stats_scroll.setVisible(false);
-                    action.setText("RETRY (QUEUED)");
-                });
-
                 _tag = -1;
 
                 _prog = 0;
@@ -478,6 +469,16 @@ public final class Transference extends javax.swing.JPanel {
                 _error = false;
 
                 _error_msg = "";
+
+                Helpers.GUIRunAndWait(() -> {
+                    Helpers.JTextFieldRegularPopupMenu.addTransferencePopupMenuTo(this);
+                    status_icon.setVisible(false);
+                    status_icon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/ok.png")));
+                    progress.setValue(progress.getMinimum());
+                    progress.setIndeterminate(true);
+                    folder_stats_scroll.setVisible(false);
+                    action.setText("RETRY (QUEUED)");
+                });
 
                 TRANSFERENCES_LOCK.notifyAll();
             }
