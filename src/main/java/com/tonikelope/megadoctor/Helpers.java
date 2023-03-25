@@ -197,6 +197,15 @@ public class Helpers {
     }
 
     public static String findFirstAccountWithSpace(long required, String filename) {
+        return findFirstAccountWithSpace(required, filename, false);
+    }
+
+    public static String findFirstAccountWithSpace(long required, String filename, boolean clear_cache) {
+
+        if (clear_cache) {
+            Main.FREE_SPACE_CACHE.clear();
+        }
+
         String bingo = null;
 
         ConcurrentHashMap<String, Long> reserved = getReservedTransfersSpace();
@@ -212,29 +221,21 @@ public class Helpers {
         Collections.sort(emails);
 
         for (String email : emails) {
-
             Helpers.GUIRunAndWait(() -> {
                 Main.MAIN_WINDOW.getStatus_label().setText("[" + Helpers.formatBytes(required) + "] " + filename + " -> " + email);
             });
-
             Long r = reserved.get(email);
-
             Long s = Main.FREE_SPACE_CACHE.get(email);
-
             if (s == null) {
-
                 s = Helpers.getAccountFreeSpace(email);
 
                 Main.FREE_SPACE_CACHE.put(email, s);
-
             } else if (s - (r != null ? r : 0) >= required) {
-
                 //Doble comprobación en caso de que el valor cacheado sea aparentemente válido para minimizar error al empezar transferencia
                 s = Helpers.getAccountFreeSpace(email);
 
                 Main.FREE_SPACE_CACHE.put(email, s);
             }
-
             if (s - (r != null ? r : 0) >= required) {
                 bingo = email;
                 break;
@@ -245,7 +246,7 @@ public class Helpers {
             Main.MAIN_WINDOW.getStatus_label().setText("");
         });
 
-        return bingo;
+        return (bingo != null || clear_cache) ? bingo : findFirstAccountWithSpace(required, filename, true);
     }
 
     public static String exportPathFromCurrentAccount(String rpath) {
