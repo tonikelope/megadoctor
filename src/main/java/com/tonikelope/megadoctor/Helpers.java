@@ -1431,7 +1431,7 @@ public class Helpers {
                     if (_t.isFinished()) {
                         File f = new File(_t.getLpath());
                         Helpers.threadRun(() -> {
-                            Helpers.copyTextToClipboard(_t.getPublic_link() != null ? f.getName() + "   " + t.getPublic_link() : "");
+                            Helpers.copyTextToClipboard(_t.getPublic_link() != null ? f.getName() + "   " + t.getPublic_link() + "   " + t.getEmail() : "");
                             Helpers.mostrarMensajeInformativo(Main.MAIN_WINDOW, "<b>" + f.getName() + "</b><br>" + _t.getPublic_link() + "<br><br>COPIED TO CLIPBOARD");
                         });
                     }

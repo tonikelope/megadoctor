@@ -58,7 +58,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.93";
+    public final static String VERSION = "1.94";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -2771,7 +2771,7 @@ public class Main extends javax.swing.JFrame {
 
                         if (t.isFinished() && t.getPublic_link() != null) {
                             String filename = new File(t.getLpath()).getName();
-                            links.add(filename + "   " + t.getPublic_link());
+                            links.add(filename + "   " + t.getPublic_link() + "   " + t.getEmail());
                         }
                     }
 
