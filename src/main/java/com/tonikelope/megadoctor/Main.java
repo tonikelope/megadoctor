@@ -58,7 +58,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.95";
+    public final static String VERSION = "1.96";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -2403,10 +2403,13 @@ public class Main extends javax.swing.JFrame {
 
                 if (isTransferences_running() && !isTransferences_paused()) {
                     _current_transference.pause();
-
                 }
 
                 Helpers.GUIRunAndWait(() -> {
+
+                    if (isTransferences_running()) {
+                        getPause_button().setText("RESUME");
+                    }
 
                     UploadFileDialog dialog = new UploadFileDialog(this, true);
 
