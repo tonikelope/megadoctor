@@ -775,7 +775,7 @@ public final class Transference extends javax.swing.JPanel {
 
         waitPaused();
 
-        if (!transferRunning() || _prog == 10000) {
+        if (!transferRunning()) {
             return false;
         }
 
