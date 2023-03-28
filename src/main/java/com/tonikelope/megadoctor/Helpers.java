@@ -970,6 +970,173 @@ public class Helpers {
             txtField.setComponentPopupMenu(popup);
         }
 
+        public static void addAccountsMEGAPopupMenuTo(JTextArea txtArea) {
+            JPopupMenu popup = new JPopupMenu();
+
+            UndoManager undoManager = new UndoManager();
+            txtArea.getDocument().addUndoableEditListener(undoManager);
+            Action undoAction = new AbstractAction("Undo") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    if (undoManager.canUndo() && txtArea.isEditable()) {
+                        undoManager.undo();
+                    }
+                }
+            };
+
+            Action copyAction = new AbstractAction("Copy") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    txtArea.copy();
+                }
+            };
+            Action cutAction = new AbstractAction("Cut") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    txtArea.cut();
+                }
+            };
+            Action pasteAction = new AbstractAction("Paste") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    txtArea.paste();
+                }
+            };
+            Action selectAllAction = new AbstractAction("Sellect all") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    txtArea.selectAll();
+                }
+            };
+
+            Action forceRefreshAccountAction = new AbstractAction("REFRESH SELECTED ACCOUNT") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                        Helpers.threadRun(() -> {
+
+                            String email = Helpers.extractFirstEmailFromtext(txtArea.getSelectedText());
+
+                            if (email != null) {
+
+                                Main.MAIN_WINDOW.forceRefreshAccount(email, "Forced FULL REFRESH (SESSION was regenerated)", true, true);
+                            }
+                        });
+                    }
+                }
+            };
+
+            Action forceRefreshFastAccountAction = new AbstractAction("REFRESH (FAST) SELECTED ACCOUNT") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                        Helpers.threadRun(() -> {
+
+                            String email = Helpers.extractFirstEmailFromtext(txtArea.getSelectedText());
+
+                            if (email != null) {
+
+                                Main.MAIN_WINDOW.forceRefreshAccount(email, "Forced FAST REFRESH", true, false);
+                            }
+                        });
+                    }
+                }
+            };
+
+            Action truncateAccountAction = new AbstractAction("TRUNCATE SELECTED ACCOUNT") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                        Helpers.threadRun(() -> {
+                            String email = Helpers.extractFirstEmailFromtext(txtArea.getSelectedText());
+
+                            if (email != null) {
+                                Main.MAIN_WINDOW.truncateAccount(email);
+                            }
+                        });
+                    }
+                }
+            };
+            cutAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control X"));
+            copyAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control C"));
+            pasteAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control V"));
+            selectAllAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control A"));
+
+            if (txtArea.isEditable()) {
+                JMenuItem undo = new JMenuItem(undoAction);
+                undo.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/undo.png")));
+                popup.add(undo);
+
+                popup.addSeparator();
+
+                JMenuItem cut = new JMenuItem(cutAction);
+                cut.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/cut.png")));
+                popup.add(cut);
+
+                JMenuItem paste = new JMenuItem(pasteAction);
+                paste.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/paste.png")));
+                popup.add(paste);
+            }
+
+            JMenuItem copy = new JMenuItem(copyAction);
+            copy.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/copy.png")));
+            popup.add(copy);
+
+            popup.addSeparator();
+
+            JMenuItem selectAll = new JMenuItem(selectAllAction);
+            selectAll.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/select_all.png")));
+            popup.add(selectAll);
+
+            popup.addSeparator();
+
+            JMenuItem refreshAccount = new JMenuItem(forceRefreshAccountAction);
+            refreshAccount.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/refresh.png")));
+
+            popup.add(refreshAccount);
+
+            JMenuItem refreshFastAccount = new JMenuItem(forceRefreshFastAccountAction);
+
+            refreshFastAccount.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/refresh.png")));
+
+            popup.add(refreshFastAccount);
+
+            if (Main.MAIN_WINDOW != null && Main.MAIN_WINDOW.getLast_email_force_refresh() != null) {
+                Action forceRefreshLastAccountAction = new AbstractAction("REFRESH (FAST) LAST ACCOUNT -> " + Main.MAIN_WINDOW.getLast_email_force_refresh()) {
+                    @Override
+                    public void actionPerformed(ActionEvent ae) {
+                        if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && Main.MAIN_WINDOW.getLast_email_force_refresh() != null) {
+                            Helpers.threadRun(() -> {
+                                Main.MAIN_WINDOW.forceRefreshAccount(Main.MAIN_WINDOW.getLast_email_force_refresh(), "Forced FAST REFRESH", true, false);
+                            });
+                        }
+                    }
+                };
+                JMenuItem refreshLastAccount = new JMenuItem(forceRefreshLastAccountAction);
+
+                refreshLastAccount.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/refresh.png")));
+
+                refreshLastAccount.setEnabled(Main.MAIN_WINDOW != null && Main.MAIN_WINDOW.getLast_email_force_refresh() != null);
+
+                popup.add(refreshLastAccount);
+
+            }
+
+            popup.addSeparator();
+
+            JMenuItem truncateAccount = new JMenuItem(truncateAccountAction);
+
+            truncateAccount.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/remove.png")));
+
+            popup.add(truncateAccount);
+
+            updateComponentFont(popup, popup.getFont(), 1.20f);
+
+            popup.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+            txtArea.setComponentPopupMenu(popup);
+        }
+
         public static void addMainMEGAPopupMenuTo(JTextArea txtArea) {
             JPopupMenu popup = new JPopupMenu();
 

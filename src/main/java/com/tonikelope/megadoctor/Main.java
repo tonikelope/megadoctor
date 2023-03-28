@@ -58,7 +58,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.97";
+    public final static String VERSION = "1.98";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -205,7 +205,7 @@ public class Main extends javax.swing.JFrame {
      */
     public Main() {
         initComponents();
-        Helpers.JTextFieldRegularPopupMenu.addMainMEGAPopupMenuTo(cuentas_textarea);
+        Helpers.JTextFieldRegularPopupMenu.addAccountsMEGAPopupMenuTo(cuentas_textarea);
         Helpers.JTextFieldRegularPopupMenu.addMainMEGAPopupMenuTo(output_textarea);
         transferences = new JPanel();
         transferences.setLayout(new BoxLayout(transferences, BoxLayout.Y_AXIS));
@@ -1484,7 +1484,7 @@ public class Main extends javax.swing.JFrame {
 
                     output_textarea.append("\n[" + email + "] (" + reason + ")\n\n" + stats + "\n\n");
                     Helpers.JTextFieldRegularPopupMenu.addMainMEGAPopupMenuTo(output_textarea);
-                    Helpers.JTextFieldRegularPopupMenu.addMainMEGAPopupMenuTo(cuentas_textarea);
+                    Helpers.JTextFieldRegularPopupMenu.addAccountsMEGAPopupMenuTo(cuentas_textarea);
                 });
 
                 if (notification) {
