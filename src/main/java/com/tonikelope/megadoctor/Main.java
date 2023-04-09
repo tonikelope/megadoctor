@@ -58,7 +58,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "1.99";
+    public final static String VERSION = "2.0";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -2376,7 +2376,7 @@ public class Main extends javax.swing.JFrame {
     private void upload_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_upload_buttonActionPerformed
         // TODO add your handling code here:
 
-        if (!Main.MEGA_ACCOUNTS.isEmpty() && !isTransferences_running()) {
+        if (!Main.MEGA_ACCOUNTS.isEmpty()) {
 
             _provisioning_upload = true;
 
