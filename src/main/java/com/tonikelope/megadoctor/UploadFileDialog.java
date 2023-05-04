@@ -82,6 +82,8 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         split_folder_checkbox.setVisible(false);
 
         Helpers.JTextFieldRegularPopupMenu.addLiteMEGAAccountPopupMenuTo(account_stats_textarea, this);
+        
+        Helpers.JTextFieldRegularPopupMenu.addTextActionsPopupMenuTo(remote_path);
 
         vamos_button.setEnabled(false);
 
