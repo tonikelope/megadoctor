@@ -58,7 +58,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.2";
+    public final static String VERSION = "2.3";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -697,7 +697,7 @@ public class Main extends javax.swing.JFrame {
                 Helpers.runProcess(new String[]{"mega-transfers", "-ca"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
             }
 
-            if (session_menu.isSelected() || Helpers.mostrarMensajeInformativoSINO(this, "Do you want to save your MEGA accounts/sessions/transfers to disk to speed up next time?\n\n(If you are using a public computer it is NOT recommended to do so for security reasons).") == 0) {
+            if (_firstAccountsTextareaClick && !MEGA_ACCOUNTS.isEmpty() && (session_menu.isSelected() || Helpers.mostrarMensajeInformativoSINO(this, "Do you want to save your MEGA accounts/sessions/transfers to disk to speed up next time?\n\n(If you are using a public computer it is NOT recommended to do so for security reasons).") == 0)) {
 
                 Helpers.GUIRun(() -> {
                     progressbar.setIndeterminate(true);
@@ -726,7 +726,7 @@ public class Main extends javax.swing.JFrame {
                     }
                 }
 
-                if ((!new_accounts.isEmpty() || !remove.isEmpty()) && Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "Changes detected in accounts list, do you want to save?") == 0) {
+                if (_firstAccountsTextareaClick && (!new_accounts.isEmpty() || !remove.isEmpty()) && Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "Changes detected in accounts list, do you want to save?") == 0) {
 
                     for (String email : new_accounts.keySet()) {
                         MEGA_ACCOUNTS.put(email, new_accounts.get(email));
@@ -1638,12 +1638,14 @@ public class Main extends javax.swing.JFrame {
                     try (FileInputStream fis = new FileInputStream(NODES_FILE); ObjectInputStream ois = new ObjectInputStream(fis)) {
                         MEGA_NODES = (ConcurrentHashMap<String, Object[]>) ois.readObject();
 
-                        Object[] test = (Object[]) MEGA_NODES.values().toArray()[0];
+                        if (MEGA_NODES.values().toArray().length > 0) {
+                            Object[] test = (Object[]) MEGA_NODES.values().toArray()[0];
 
-                        if (test.length != 4) {
-                            MEGA_NODES.clear();
-                            Files.deleteIfExists(Paths.get(NODES_FILE));
-                            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "WRONG NODES FILE (DELETING...)");
+                            if (test.length != 4) {
+                                MEGA_NODES.clear();
+                                Files.deleteIfExists(Paths.get(NODES_FILE));
+                                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "WRONG NODES FILE (DELETING...)");
+                            }
                         }
 
                     } catch (Exception ex) {
@@ -2361,6 +2363,7 @@ public class Main extends javax.swing.JFrame {
             _firstAccountsTextareaClick = true;
             cuentas_textarea.setText("");
             cuentas_textarea.setForeground(null);
+            MEGA_ACCOUNTS.clear();
         }
     }//GEN-LAST:event_cuentas_textareaFocusGained
 
@@ -2376,7 +2379,7 @@ public class Main extends javax.swing.JFrame {
     private void upload_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_upload_buttonActionPerformed
         // TODO add your handling code here:
 
-        if (!Main.MEGA_ACCOUNTS.isEmpty()) {
+        if (!Main.MEGA_ACCOUNTS.isEmpty() && _firstAccountsTextareaClick) {
 
             _provisioning_upload = true;
 
