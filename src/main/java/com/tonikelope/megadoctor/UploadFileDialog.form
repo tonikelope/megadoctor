@@ -152,7 +152,7 @@
         <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
           <Image iconType="3" name="/images/file.png"/>
         </Property>
-        <Property name="text" type="java.lang.String" value="FILE"/>
+        <Property name="text" type="java.lang.String" value="ADD FILE"/>
         <Property name="cursor" type="java.awt.Cursor" editor="org.netbeans.modules.form.editors2.CursorEditor">
           <Color id="Cursor de Mano"/>
         </Property>
@@ -184,7 +184,7 @@
         <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
           <Image iconType="3" name="/images/folder.png"/>
         </Property>
-        <Property name="text" type="java.lang.String" value="FOLDER"/>
+        <Property name="text" type="java.lang.String" value="ADD FOLDER"/>
         <Property name="cursor" type="java.awt.Cursor" editor="org.netbeans.modules.form.editors2.CursorEditor">
           <Color id="Cursor de Mano"/>
         </Property>
@@ -252,7 +252,7 @@
         <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
           <Image iconType="3" name="/images/mega.png"/>
         </Property>
-        <Property name="text" type="java.lang.String" value="MEGA LINK"/>
+        <Property name="text" type="java.lang.String" value="ADD MEGA LINK"/>
         <Property name="cursor" type="java.awt.Cursor" editor="org.netbeans.modules.form.editors2.CursorEditor">
           <Color id="Cursor de Mano"/>
         </Property>
@@ -267,7 +267,7 @@
         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
           <Font name="Noto Sans" size="24" style="1"/>
         </Property>
-        <Property name="text" type="java.lang.String" value="AUTO"/>
+        <Property name="text" type="java.lang.String" value="Auto-allocate"/>
         <Property name="toolTipText" type="java.lang.String" value="Auto search an account with free space"/>
         <Property name="cursor" type="java.awt.Cursor" editor="org.netbeans.modules.form.editors2.CursorEditor">
           <Color id="Cursor de Mano"/>

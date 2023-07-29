@@ -13,6 +13,8 @@ package com.tonikelope.megadoctor;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
@@ -210,7 +212,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
         local_file_button.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
         local_file_button.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/file.png"))); // NOI18N
-        local_file_button.setText("FILE");
+        local_file_button.setText("ADD FILE");
         local_file_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         local_file_button.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -225,7 +227,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
         local_folder_button.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
         local_folder_button.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/folder.png"))); // NOI18N
-        local_folder_button.setText("FOLDER");
+        local_folder_button.setText("ADD FOLDER");
         local_folder_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         local_folder_button.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -254,7 +256,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
         mega_button.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
         mega_button.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/mega.png"))); // NOI18N
-        mega_button.setText("MEGA LINK");
+        mega_button.setText("ADD MEGA LINK");
         mega_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         mega_button.setDoubleBuffered(true);
         mega_button.addActionListener(new java.awt.event.ActionListener() {
@@ -264,7 +266,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         });
 
         auto_select_account.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
-        auto_select_account.setText("AUTO");
+        auto_select_account.setText("Auto-allocate");
         auto_select_account.setToolTipText("Auto search an account with free space");
         auto_select_account.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         auto_select_account.setDoubleBuffered(true);
@@ -454,6 +456,8 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
             local_size.setText(Helpers.formatBytes(_local_size));
 
+            split_folder_checkbox.setVisible(auto_select_account.isSelected() && getLocal_path() != null && Files.isDirectory(Paths.get(getLocal_path())));
+
             checkFreeSpace();
         }
 
@@ -510,9 +514,10 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                         local_folder_button.setEnabled(true);
                         local_file_button.setEnabled(true);
                         mega_button.setEnabled(true);
-                        local_folder_button.setText("FOLDER");
+                        local_folder_button.setText("ADD FOLDER");
                         local_folder_progress.setVisible(false);
                         local_size.setText(Helpers.formatBytes(_local_size));
+                        split_folder_checkbox.setVisible(auto_select_account.isSelected() && getLocal_path() != null && Files.isDirectory(Paths.get(getLocal_path())));
                         checkFreeSpace();
                     });
                 }
@@ -522,7 +527,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
             local_folder_button.setEnabled(true);
             local_file_button.setEnabled(true);
             mega_button.setEnabled(true);
-            local_folder_button.setText("FOLDER");
+            local_folder_button.setText("ADD FOLDER");
         }
 
         Helpers.smartPack(this);
@@ -558,7 +563,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
                     Helpers.GUIRun(() -> {
 
-                        free_space.setText(Helpers.formatBytes(_free_space));
+                        free_space.setText(Helpers.formatBytes(_free_space) + " (free)");
                         account_stats_textarea.setText("[" + email + "] \n\n" + stats + "\n\n");
                         account_stats_textarea.setCaretPosition(0);
                         progress.setVisible(false);
@@ -620,7 +625,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         free_space.setEnabled(!auto_select_account.isSelected());
         email_combobox.setEnabled(!auto_select_account.isSelected());
         account_stats_textarea.setEnabled(!auto_select_account.isSelected());
-        split_folder_checkbox.setVisible(auto_select_account.isSelected());
+        split_folder_checkbox.setVisible(auto_select_account.isSelected() && getLocal_path() != null && Files.isDirectory(Paths.get(getLocal_path())));
         free_space.setVisible(!auto_select_account.isSelected());
         checkFreeSpace();
     }//GEN-LAST:event_auto_select_accountActionPerformed
