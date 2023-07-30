@@ -292,7 +292,7 @@ public final class Transference extends javax.swing.JPanel {
             Main.FREE_SPACE_CACHE.remove(_email);
 
             if (_running) {
-                Main.MAIN_WINDOW.forceRefreshAccount(_email, "Refreshed after upload CANCEL [" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + _rpath, false, false);
+                Main.MAIN_WINDOW.refreshAccount(_email, "Refreshed after upload CANCEL [" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + _rpath, false, false);
             }
 
             _running = false;
@@ -664,7 +664,7 @@ public final class Transference extends javax.swing.JPanel {
                         });
 
                         if (_action == 1) {
-                            Main.MAIN_WINDOW.forceRefreshAccount(_email, "Refreshed after upload [" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + _rpath, false, false);
+                            Main.MAIN_WINDOW.refreshAccount(_email, "Refreshed after upload [" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + _rpath, false, false);
                         }
 
                         _finishing = false;

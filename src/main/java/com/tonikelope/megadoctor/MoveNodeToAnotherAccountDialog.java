@@ -10,6 +10,7 @@ by tonikelope
  */
 package com.tonikelope.megadoctor;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Set;
@@ -21,6 +22,7 @@ import java.util.Set;
 public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog implements Refresheable {
 
     private volatile long _free_space = 0;
+    private volatile long _size = 0;
 
     public String getSelected_email() {
         return selected_email;
@@ -34,9 +36,13 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog implemen
 
     private String selected_email = null;
 
-    public MoveNodeToAnotherAccountDialog(java.awt.Frame parent, boolean modal, Set<String> skip_emails, boolean move) {
+    public MoveNodeToAnotherAccountDialog(java.awt.Frame parent, boolean modal, Set<String> skip_emails, boolean move, long size) {
         super(parent, modal);
         initComponents();
+
+        _size = size;
+
+        setTitle(this.getTitle() + " (" + Helpers.formatBytes(size) + " of free space required)");
 
         Helpers.JTextFieldRegularPopupMenu.addLiteMEGAAccountPopupMenuTo(account_stats_textarea, this);
 
@@ -57,8 +63,6 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog implemen
         }
 
         vamos_button.setText(move ? "MOVE" : "COPY");
-
-        vamos_button.setEnabled(true);
 
         email_comboboxItemStateChanged(null);
 
@@ -193,13 +197,15 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog implemen
 
                     account_stats_textarea.setText("[" + email + "] \n\n" + stats + "\n\n");
                     account_stats_textarea.setCaretPosition(0);
-                    free_space.setText(Helpers.formatBytes(_free_space));
+                    free_space.setText(Helpers.formatBytes(_free_space) + " (free)");
                     email_combobox.setEnabled(true);
                     vamos_button.setEnabled(true);
                     progress.setVisible(false);
                     Helpers.smartPack(this);
 
                 });
+
+                checkFreeSpace();
             });
         }
     }//GEN-LAST:event_email_comboboxItemStateChanged
@@ -235,5 +241,27 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog implemen
             email_combobox.setEnabled(enable);
 
         });
+    }
+
+    private boolean checkFreeSpace() {
+
+        if (_size > 0 && _free_space > 0) {
+
+            if (_size > _free_space) {
+                Helpers.GUIRun(() -> {
+                    free_space.setForeground(Color.red);
+                    vamos_button.setEnabled(false);
+                });
+                return false;
+            } else {
+                Helpers.GUIRun(() -> {
+                    free_space.setForeground(new Color(0, 153, 0));
+                    vamos_button.setEnabled(true);
+                });
+                return true;
+            }
+        }
+
+        return false;
     }
 }

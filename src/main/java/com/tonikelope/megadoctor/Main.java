@@ -37,6 +37,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -58,7 +59,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.4";
+    public final static String VERSION = "2.5";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -566,7 +567,7 @@ public class Main extends javax.swing.JFrame {
             }
 
             Helpers.GUIRunAndWait(() -> {
-                _email_dialog = new MoveNodeToAnotherAccountDialog(MAIN_WINDOW, true, nodesToCopy.keySet(), move);
+                _email_dialog = new MoveNodeToAnotherAccountDialog(MAIN_WINDOW, true, nodesToCopy.keySet(), move, Helpers.getNodeMapTotalSize(nodesToCopy));
 
                 _email_dialog.setLocationRelativeTo(MAIN_WINDOW);
 
@@ -628,7 +629,7 @@ public class Main extends javax.swing.JFrame {
                         Helpers.runProcess(new String[]{"mega-import", s[1], folder}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
                     }
 
-                    forceRefreshAccount(email, "Refreshed after insertion", false, false);
+                    refreshAccount(email, "Refreshed after insertion", false, false);
 
                     if (move) {
 
@@ -648,7 +649,7 @@ public class Main extends javax.swing.JFrame {
 
                             Helpers.runProcess(delete_command.toArray(String[]::new), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-                            forceRefreshAccount(email_rm, "Refreshed after deletion", false, false);
+                            refreshAccount(email_rm, "Refreshed after deletion", false, false);
                         }
 
                         Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL SELECTED FOLDERS/FILES MOVED");
@@ -910,35 +911,41 @@ public class Main extends javax.swing.JFrame {
                         _move_dialog.setVisible(true);
                     });
 
-                    int conta = 0;
+                    if (_move_dialog.isOk()) {
 
-                    for (String node : node_list) {
+                        int conta = 0;
 
-                        String old_full_path = Helpers.getNodeFullPath(node, email);
+                        for (String node : node_list) {
 
-                        String old_n = old_full_path.replaceAll("^.*/([^/]*)$", "$1");
+                            String old_full_path = Helpers.getNodeFullPath(node, email);
 
-                        String new_full_path = _move_dialog.getNew_name().getText().trim() + old_n;
+                            String old_n = old_full_path.replaceAll("^.*/([^/]*)$", "$1");
 
-                        if (_move_dialog.isOk() && !old_full_path.equals(new_full_path) && !new_full_path.isBlank()) {
+                            String new_full_path = _move_dialog.getNew_name().getText().trim() + old_n;
 
-                            String folder = new_full_path.replaceAll("^(.*/)[^/]*$", "$1");
+                            if (_move_dialog.isOk() && !old_full_path.equals(new_full_path) && !new_full_path.isBlank()) {
 
-                            Helpers.runProcess(new String[]{"mega-mkdir", "-p", folder}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+                                String folder = new_full_path.replaceAll("^(.*/)[^/]*$", "$1");
 
-                            Helpers.runProcess(new String[]{"mega-cp", node, new_full_path}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+                                Helpers.runProcess(new String[]{"mega-mkdir", "-p", folder}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-                            conta++;
+                                Helpers.runProcess(new String[]{"mega-cp", node, new_full_path}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-                        } else if (!_move_dialog.isOk()) {
-                            cancel = true;
-                            break outer;
+                                conta++;
+
+                            } else if (!_move_dialog.isOk()) {
+                                cancel = true;
+                                break outer;
+                            }
                         }
-                    }
 
-                    if (conta > 0) {
+                        if (conta > 0) {
 
-                        forceRefreshAccount(email, "Refreshed after copying", false, false);
+                            refreshAccount(email, "Refreshed after copying", false, false);
+                        }
+                    } else {
+                        cancel = true;
+                        break outer;
                     }
 
                 } else {
@@ -1126,7 +1133,7 @@ public class Main extends javax.swing.JFrame {
 
                 if (conta > 0) {
 
-                    forceRefreshAccount(email, "Refreshed after copying", false, false);
+                    refreshAccount(email, "Refreshed after copying", false, false);
 
                 }
 
@@ -1189,7 +1196,7 @@ public class Main extends javax.swing.JFrame {
 
                 Helpers.runProcess(export_command.toArray(String[]::new), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-                forceRefreshAccount(email, "Refreshed after public links generated/removed", false, false);
+                refreshAccount(email, "Refreshed after public links generated/removed", false, false);
 
             }
 
@@ -1232,7 +1239,7 @@ public class Main extends javax.swing.JFrame {
             String[] import_result = Helpers.runProcess(new String[]{"mega-import", link, rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
             if (Integer.parseInt(import_result[2]) == 0) {
-                forceRefreshAccount(email, "Refreshed after insertion", false, false);
+                refreshAccount(email, "Refreshed after insertion", false, false);
                 Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "<b>" + link + "</b>\nIMPORTED");
             } else {
                 Helpers.mostrarMensajeError(MAIN_WINDOW, link + " " + rpath + " IMPORTATION ERROR (" + import_result[2] + ")");
@@ -1277,7 +1284,7 @@ public class Main extends javax.swing.JFrame {
             Helpers.runProcess(new String[]{"mega-rm", "-rf", "'//in/*'"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
             Helpers.runProcess(new String[]{"mega-rm", "-rf", "'//bin/*'"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-            forceRefreshAccount(email, "Refreshed after account truncate", false, false);
+            refreshAccount(email, "Refreshed after account truncate", false, false);
 
             Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "<b>" + email + "</b>\nTRUNCATED");
         }
@@ -1336,7 +1343,7 @@ public class Main extends javax.swing.JFrame {
                     MEGA_NODES.remove(n);
                 }
 
-                forceRefreshAccount(email, "Refreshed after deletion", false, false);
+                refreshAccount(email, "Refreshed after deletion", false, false);
             }
 
             logout(true);
@@ -1440,7 +1447,7 @@ public class Main extends javax.swing.JFrame {
         _running_main_action = false;
     }
 
-    public void forceRefreshAccount(String email, String reason, boolean notification, boolean refresh_session) {
+    public void refreshAccount(String email, String reason, boolean notification, boolean refresh_session) {
 
         _running_main_action = true;
 
@@ -1697,6 +1704,9 @@ public class Main extends javax.swing.JFrame {
     public void parseAccountNodes(String email) {
 
         synchronized (MEGA_NODES) {
+
+            clearAccountNodes(email);
+
             login(email);
 
             String ls = Helpers.runProcess(new String[]{"mega-ls", "-lr", "--show-handles"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
@@ -1709,6 +1719,24 @@ public class Main extends javax.swing.JFrame {
 
                 MEGA_NODES.put(matcher.group(2), new Object[]{getCurrentAccountNodeSize(matcher.group(2)), email, matcher.group(3), (matcher.group(1).toLowerCase().equals("d"))});
 
+            }
+        }
+    }
+
+    public void clearAccountNodes(String email) {
+        synchronized (MEGA_NODES) {
+
+            var it = MEGA_NODES.entrySet().iterator();
+
+            while (it.hasNext()) {
+
+                Map.Entry<String, Object[]> node = (Map.Entry<String, Object[]>) it.next();
+
+                Object[] o = node.getValue();
+
+                if (o[1].equals(email)) {
+                    it.remove();
+                }
             }
         }
     }

@@ -1019,7 +1019,7 @@ public class Helpers {
 
                             if (email != null) {
 
-                                Main.MAIN_WINDOW.forceRefreshAccount(email, "Forced FULL REFRESH (SESSION was regenerated)", true, true);
+                                Main.MAIN_WINDOW.refreshAccount(email, "Forced FULL REFRESH (SESSION was regenerated)", true, true);
                             }
                         });
                     }
@@ -1036,7 +1036,7 @@ public class Helpers {
 
                             if (email != null) {
 
-                                Main.MAIN_WINDOW.forceRefreshAccount(email, "Forced FAST REFRESH", true, false);
+                                Main.MAIN_WINDOW.refreshAccount(email, "Forced FAST REFRESH", true, false);
                             }
                         });
                     }
@@ -1107,7 +1107,7 @@ public class Helpers {
                     public void actionPerformed(ActionEvent ae) {
                         if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && Main.MAIN_WINDOW.getLast_email_force_refresh() != null) {
                             Helpers.threadRun(() -> {
-                                Main.MAIN_WINDOW.forceRefreshAccount(Main.MAIN_WINDOW.getLast_email_force_refresh(), "Forced FAST REFRESH", true, false);
+                                Main.MAIN_WINDOW.refreshAccount(Main.MAIN_WINDOW.getLast_email_force_refresh(), "Forced FAST REFRESH", true, false);
                             });
                         }
                     }
@@ -1277,7 +1277,7 @@ public class Helpers {
 
                             if (email != null) {
 
-                                Main.MAIN_WINDOW.forceRefreshAccount(email, "Forced FULL REFRESH (SESSION was regenerated)", true, true);
+                                Main.MAIN_WINDOW.refreshAccount(email, "Forced FULL REFRESH (SESSION was regenerated)", true, true);
                             }
                         });
                     }
@@ -1294,7 +1294,7 @@ public class Helpers {
 
                             if (email != null) {
 
-                                Main.MAIN_WINDOW.forceRefreshAccount(email, "Forced FAST REFRESH", true, false);
+                                Main.MAIN_WINDOW.refreshAccount(email, "Forced FAST REFRESH", true, false);
                             }
                         });
                     }
@@ -1430,7 +1430,7 @@ public class Helpers {
                     public void actionPerformed(ActionEvent ae) {
                         if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && Main.MAIN_WINDOW.getLast_email_force_refresh() != null) {
                             Helpers.threadRun(() -> {
-                                Main.MAIN_WINDOW.forceRefreshAccount(Main.MAIN_WINDOW.getLast_email_force_refresh(), "Forced FAST REFRESH", true, false);
+                                Main.MAIN_WINDOW.refreshAccount(Main.MAIN_WINDOW.getLast_email_force_refresh(), "Forced FAST REFRESH", true, false);
                             });
                         }
                     }
