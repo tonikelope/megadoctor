@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.swing.JFileChooser;
+import javax.swing.JScrollPane;
 
 /**
  *
@@ -163,13 +164,11 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        email_combobox = new javax.swing.JComboBox<>();
         vamos_button = new javax.swing.JButton();
         local_file_button = new javax.swing.JButton();
         jLabel2 = new javax.swing.JLabel();
         remote_path = new javax.swing.JTextField();
         local_folder_button = new javax.swing.JButton();
-        free_space = new javax.swing.JLabel();
         progress = new javax.swing.JProgressBar();
         local_size = new javax.swing.JLabel();
         account_stats_scroll = new javax.swing.JScrollPane();
@@ -180,21 +179,15 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         split_folder_checkbox = new javax.swing.JCheckBox();
         local_path_scroll_panel = new javax.swing.JScrollPane();
         local_path = new javax.swing.JLabel();
+        accounts_panel = new javax.swing.JPanel();
+        free_space = new javax.swing.JLabel();
+        email_combobox = new javax.swing.JComboBox<>();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle("UPLOAD");
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
                 formWindowClosing(evt);
-            }
-        });
-
-        email_combobox.setFont(new java.awt.Font("Noto Sans", 0, 24)); // NOI18N
-        email_combobox.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-        email_combobox.setDoubleBuffered(true);
-        email_combobox.addItemListener(new java.awt.event.ItemListener() {
-            public void itemStateChanged(java.awt.event.ItemEvent evt) {
-                email_comboboxItemStateChanged(evt);
             }
         });
 
@@ -212,7 +205,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
         local_file_button.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
         local_file_button.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/file.png"))); // NOI18N
-        local_file_button.setText("ADD FILE");
+        local_file_button.setText("SELECT FILE");
         local_file_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         local_file_button.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -227,18 +220,13 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
         local_folder_button.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
         local_folder_button.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/folder.png"))); // NOI18N
-        local_folder_button.setText("ADD FOLDER");
+        local_folder_button.setText("SELECT FOLDER");
         local_folder_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         local_folder_button.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 local_folder_buttonActionPerformed(evt);
             }
         });
-
-        free_space.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
-        free_space.setText("---");
-        free_space.setToolTipText("Free account space");
-        free_space.setDoubleBuffered(true);
 
         local_size.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
         local_size.setDoubleBuffered(true);
@@ -256,7 +244,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
         mega_button.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
         mega_button.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/mega.png"))); // NOI18N
-        mega_button.setText("ADD MEGA LINK");
+        mega_button.setText("SELECT MEGA LINK");
         mega_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         mega_button.setDoubleBuffered(true);
         mega_button.addActionListener(new java.awt.event.ActionListener() {
@@ -266,7 +254,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         });
 
         auto_select_account.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
-        auto_select_account.setText("Auto-allocate");
+        auto_select_account.setText("Auto allocation");
         auto_select_account.setToolTipText("Auto search an account with free space");
         auto_select_account.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         auto_select_account.setDoubleBuffered(true);
@@ -292,11 +280,48 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         local_path.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
         local_path_scroll_panel.setViewportView(local_path);
 
+        accounts_panel.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(153, 153, 153)));
+
+        free_space.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
+        free_space.setText("---");
+        free_space.setToolTipText("Free account space");
+        free_space.setDoubleBuffered(true);
+
+        email_combobox.setFont(new java.awt.Font("Noto Sans", 0, 24)); // NOI18N
+        email_combobox.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        email_combobox.setDoubleBuffered(true);
+        email_combobox.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                email_comboboxItemStateChanged(evt);
+            }
+        });
+
+        javax.swing.GroupLayout accounts_panelLayout = new javax.swing.GroupLayout(accounts_panel);
+        accounts_panel.setLayout(accounts_panelLayout);
+        accounts_panelLayout.setHorizontalGroup(
+            accounts_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(accounts_panelLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(free_space)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(email_combobox, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+        accounts_panelLayout.setVerticalGroup(
+            accounts_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(accounts_panelLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(accounts_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(email_combobox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(free_space))
+                .addContainerGap())
+        );
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+            .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(local_folder_progress, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -307,10 +332,8 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(split_folder_checkbox)
                         .addGap(18, 18, 18)
-                        .addComponent(free_space)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(email_combobox, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addGap(18, 18, 18)
+                        .addComponent(accounts_panel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(vamos_button))
                     .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                         .addComponent(jLabel2)
@@ -342,7 +365,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(local_folder_progress, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(account_stats_scroll, javax.swing.GroupLayout.DEFAULT_SIZE, 472, Short.MAX_VALUE)
+                .addComponent(account_stats_scroll, javax.swing.GroupLayout.DEFAULT_SIZE, 493, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
@@ -350,12 +373,12 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(progress, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(email_combobox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(free_space)
-                    .addComponent(auto_select_account)
-                    .addComponent(vamos_button)
-                    .addComponent(split_folder_checkbox))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                        .addComponent(auto_select_account, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 55, Short.MAX_VALUE)
+                        .addComponent(split_folder_checkbox, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(accounts_panel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(vamos_button, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
         );
 
@@ -514,7 +537,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                         local_folder_button.setEnabled(true);
                         local_file_button.setEnabled(true);
                         mega_button.setEnabled(true);
-                        local_folder_button.setText("ADD FOLDER");
+                        local_folder_button.setText("SELECT FOLDER");
                         local_folder_progress.setVisible(false);
                         local_size.setText(Helpers.formatBytes(_local_size));
                         split_folder_checkbox.setVisible(auto_select_account.isSelected() && getLocal_path() != null && Files.isDirectory(Paths.get(getLocal_path())));
@@ -527,7 +550,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
             local_folder_button.setEnabled(true);
             local_file_button.setEnabled(true);
             mega_button.setEnabled(true);
-            local_folder_button.setText("ADD FOLDER");
+            local_folder_button.setText("SELECT FOLDER");
         }
 
         Helpers.smartPack(this);
@@ -622,9 +645,10 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         }
 
         _auto = auto_select_account.isSelected();
-        free_space.setEnabled(!auto_select_account.isSelected());
         email_combobox.setEnabled(!auto_select_account.isSelected());
-        account_stats_textarea.setEnabled(!auto_select_account.isSelected());
+        account_stats_textarea.setVisible(!auto_select_account.isSelected());
+        account_stats_scroll.setHorizontalScrollBarPolicy(!auto_select_account.isSelected() ? JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED : JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        account_stats_scroll.setVerticalScrollBarPolicy(!auto_select_account.isSelected() ? JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED : JScrollPane.VERTICAL_SCROLLBAR_NEVER);
         split_folder_checkbox.setVisible(auto_select_account.isSelected() && getLocal_path() != null && Files.isDirectory(Paths.get(getLocal_path())));
         free_space.setVisible(!auto_select_account.isSelected());
         checkFreeSpace();
@@ -638,6 +662,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JScrollPane account_stats_scroll;
     private javax.swing.JTextArea account_stats_textarea;
+    private javax.swing.JPanel accounts_panel;
     private javax.swing.JCheckBox auto_select_account;
     private javax.swing.JComboBox<String> email_combobox;
     private javax.swing.JLabel free_space;

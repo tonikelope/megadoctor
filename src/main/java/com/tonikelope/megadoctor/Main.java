@@ -59,7 +59,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.5";
+    public final static String VERSION = "2.6";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -668,7 +668,7 @@ public class Main extends javax.swing.JFrame {
             _email_dialog = null;
 
         } else if (nodesToCopy.isEmpty()) {
-            Helpers.mostrarMensajeError(MAIN_WINDOW, "NO FOLDERS/FILES SELECTED (you must select with your mouse text that contains some H:XXXXXXXX MEGA NODE)");
+            Helpers.mostrarMensajeError(MAIN_WINDOW, "NO VALID FOLDERS/FILES SELECTED\n(you must select with your mouse text that contains some H:XXXXXXXX MEGA NODE)");
         }
 
         Helpers.GUIRunAndWait(() -> {
@@ -966,7 +966,7 @@ public class Main extends javax.swing.JFrame {
             _move_dialog = null;
 
         } else if (nodesToCopy.isEmpty()) {
-            Helpers.mostrarMensajeError(MAIN_WINDOW, "NO FOLDERS/FILES SELECTED (you must select with your mouse text that contains some H:xxxxxxxx MEGA NODE)");
+            Helpers.mostrarMensajeError(MAIN_WINDOW, "NO VALID FOLDERS/FILES SELECTED\n(you must select with your mouse text that contains some H:xxxxxxxx MEGA NODE)");
         }
 
         Helpers.GUIRunAndWait(() -> {
@@ -1063,7 +1063,7 @@ public class Main extends javax.swing.JFrame {
             _move_dialog = null;
 
         } else if (nodesToMove.isEmpty()) {
-            Helpers.mostrarMensajeError(MAIN_WINDOW, "NO FOLDERS/FILES SELECTED (you must select with your mouse text that contains some H:xxxxxxxx MEGA NODE)");
+            Helpers.mostrarMensajeError(MAIN_WINDOW, "NO VALID FOLDERS/FILES SELECTED\n(you must select with your mouse text that contains some H:xxxxxxxx MEGA NODE)");
         }
 
         Helpers.GUIRunAndWait(() -> {
@@ -1150,7 +1150,7 @@ public class Main extends javax.swing.JFrame {
             _move_dialog = null;
 
         } else if (nodesToRename.isEmpty()) {
-            Helpers.mostrarMensajeError(MAIN_WINDOW, "NO FOLDERS/FILES SELECTED (you must select with your mouse text that contains some H:xxxxxxxx MEGA NODE)");
+            Helpers.mostrarMensajeError(MAIN_WINDOW, "NO VALID FOLDERS/FILES SELECTED\n(you must select with your mouse text that contains some H:xxxxxxxx MEGA NODE)");
         }
 
         Helpers.GUIRunAndWait(() -> {
@@ -1204,7 +1204,7 @@ public class Main extends javax.swing.JFrame {
 
             Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL SELECTED FOLDERS/FILES " + (enable ? "PUBLIC LINKS GENERATED" : "PUBLIC LINKS REMOVED"));
         } else if (nodesToExport.isEmpty()) {
-            Helpers.mostrarMensajeError(MAIN_WINDOW, "NO FOLDERS/FILES SELECTED (you must select with your mouse text that contains some H:xxxxxxxx MEGA NODE)");
+            Helpers.mostrarMensajeError(MAIN_WINDOW, "NO VALID FOLDERS/FILES SELECTED\n(you must select with your mouse text that contains some H:xxxxxxxx MEGA NODE)");
         }
 
         Helpers.GUIRunAndWait(() -> {
@@ -1350,7 +1350,7 @@ public class Main extends javax.swing.JFrame {
 
             Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL SELECTED FOLDERS/FILES DELETED");
         } else if (nodesToRemove.isEmpty()) {
-            Helpers.mostrarMensajeError(MAIN_WINDOW, "NO FOLDERS/FILES SELECTED (you must select with your mouse text that contains some H:xxxxxxxx MEGA NODE)");
+            Helpers.mostrarMensajeError(MAIN_WINDOW, "NO VALID FOLDERS/FILES SELECTED\n(you must select with your mouse text that contains some H:xxxxxxxx MEGA NODE)");
         }
 
         Helpers.GUIRunAndWait(() -> {
@@ -1429,7 +1429,7 @@ public class Main extends javax.swing.JFrame {
                 });
             }
         } else if (nodesToDownload.isEmpty()) {
-            Helpers.mostrarMensajeError(MAIN_WINDOW, "NO FOLDERS/FILES SELECTED (you must select with your mouse text that contains some H:xxxxxxxx MEGA NODE)");
+            Helpers.mostrarMensajeError(MAIN_WINDOW, "NO VALID FOLDERS/FILES SELECTED\n(you must select with your mouse text that contains some H:xxxxxxxx MEGA NODE)");
         }
 
         Helpers.GUIRunAndWait(() -> {
