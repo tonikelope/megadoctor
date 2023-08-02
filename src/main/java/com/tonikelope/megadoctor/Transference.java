@@ -660,11 +660,17 @@ public final class Transference extends javax.swing.JPanel {
 
                             if (!_error && _remove_after) {
                                 try {
-                                    Files.deleteIfExists(Paths.get(_lpath));
+                                    if (isDirectory()) {
+                                        Helpers.deleteDirectoryRecursion(Paths.get(_lpath));
+                                    } else {
+                                        Files.deleteIfExists(Paths.get(_lpath));
+                                    }
                                     local_path.setBackground(Color.red);
                                 } catch (IOException ex) {
                                     Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
                                 }
+                            } else {
+                                local_path.setBackground(null);
                             }
 
                             if (!running) {
@@ -865,7 +871,7 @@ public final class Transference extends javax.swing.JPanel {
         _remove_after = remove_after;
 
         if (_remove_after) {
-            local_path.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/remove.png")));
+            local_path.setBackground(Color.red);
         }
 
         _terminate_walk_tree.set(false);
@@ -1082,9 +1088,9 @@ public final class Transference extends javax.swing.JPanel {
 
     private void local_pathMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_local_pathMouseClicked
         // TODO add your handling code here:
-        if (_remove_after && Files.exists(Paths.get(_lpath)) && Helpers.mostrarMensajeInformativoSINO(null, "DISABLE REMOVE AFTER UPLOAD?") == 0) {
+        if (_remove_after && Files.exists(Paths.get(_lpath)) && !isFinished() && Helpers.mostrarMensajeInformativoSINO(null, "DISABLE REMOVE AFTER UPLOAD?") == 0) {
             _remove_after = false;
-            local_path.setIcon(null);
+            local_path.setBackground(null);
         }
     }//GEN-LAST:event_local_pathMouseClicked
 
