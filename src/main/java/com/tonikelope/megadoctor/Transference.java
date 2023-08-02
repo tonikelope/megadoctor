@@ -12,9 +12,13 @@ package com.tonikelope.megadoctor;
 
 import static com.tonikelope.megadoctor.Main.MEGA_CMD_WINDOWS_PATH;
 import static com.tonikelope.megadoctor.Main.TRANSFERENCES_LOCK;
+import java.awt.Color;
 import java.awt.Component;
 import java.io.File;
+import java.io.IOException;
 import java.net.URLDecoder;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -53,6 +57,7 @@ public final class Transference extends javax.swing.JPanel {
     private volatile long _prog_timestamp = 0;
     private final AtomicBoolean _terminate_walk_tree = new AtomicBoolean();
     private volatile String _public_link = null;
+    private volatile boolean _remove_after;
 
     public boolean isError() {
         return _error;
@@ -653,6 +658,15 @@ public final class Transference extends javax.swing.JPanel {
                                 }
                             }
 
+                            if (!_error && _remove_after) {
+                                try {
+                                    Files.deleteIfExists(Paths.get(_lpath));
+                                    local_path.setBackground(Color.red);
+                                } catch (IOException ex) {
+                                    Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
+                                }
+                            }
+
                             if (!running) {
                                 Notification notification = new Notification(new javax.swing.JFrame(), false, "ALL TRANSFERS FINISHED", (Main.MAIN_WINDOW.getExtendedState() & JFrame.ICONIFIED) == 0 ? 3000 : 0, "finish.wav");
                                 Helpers.setWindowLowRightCorner(notification);
@@ -837,7 +851,7 @@ public final class Transference extends javax.swing.JPanel {
     /**
      * Creates new form TransferenceQueueItem
      */
-    public Transference(String email, String lpath, String rpath, int act) {
+    public Transference(String email, String lpath, String rpath, int act, boolean remove_after) {
         initComponents();
 
         status_icon.setVisible(false);
@@ -847,6 +861,12 @@ public final class Transference extends javax.swing.JPanel {
         DefaultCaret caret = (DefaultCaret) folder_stats_textarea.getCaret();
 
         caret.setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
+
+        _remove_after = remove_after;
+
+        if (_remove_after) {
+            local_path.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/remove.png")));
+        }
 
         _terminate_walk_tree.set(false);
 
@@ -968,6 +988,12 @@ public final class Transference extends javax.swing.JPanel {
         local_path.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
         local_path.setText("jLabel1");
         local_path.setDoubleBuffered(true);
+        local_path.setOpaque(true);
+        local_path.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                local_pathMouseClicked(evt);
+            }
+        });
 
         javax.swing.GroupLayout main_panelLayout = new javax.swing.GroupLayout(main_panel);
         main_panel.setLayout(main_panelLayout);
@@ -1053,6 +1079,14 @@ public final class Transference extends javax.swing.JPanel {
             repaint();
         }
     }//GEN-LAST:event_main_panelMousePressed
+
+    private void local_pathMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_local_pathMouseClicked
+        // TODO add your handling code here:
+        if (_remove_after && Files.exists(Paths.get(_lpath)) && Helpers.mostrarMensajeInformativoSINO(null, "DISABLE REMOVE AFTER UPLOAD?") == 0) {
+            _remove_after = false;
+            local_path.setIcon(null);
+        }
+    }//GEN-LAST:event_local_pathMouseClicked
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel action;

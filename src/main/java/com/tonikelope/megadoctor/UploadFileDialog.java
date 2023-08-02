@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
 import javax.swing.JScrollPane;
 
@@ -56,6 +57,10 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
     public long getLocal_size() {
         return _local_size;
+    }
+
+    public JCheckBox getRemove_after() {
+        return remove_after;
     }
 
     private volatile boolean _ok = false;
@@ -182,6 +187,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         accounts_panel = new javax.swing.JPanel();
         free_space = new javax.swing.JLabel();
         email_combobox = new javax.swing.JComboBox<>();
+        remove_after = new javax.swing.JCheckBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle("UPLOAD");
@@ -317,17 +323,28 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                 .addContainerGap())
         );
 
+        remove_after.setFont(new java.awt.Font("Noto Sans", 1, 16)); // NOI18N
+        remove_after.setText("Remove local file/folder after successful upload");
+        remove_after.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        remove_after.setDoubleBuffered(true);
+        remove_after.setOpaque(true);
+        remove_after.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                remove_afterActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(local_folder_progress, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(account_stats_scroll, javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(progress, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(local_folder_progress, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(account_stats_scroll)
+                    .addComponent(progress, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(layout.createSequentialGroup()
                         .addComponent(auto_select_account)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(split_folder_checkbox)
@@ -335,11 +352,11 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                         .addComponent(accounts_panel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(vamos_button))
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                    .addGroup(layout.createSequentialGroup()
                         .addComponent(jLabel2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(remote_path))
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                    .addGroup(layout.createSequentialGroup()
                         .addComponent(local_file_button)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(local_folder_button)
@@ -348,7 +365,10 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(local_size)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(local_path_scroll_panel)))
+                        .addComponent(local_path_scroll_panel))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(remove_after)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -363,9 +383,11 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                         .addComponent(mega_button))
                     .addComponent(local_path_scroll_panel))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(remove_after)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(local_folder_progress, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(account_stats_scroll, javax.swing.GroupLayout.DEFAULT_SIZE, 493, Short.MAX_VALUE)
+                .addComponent(account_stats_scroll, javax.swing.GroupLayout.DEFAULT_SIZE, 458, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
@@ -659,6 +681,16 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         _split_folder = split_folder_checkbox.isSelected();
     }//GEN-LAST:event_split_folder_checkboxActionPerformed
 
+    private void remove_afterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_remove_afterActionPerformed
+        // TODO add your handling code here:
+        if (remove_after.isSelected() && Helpers.mostrarMensajeInformativoSINO(null, "SURE?") != 0) {
+            remove_after.setSelected(false);
+        }
+
+        remove_after.setBackground(remove_after.isSelected() ? Color.red : null);
+
+    }//GEN-LAST:event_remove_afterActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JScrollPane account_stats_scroll;
     private javax.swing.JTextArea account_stats_textarea;
@@ -676,6 +708,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
     private javax.swing.JButton mega_button;
     private javax.swing.JProgressBar progress;
     private javax.swing.JTextField remote_path;
+    private javax.swing.JCheckBox remove_after;
     private javax.swing.JCheckBox split_folder_checkbox;
     private javax.swing.JButton vamos_button;
     // End of variables declaration//GEN-END:variables

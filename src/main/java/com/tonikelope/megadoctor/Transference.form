@@ -153,7 +153,11 @@
             </Property>
             <Property name="text" type="java.lang.String" value="jLabel1"/>
             <Property name="doubleBuffered" type="boolean" value="true"/>
+            <Property name="opaque" type="boolean" value="true"/>
           </Properties>
+          <Events>
+            <EventHandler event="mouseClicked" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="local_pathMouseClicked"/>
+          </Events>
         </Component>
       </SubComponents>
     </Container>

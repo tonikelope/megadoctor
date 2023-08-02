@@ -59,7 +59,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.6";
+    public final static String VERSION = "2.7";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -844,7 +844,7 @@ public class Main extends javax.swing.JFrame {
 
                                 for (Object[] o : trans) {
                                     if (MEGA_SESSIONS.containsKey((String) o[0])) {
-                                        Transference t = new Transference((String) o[0], (String) o[1], (String) o[2], (int) o[3]);
+                                        Transference t = new Transference((String) o[0], (String) o[1], (String) o[2], (int) o[3], false);
                                         TRANSFERENCES_MAP.put(transferences.add(t), t);
                                         valid_trans.add(t);
                                     }
@@ -1409,7 +1409,7 @@ public class Main extends javax.swing.JFrame {
                         for (String n : node_list) {
                             Helpers.GUIRunAndWait(() -> {
 
-                                Transference trans = new Transference(email, download_directory.getAbsolutePath(), n, 0);
+                                Transference trans = new Transference(email, download_directory.getAbsolutePath(), n, 0, false);
                                 TRANSFERENCES_MAP.put(transferences.add(trans), trans);
                                 transferences.revalidate();
                                 transferences.repaint();
@@ -2447,6 +2447,8 @@ public class Main extends javax.swing.JFrame {
 
                     if (dialog.isOk()) {
 
+                        boolean remove_after = dialog.getRemove_after().isSelected();
+
                         tabbed_panel.setSelectedIndex(1);
 
                         vamos_button.setEnabled(false);
@@ -2483,7 +2485,7 @@ public class Main extends javax.swing.JFrame {
                                     if (dialog.getEmail() != null) {
                                         Helpers.GUIRunAndWait(() -> {
 
-                                            Transference trans = new Transference(dialog.getEmail(), dialog.getLocal_path(), dialog.getRemote_path(), 1);
+                                            Transference trans = new Transference(dialog.getEmail(), dialog.getLocal_path(), dialog.getRemote_path(), 1, remove_after);
                                             TRANSFERENCES_MAP.put(transferences.add(trans), trans);
                                             transferences.revalidate();
                                             transferences.repaint();
@@ -2528,7 +2530,7 @@ public class Main extends javax.swing.JFrame {
 
                                                         Helpers.GUIRunAndWait(() -> {
 
-                                                            Transference trans = new Transference(email, (String) h[0], dialog.getRemote_path(), 1);
+                                                            Transference trans = new Transference(email, (String) h[0], dialog.getRemote_path(), 1, remove_after);
                                                             TRANSFERENCES_MAP.put(transferences.add(trans), trans);
                                                             transferences.revalidate();
                                                             transferences.repaint();
@@ -2554,7 +2556,7 @@ public class Main extends javax.swing.JFrame {
                                             if (email != null) {
                                                 Helpers.GUIRunAndWait(() -> {
 
-                                                    Transference trans = new Transference(email, f.getAbsolutePath(), dialog.getRemote_path(), 1);
+                                                    Transference trans = new Transference(email, f.getAbsolutePath(), dialog.getRemote_path(), 1, remove_after);
                                                     TRANSFERENCES_MAP.put(transferences.add(trans), trans);
                                                     transferences.revalidate();
                                                     transferences.repaint();
