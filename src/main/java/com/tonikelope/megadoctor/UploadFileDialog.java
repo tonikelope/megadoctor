@@ -250,7 +250,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
         mega_button.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
         mega_button.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/mega.png"))); // NOI18N
-        mega_button.setText("SELECT MEGA LINK");
+        mega_button.setText("USE MEGA LINK");
         mega_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         mega_button.setDoubleBuffered(true);
         mega_button.addActionListener(new java.awt.event.ActionListener() {
@@ -688,6 +688,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         }
 
         remove_after.setBackground(remove_after.isSelected() ? Color.red : null);
+        remove_after.setForeground(remove_after.isSelected() ? Color.white : null);
 
     }//GEN-LAST:event_remove_afterActionPerformed
 

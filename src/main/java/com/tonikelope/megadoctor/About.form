@@ -134,7 +134,7 @@
             <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
               <Font name="Noto Sans" size="15" style="2"/>
             </Property>
-            <Property name="text" type="java.lang.String" value="Jn 8:32"/>
+            <Property name="text" type="java.lang.String" value=" Jn 8:32"/>
             <Property name="doubleBuffered" type="boolean" value="true"/>
           </Properties>
         </Component>

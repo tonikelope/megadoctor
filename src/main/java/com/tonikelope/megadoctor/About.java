@@ -116,7 +116,7 @@ public class About extends javax.swing.JDialog {
         });
 
         eso.setFont(new java.awt.Font("Noto Sans", 2, 15)); // NOI18N
-        eso.setText("Jn 8:32");
+        eso.setText(" Jn 8:32");
         eso.setDoubleBuffered(true);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);

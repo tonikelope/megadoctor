@@ -59,7 +59,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.8";
+    public final static String VERSION = "2.9";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -2025,7 +2025,7 @@ public class Main extends javax.swing.JFrame {
         jMenu2.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
 
         jMenuItem2.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
-        jMenuItem2.setText("Auto upload excluded accounts");
+        jMenuItem2.setText("Auto allocation excluded accounts");
         jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jMenuItem2ActionPerformed(evt);
@@ -2823,7 +2823,7 @@ public class Main extends javax.swing.JFrame {
 
     private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
         // TODO add your handling code here:
-        AutoUploadExcludedDialog dialog = new AutoUploadExcludedDialog(this, true);
+        AutoAllocationExcludedDialog dialog = new AutoAllocationExcludedDialog(this, true);
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
 

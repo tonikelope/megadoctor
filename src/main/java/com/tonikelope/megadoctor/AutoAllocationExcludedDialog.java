@@ -16,7 +16,7 @@ import javax.swing.JTextArea;
  *
  * @author tonikelope
  */
-public class AutoUploadExcludedDialog extends javax.swing.JDialog {
+public class AutoAllocationExcludedDialog extends javax.swing.JDialog {
 
     public JTextArea getExcluded_accounts() {
         return excluded_accounts;
@@ -25,7 +25,7 @@ public class AutoUploadExcludedDialog extends javax.swing.JDialog {
     /**
      * Creates new form AutoUploadExcludedDialog
      */
-    public AutoUploadExcludedDialog(java.awt.Frame parent, boolean modal) {
+    public AutoAllocationExcludedDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
 
@@ -50,9 +50,9 @@ public class AutoUploadExcludedDialog extends javax.swing.JDialog {
         jButton1 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-        setTitle("AUTO UPLOAD EXCLUDED ACCOUNTS");
+        setTitle("AUTO ALLOCATION EXCLUDED ACCOUNTS");
 
-        excluded_accounts.setBackground(new java.awt.Color(255, 255, 0));
+        excluded_accounts.setBackground(new java.awt.Color(255, 255, 204));
         excluded_accounts.setColumns(20);
         excluded_accounts.setFont(new java.awt.Font("Monospaced", 0, 16)); // NOI18N
         excluded_accounts.setRows(5);
@@ -107,20 +107,23 @@ public class AutoUploadExcludedDialog extends javax.swing.JDialog {
                 }
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(AutoUploadExcludedDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(AutoAllocationExcludedDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(AutoUploadExcludedDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(AutoAllocationExcludedDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(AutoUploadExcludedDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(AutoAllocationExcludedDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(AutoUploadExcludedDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(AutoAllocationExcludedDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
         //</editor-fold>
 
         /* Create and display the dialog */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                AutoUploadExcludedDialog dialog = new AutoUploadExcludedDialog(new javax.swing.JFrame(), true);
+                AutoAllocationExcludedDialog dialog = new AutoAllocationExcludedDialog(new javax.swing.JFrame(), true);
                 dialog.addWindowListener(new java.awt.event.WindowAdapter() {
                     @Override
                     public void windowClosing(java.awt.event.WindowEvent e) {

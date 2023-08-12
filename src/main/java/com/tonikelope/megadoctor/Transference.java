@@ -666,6 +666,7 @@ public final class Transference extends javax.swing.JPanel {
                                         Files.deleteIfExists(Paths.get(_lpath));
                                     }
                                     local_path.setBackground(Color.red);
+                                    local_path.setForeground(Color.white);
                                 } catch (IOException ex) {
                                     Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
                                 }
@@ -872,6 +873,7 @@ public final class Transference extends javax.swing.JPanel {
 
         if (_remove_after) {
             local_path.setBackground(Color.red);
+            local_path.setForeground(Color.white);
         }
 
         _terminate_walk_tree.set(false);
