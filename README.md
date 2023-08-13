@@ -1,4 +1,5 @@
 # megadoctor
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/Naereen/StrapDown.js/graphs/commit-activity) [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 ### (A vitaminized GUI for MEGAcmd)
 megadoctor is an unofficial application designed to help you manage your MEGA account by relying internally on the excellent MEGAcmd tool (Note: although it relies on MEGAcmd, it does not pretend to be a complete GUI of it).
 
