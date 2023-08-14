@@ -37,6 +37,7 @@ import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileVisitOption;
 import static java.nio.file.FileVisitOption.FOLLOW_LINKS;
@@ -676,7 +677,7 @@ public class Helpers {
                 Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
             }
             process.waitFor();
-            return new String[]{String.valueOf(pid), sb.toString(), String.valueOf(process.exitValue())};
+            return new String[]{String.valueOf(pid), new String(sb.toString().getBytes(), StandardCharsets.UTF_8), String.valueOf(process.exitValue())};
         } catch (Exception ex) {
         }
         return null;
