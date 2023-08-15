@@ -12,4 +12,4 @@ MegaDoctor is an unofficial application designed to help you manage your MEGA ac
 <p align="center"><img src="https://github.com/tonikelope/megadoctor/raw/main/snapshots/transfer.png"></p>
 
 <p><i>Note1: although MegaDoctor relies on MEGAcmd, it does not pretend to be a complete GUI for it.</i></p>
-<p></p><i>Note2: I recommend using OpenJDK 11, although MegaDoctor has been successfully tested up to Java version 15.</i></p>
+<p></p><i>Note2: I recommend using OpenJDK 11, although MegaDoctor has been successfully tested up to version 15.</i></p>
