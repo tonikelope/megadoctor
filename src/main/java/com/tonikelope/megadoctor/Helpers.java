@@ -320,7 +320,7 @@ public class Helpers {
     }
 
     public static String megaWhoami() {
-        String[] whoami = Helpers.runProcess(new String[]{"mega-whoami"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null, true);
+        String[] whoami = Helpers.runProcess(new String[]{"mega-whoami"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null, true, null);
         if (whoami[1].contains("security needs upgrading")) {
             Helpers.GUIRun(() -> {
                 Main.MAIN_WINDOW.getStatus_label().setForeground(Color.MAGENTA);
@@ -650,12 +650,14 @@ public class Helpers {
     }
 
     public static String[] runProcess(String[] command, String path) {
-        return runProcess(command, path, false);
+        return runProcess(command, path, false, null);
     }
 
-    public static String[] runProcess(String[] command, String path, boolean redirectstream) {
+    public static String[] runProcess(String[] command, String path, boolean redirectstream, Pattern stop_regex) {
         try {
+
             ProcessBuilder processbuilder = new ProcessBuilder(Helpers.buildCommand(command));
+
             if (path != null && !"".equals(path)) {
                 processbuilder.environment().put("PATH", path + File.pathSeparator + System.getenv("PATH"));
             }
@@ -663,8 +665,11 @@ public class Helpers {
             processbuilder.redirectErrorStream(redirectstream);
 
             Process process = processbuilder.start();
+
             long pid = process.pid();
+
             StringBuilder sb = new StringBuilder();
+
             try {
                 BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
 
@@ -672,6 +677,16 @@ public class Helpers {
 
                 while ((line = br.readLine()) != null) {
                     sb.append(line).append("\n");
+
+                    if (stop_regex != null) {
+
+                        Matcher matcher = stop_regex.matcher(Pattern.quote(line));
+
+                        if (matcher.find()) {
+                            Logger.getLogger(Helpers.class.getName()).log(Level.INFO, "RunProcess stop regex found -> #" + stop_regex.pattern() + "# " + String.join(" ", Helpers.buildCommand(command)) + " " + line);
+                            break;
+                        }
+                    }
                 }
             } catch (Exception ex) {
                 Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
