@@ -3,7 +3,7 @@
 <p align="center"><i>"Standing on the shoulders of giants..."</i></p>
 
 ### (A vitaminized GUI for MEGAcmd)
-MegaDoctor is an unofficial application designed to help you manage your MEGA account.
+MegaDoctor is an unofficial application designed to help you manage your MEGA account/s.
 
 <h1 align="center"><a href="https://github.com/tonikelope/megadoctor/releases/latest"><b>DOWNLOAD LATEST MEGADOCTOR RELEASE</b></a></h1>
 <h3 align="center">Dependencies (2): <a href="https://adoptium.net/es/temurin/releases/?version=11"><b>Java</b></a> / <a href="https://mega.io/cmd"><b>MEGAcmd</b></a></h3>
