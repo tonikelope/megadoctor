@@ -1090,7 +1090,7 @@ public final class Transference extends javax.swing.JPanel {
 
     private void local_pathMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_local_pathMouseClicked
         // TODO add your handling code here:
-        if (_remove_after && Files.exists(Paths.get(_lpath)) && !isFinished() && Helpers.mostrarMensajeInformativoSINO(null, "DISABLE REMOVE AFTER UPLOAD?") == 0) {
+        if (_remove_after && Files.exists(Paths.get(_lpath)) && !isFinished() && Helpers.mostrarMensajeInformativoSINO(Main.MAIN_WINDOW, "DISABLE REMOVE AFTER UPLOAD?") == 0) {
             _remove_after = false;
             local_path.setBackground(null);
         }

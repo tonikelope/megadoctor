@@ -683,7 +683,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
     private void remove_afterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_remove_afterActionPerformed
         // TODO add your handling code here:
-        if (remove_after.isSelected() && Helpers.mostrarMensajeInformativoSINO(null, "SURE?") != 0) {
+        if (remove_after.isSelected() && Helpers.mostrarMensajeInformativoSINO(Main.MAIN_WINDOW, "SURE?") != 0) {
             remove_after.setSelected(false);
         }
 

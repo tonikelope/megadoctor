@@ -59,7 +59,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.11";
+    public final static String VERSION = "2.12";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -2120,7 +2120,7 @@ public class Main extends javax.swing.JFrame {
     private void vamos_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_vamos_buttonActionPerformed
         // TODO add your handling code here:
 
-        if (MEGA_CMD_VERSION != null) {
+        if (MEGA_CMD_VERSION != null && Helpers.mostrarMensajeInformativoSINO(this, "This will run through all your accounts to generate a report on their status and add\n the accounts to the internal database (required to be able to make transfers).\n<b>It may take a long time</b> and while the report is being generated\nyou will not be able to make transfers in MegaDoctor.\n\n<b>DO YOU WANT TO CONTINUE?</b>") == 0) {
 
             if (!isRunning_global_check()) {
 

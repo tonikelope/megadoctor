@@ -50,7 +50,7 @@ public class AutoAllocationExcludedDialog extends javax.swing.JDialog {
         jButton1 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-        setTitle("AUTO ALLOCATION EXCLUDED ACCOUNTS");
+        setTitle("AUTO ALLOCATION EXCLUDED ACCOUNTS (one per line)");
 
         excluded_accounts.setBackground(new java.awt.Color(255, 255, 204));
         excluded_accounts.setColumns(20);
