@@ -8,7 +8,7 @@ MegaDoctor is an unofficial application designed to help you manage your MEGA ac
 <h1 align="center"><a href="https://github.com/tonikelope/megadoctor/releases/latest"><b>DOWNLOAD LATEST MEGADOCTOR RELEASE</b></a></h1>
 <h3 align="center">Dependencies (2): <a href="https://adoptium.net/es/temurin/releases/?version=11"><b>Java</b></a> / <a href="https://mega.io/cmd"><b>MEGAcmd</b></a></h3>
 
-<h2 align="center">IMPORTANT: YOU MUST NOT USE MEGAcmd WHILE MegaDoctor IS RUNNING</h2>
+<h3 align="center">IMPORTANT: YOU MUST NOT USE MEGAcmd WHILE MegaDoctor IS RUNNING</h2>
 <p align="center"><img src="https://github.com/tonikelope/megadoctor/raw/main/snapshots/9900.png"></p>
 <p align="center"><img src="https://github.com/tonikelope/megadoctor/raw/main/snapshots/screenshot.png"></p>
 <p align="center"><img src="https://github.com/tonikelope/megadoctor/raw/main/snapshots/transfer.png"></p>
