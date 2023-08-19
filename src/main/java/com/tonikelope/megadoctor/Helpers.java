@@ -569,6 +569,24 @@ public class Helpers {
         }
     }
 
+    public static void mostrarMensajeAviso(JFrame frame, String m) {
+
+        final String msg = m.replace("\n", "<br>");
+
+        if (SwingUtilities.isEventDispatchThread()) {
+
+            JOptionPane.showMessageDialog(frame, "<html><div align='center'>" + msg + "</div></html>", "WARNING", JOptionPane.WARNING_MESSAGE);
+
+        } else {
+            Helpers.GUIRunAndWait(new Runnable() {
+                @Override
+                public void run() {
+                    JOptionPane.showMessageDialog(frame, "<html><div align='center'>" + msg + "</div></html>", "WARNING", JOptionPane.WARNING_MESSAGE);
+                }
+            });
+        }
+    }
+
     // 0=yes, 1=no, 2=cancel
     public static int mostrarMensajeInformativoSINO(JFrame frame, String m) {
 

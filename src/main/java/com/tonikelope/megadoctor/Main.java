@@ -1,10 +1,10 @@
 /*
- __  __ _____ ____    _    ____   ___   ____ _____ ___  ____  
-|  \/  | ____/ ___|  / \  |  _ \ / _ \ / ___|_   _/ _ \|  _ \ 
+ __  __ _____ ____    _    ____   ___   ____ _____ ___  ____
+|  \/  | ____/ ___|  / \  |  _ \ / _ \ / ___|_   _/ _ \|  _ \
 | |\/| |  _|| |  _  / _ \ | | | | | | | |     | || | | | |_) |
-| |  | | |__| |_| |/ ___ \| |_| | |_| | |___  | || |_| |  _ < 
+| |  | | |__| |_| |/ ___ \| |_| | |_| | |___  | || |_| |  _ <
 |_|  |_|_____\____/_/   \_\____/ \___/ \____| |_| \___/|_| \_\
-                                                              
+
 by tonikelope
 
  */
@@ -59,12 +59,13 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.13";
+    public final static String VERSION = "2.14";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
+    public final static String MEGA_CMD_CHECK_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_megacmd_ok";
     public final static String SESSIONS_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_sessions";
     public final static String ACCOUNTS_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_accounts";
     public final static String EXCLUDED_ACCOUNTS_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_excluded_accounts";
@@ -245,6 +246,16 @@ public class Main extends javax.swing.JFrame {
                     }
                 }
                 System.exit(1);
+            }
+
+            if (!Files.exists(Paths.get(MEGA_CMD_CHECK_FILE))) {
+                Helpers.mostrarMensajeInformativo(this, "MEGAcmd IS CORRECTLY INSTALLED 😃\n\nRemember that to avoid possible failures, <b>YOU MUST NOT USE MEGAcmd WHILE USING MegaDoctor.</b>");
+
+                try {
+                    Files.createFile(Paths.get(MEGA_CMD_CHECK_FILE));
+                } catch (IOException ex) {
+                    Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
 
             Helpers.GUIRunAndWait(() -> {
@@ -2855,7 +2866,7 @@ public class Main extends javax.swing.JFrame {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
          */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
