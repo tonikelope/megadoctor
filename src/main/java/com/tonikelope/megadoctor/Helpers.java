@@ -701,7 +701,7 @@ public class Helpers {
                         Matcher matcher = stop_regex.matcher(Pattern.quote(line));
 
                         if (matcher.find()) {
-                            Logger.getLogger(Helpers.class.getName()).log(Level.INFO, "RunProcess stop regex found -> #" + stop_regex.pattern() + "# " + String.join(" ", Helpers.buildCommand(command)) + " " + line);
+                            //Logger.getLogger(Helpers.class.getName()).log(Level.INFO, "RunProcess stop regex found -> #" + stop_regex.pattern() + "# " + String.join(" ", Helpers.buildCommand(command)) + " " + line);
                             break;
                         }
                     }

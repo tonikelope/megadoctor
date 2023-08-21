@@ -13,15 +13,19 @@ package com.tonikelope.megadoctor;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
 import javax.swing.JScrollPane;
+import javax.swing.JTextField;
 
 /**
  *
@@ -31,12 +35,16 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
     public static String LAST_FOLDER = null;
 
+    public JTextField getSplit_textbox() {
+        return split_textbox;
+    }
+
     public boolean isAuto() {
         return _auto;
     }
 
-    public boolean isSplit_folder() {
-        return _split_folder;
+    public boolean isSplit() {
+        return _split;
     }
 
     public String getEmail() {
@@ -70,11 +78,16 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
     private volatile String _link = null;
     private volatile String _lpath = null;
     private volatile String _rpath = null;
-    private volatile boolean _split_folder = false;
+    private volatile boolean _split = false;
+    private volatile long _split_size = -1;
     private volatile boolean _auto = false;
     private volatile boolean _init = false;
     private final AtomicBoolean _terminate_walk_tree = new AtomicBoolean();
     private static volatile String LAST_EMAIL = null;
+
+    public long getSplit_size() {
+        return _split_size;
+    }
 
     public UploadFileDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
@@ -83,11 +96,15 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
         _init = true;
 
+        split_panel.setVisible(false);
+
+        split_textbox.setEnabled(false);
+
+        split_mb.setEnabled(false);
+
         local_path_scroll_panel.getHorizontalScrollBar().setPreferredSize(new Dimension(0, 10));
 
         _terminate_walk_tree.set(false);
-
-        split_folder_checkbox.setVisible(false);
 
         Helpers.JTextFieldRegularPopupMenu.addLiteMEGAAccountPopupMenuTo(account_stats_textarea, this);
 
@@ -181,13 +198,17 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         local_folder_progress = new javax.swing.JProgressBar();
         mega_button = new javax.swing.JButton();
         auto_select_account = new javax.swing.JCheckBox();
-        split_folder_checkbox = new javax.swing.JCheckBox();
         local_path_scroll_panel = new javax.swing.JScrollPane();
         local_path = new javax.swing.JLabel();
         accounts_panel = new javax.swing.JPanel();
         free_space = new javax.swing.JLabel();
         email_combobox = new javax.swing.JComboBox<>();
         remove_after = new javax.swing.JCheckBox();
+        split_panel = new javax.swing.JPanel();
+        split_textbox = new javax.swing.JTextField();
+        split_mb = new javax.swing.JLabel();
+        split_checkbox = new javax.swing.JCheckBox();
+        split_icon = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle("UPLOAD");
@@ -260,24 +281,13 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         });
 
         auto_select_account.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
-        auto_select_account.setText("Auto allocation");
+        auto_select_account.setText("AUTO ALLOCATION");
         auto_select_account.setToolTipText("Auto search an account with free space");
         auto_select_account.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         auto_select_account.setDoubleBuffered(true);
         auto_select_account.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 auto_select_accountActionPerformed(evt);
-            }
-        });
-
-        split_folder_checkbox.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
-        split_folder_checkbox.setText("Split folder");
-        split_folder_checkbox.setToolTipText("Create a transfer for every folder child (first level)");
-        split_folder_checkbox.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-        split_folder_checkbox.setDoubleBuffered(true);
-        split_folder_checkbox.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                split_folder_checkboxActionPerformed(evt);
             }
         });
 
@@ -323,7 +333,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                 .addContainerGap())
         );
 
-        remove_after.setFont(new java.awt.Font("Noto Sans", 1, 16)); // NOI18N
+        remove_after.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
         remove_after.setText("Remove local file/folder after successful upload");
         remove_after.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         remove_after.setDoubleBuffered(true);
@@ -333,6 +343,55 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                 remove_afterActionPerformed(evt);
             }
         });
+
+        split_textbox.setFont(new java.awt.Font("Noto Sans", 0, 18)); // NOI18N
+        split_textbox.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        split_textbox.setText("20500");
+        split_textbox.setDoubleBuffered(true);
+
+        split_mb.setFont(new java.awt.Font("Noto Sans", 0, 18)); // NOI18N
+        split_mb.setText("MB");
+        split_mb.setDoubleBuffered(true);
+
+        split_checkbox.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
+        split_checkbox.setText("SPLIT");
+        split_checkbox.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        split_checkbox.setDoubleBuffered(true);
+        split_checkbox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                split_checkboxActionPerformed(evt);
+            }
+        });
+
+        split_icon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/menu/icons8-cut-30.png"))); // NOI18N
+        split_icon.setDoubleBuffered(true);
+
+        javax.swing.GroupLayout split_panelLayout = new javax.swing.GroupLayout(split_panel);
+        split_panel.setLayout(split_panelLayout);
+        split_panelLayout.setHorizontalGroup(
+            split_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(split_panelLayout.createSequentialGroup()
+                .addGap(0, 0, 0)
+                .addComponent(split_checkbox)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(split_icon)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(split_textbox, javax.swing.GroupLayout.DEFAULT_SIZE, 137, Short.MAX_VALUE)
+                .addGap(1, 1, 1)
+                .addComponent(split_mb)
+                .addGap(0, 0, 0))
+        );
+        split_panelLayout.setVerticalGroup(
+            split_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(split_panelLayout.createSequentialGroup()
+                .addGap(0, 0, 0)
+                .addGroup(split_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(split_checkbox)
+                    .addComponent(split_textbox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(split_mb)
+                    .addComponent(split_icon))
+                .addGap(0, 0, 0))
+        );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -346,8 +405,6 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                     .addComponent(progress, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(auto_select_account)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(split_folder_checkbox)
                         .addGap(18, 18, 18)
                         .addComponent(accounts_panel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -358,16 +415,17 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                         .addComponent(remote_path))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(local_file_button)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGap(18, 18, 18)
                         .addComponent(local_folder_button)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGap(18, 18, 18)
                         .addComponent(mega_button)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(local_size)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(local_path_scroll_panel))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(local_path_scroll_panel, javax.swing.GroupLayout.DEFAULT_SIZE, 339, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(split_panel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(remove_after)))
                 .addContainerGap())
         );
@@ -383,11 +441,13 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                         .addComponent(mega_button))
                     .addComponent(local_path_scroll_panel))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(remove_after)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(split_panel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(remove_after))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(local_folder_progress, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(account_stats_scroll, javax.swing.GroupLayout.DEFAULT_SIZE, 458, Short.MAX_VALUE)
+                .addComponent(account_stats_scroll, javax.swing.GroupLayout.DEFAULT_SIZE, 444, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
@@ -396,9 +456,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                 .addComponent(progress, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                        .addComponent(auto_select_account, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 55, Short.MAX_VALUE)
-                        .addComponent(split_folder_checkbox, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(auto_select_account, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(accounts_panel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(vamos_button, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
@@ -412,7 +470,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
         if (!_lpath.isBlank()) {
             auto_select_account.setEnabled(false);
-            split_folder_checkbox.setEnabled(false);
+            split_panel.setEnabled(false);
             local_file_button.setEnabled(false);
             local_folder_button.setEnabled(false);
             mega_button.setEnabled(false);
@@ -425,7 +483,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
             if (auto_select_account.isSelected()) {
 
-                if (f.isDirectory() && _split_folder) {
+                if (f.isDirectory() && _split) {
 
                     if (!_rpath.endsWith("/")) {
                         _rpath += "/";
@@ -434,6 +492,31 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                     if (_rpath.equals("/")) {
                         _rpath += f.getName() + "/";
                     }
+                } else if (_split) {
+
+                    Long sp_size = Long.parseLong(getSplit_textbox().getText()) * 1024 * 1024;
+
+                    try {
+                        if (Files.size(Paths.get(this._lpath)) > sp_size) {
+
+                            _split_size = sp_size;
+
+                            if (!_rpath.endsWith("/")) {
+                                _rpath += "/" + f.getName() + "/";
+                            }
+
+                            if (_rpath.equals("/")) {
+                                _rpath += f.getName() + "/";
+                            }
+                        } else {
+                            _split = false;
+                            _ok = true;
+                            dispose();
+                        }
+                    } catch (IOException ex) {
+                        Logger.getLogger(UploadFileDialog.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+
                 }
 
                 _ok = true;
@@ -501,7 +584,15 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
             local_size.setText(Helpers.formatBytes(_local_size));
 
-            split_folder_checkbox.setVisible(auto_select_account.isSelected() && getLocal_path() != null && Files.isDirectory(Paths.get(getLocal_path())));
+            split_panel.setVisible(auto_select_account.isSelected() && getLocal_path() != null);
+
+            split_textbox.setVisible(true);
+
+            split_mb.setVisible(true);
+
+            split_checkbox.setText("SPLIT FILE");
+
+            split_checkbox.setToolTipText("Split file in chunks");
 
             checkFreeSpace();
         }
@@ -562,7 +653,10 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                         local_folder_button.setText("SELECT FOLDER");
                         local_folder_progress.setVisible(false);
                         local_size.setText(Helpers.formatBytes(_local_size));
-                        split_folder_checkbox.setVisible(auto_select_account.isSelected() && getLocal_path() != null && Files.isDirectory(Paths.get(getLocal_path())));
+                        split_textbox.setVisible(false);
+                        split_mb.setVisible(false);
+                        split_checkbox.setText("SPLIT FOLDER");
+                        split_checkbox.setToolTipText("Create a transfer for every folder child (first level)");
                         checkFreeSpace();
                     });
                 }
@@ -671,15 +765,32 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         account_stats_textarea.setVisible(!auto_select_account.isSelected());
         account_stats_scroll.setHorizontalScrollBarPolicy(!auto_select_account.isSelected() ? JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED : JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         account_stats_scroll.setVerticalScrollBarPolicy(!auto_select_account.isSelected() ? JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED : JScrollPane.VERTICAL_SCROLLBAR_NEVER);
-        split_folder_checkbox.setVisible(auto_select_account.isSelected() && getLocal_path() != null && Files.isDirectory(Paths.get(getLocal_path())));
+
         free_space.setVisible(!auto_select_account.isSelected());
+
+        split_panel.setVisible(auto_select_account.isSelected() && getLocal_path() != null);
+
+        split_textbox.setVisible(split_panel.isVisible() && !Files.isDirectory(Paths.get(getLocal_path())));
+
+        split_mb.setVisible(split_panel.isVisible() && !Files.isDirectory(Paths.get(getLocal_path())));
+
+        if (split_panel.isVisible()) {
+            split_checkbox.setText("SPLIT " + (Files.isDirectory(Paths.get(getLocal_path())) ? "FOLDER" : "FILE"));
+            split_checkbox.setToolTipText(Files.isDirectory(Paths.get(getLocal_path())) ? "Create a transfer for every folder child (first level)" : "Split file in chunks");
+        }
+
         checkFreeSpace();
     }//GEN-LAST:event_auto_select_accountActionPerformed
 
-    private void split_folder_checkboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_split_folder_checkboxActionPerformed
+    private void split_checkboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_split_checkboxActionPerformed
         // TODO add your handling code here:
-        _split_folder = split_folder_checkbox.isSelected();
-    }//GEN-LAST:event_split_folder_checkboxActionPerformed
+        _split = split_checkbox.isSelected();
+
+        split_textbox.setEnabled(_split);
+
+        split_mb.setEnabled(_split);
+
+    }//GEN-LAST:event_split_checkboxActionPerformed
 
     private void remove_afterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_remove_afterActionPerformed
         // TODO add your handling code here:
@@ -710,7 +821,11 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
     private javax.swing.JProgressBar progress;
     private javax.swing.JTextField remote_path;
     private javax.swing.JCheckBox remove_after;
-    private javax.swing.JCheckBox split_folder_checkbox;
+    private javax.swing.JCheckBox split_checkbox;
+    private javax.swing.JLabel split_icon;
+    private javax.swing.JLabel split_mb;
+    private javax.swing.JPanel split_panel;
+    private javax.swing.JTextField split_textbox;
     private javax.swing.JButton vamos_button;
     // End of variables declaration//GEN-END:variables
 

@@ -30,8 +30,11 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStreamWriter;
+import java.io.RandomAccessFile;
 import java.net.ServerSocket;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Comparator;
@@ -59,7 +62,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.14";
+    public final static String VERSION = "2.15";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -68,6 +71,7 @@ public class Main extends javax.swing.JFrame {
     public final static String MEGA_CMD_CHECK_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_megacmd_ok";
     public final static String SESSIONS_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_sessions";
     public final static String ACCOUNTS_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_accounts";
+    public final static String FILE_SPLITTER_TASKS_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_file_splitter";
     public final static String EXCLUDED_ACCOUNTS_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_excluded_accounts";
     public final static String TRANSFERS_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_transfers";
     public final static String NODES_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_nodes";
@@ -77,6 +81,7 @@ public class Main extends javax.swing.JFrame {
     public volatile static ServerSocket ONE_INSTANCE_SOCKET = null;
 
     public final static ConcurrentHashMap<Component, Transference> TRANSFERENCES_MAP = new ConcurrentHashMap<>();
+    public final static Object FILE_SPLITTER_LOCK = new Object();
 
     public volatile static Main MAIN_WINDOW;
     public volatile static String MEGA_CMD_VERSION = null;
@@ -85,6 +90,7 @@ public class Main extends javax.swing.JFrame {
     public volatile static HashMap<String, String> MEGA_SESSIONS = new HashMap<>();
     public volatile static ConcurrentHashMap<String, Object[]> MEGA_NODES = new ConcurrentHashMap<>();
     public volatile static ConcurrentHashMap<String, Long> FREE_SPACE_CACHE = new ConcurrentHashMap<>();
+    public volatile static ConcurrentLinkedQueue<Object[]> FILE_SPLITTER_TASKS = new ConcurrentLinkedQueue<>();
 
     private final DragMouseAdapter _transfer_drag_drop_adapter = new DragMouseAdapter(TRANSFERENCES_LOCK);
     private volatile boolean _running_main_action = false;
@@ -269,6 +275,80 @@ public class Main extends javax.swing.JFrame {
 
     }
 
+    private void runFileSplitter() {
+
+        loadFileSplitterTasks();
+
+        Helpers.threadRun(() -> {
+
+            while (true) {
+
+                if (!FILE_SPLITTER_TASKS.isEmpty()) {
+                    try {
+                        Object[] task = (Object[]) FILE_SPLITTER_TASKS.poll();
+
+                        String file_path = (String) task[0];
+
+                        Long file_size = Files.size(Paths.get(file_path));
+
+                        Long chunk_size = (Long) task[1];
+
+                        final int tot_chunks = (int) Math.ceil((float) file_size / chunk_size);
+
+                        for (int i = 0; i < tot_chunks; i++) {
+
+                            long current_chunk_size = Math.min(chunk_size, file_size - chunk_size * i);
+
+                            try (RandomAccessFile sourceFile = new RandomAccessFile(file_path, "r"); FileChannel sourceChannel = sourceFile.getChannel()) {
+
+                                Path fileName = Paths.get(file_path + ".part" + String.valueOf(i + 1) + "-" + String.valueOf(tot_chunks));
+
+                                if (!(Files.exists(fileName) && Files.size(fileName) == current_chunk_size)) {
+
+                                    long position;
+
+                                    long diff = 0;
+
+                                    if (Files.exists(fileName)) {
+
+                                        position = Math.max(Files.size(fileName), chunk_size * i);
+                                        diff = position - chunk_size * i;
+
+                                    } else {
+
+                                        position = chunk_size * i;
+
+                                    }
+
+                                    try (RandomAccessFile toFile = new RandomAccessFile(fileName.toFile(), "rw"); FileChannel toChannel = toFile.getChannel()) {
+                                        sourceChannel.position(position);
+                                        toChannel.transferFrom(sourceChannel, 0, current_chunk_size - diff);
+                                    }
+                                }
+
+                            }
+
+                        }
+                    } catch (IOException ex) {
+                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+
+                } else {
+
+                    synchronized (FILE_SPLITTER_LOCK) {
+                        try {
+                            FILE_SPLITTER_LOCK.wait(1000);
+                        } catch (InterruptedException ex) {
+                            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                }
+
+            }
+
+        });
+    }
+
     private void runTransferenceWatchdog() {
         Helpers.threadRun(() -> {
 
@@ -311,9 +391,29 @@ public class Main extends javax.swing.JFrame {
                                     if (!isTransferences_running()) {
                                         for (Component tr : transferences.getComponents()) {
                                             Transference t = TRANSFERENCES_MAP.get(tr);
-                                            if (!t.isRunning() && !t.isFinished() && !t.isCanceled()) {
+
+                                            if (t.getSplit_file() != null && t.isSplit_finished() && !t.isFinished() && !t.isCanceled()) {
+
+                                                t.setSplitting(false);
+
+                                                synchronized (t.getSplit_lock()) {
+                                                    t.getSplit_lock().notify();
+                                                }
+
                                                 _transferences_running = true;
+
+                                                break;
+
+                                            } else if (!t.isRunning() && !t.isFinished() && !t.isCanceled() && !t.isSplitting()) {
+
+                                                if (t.getSplit_file() == null) {
+                                                    _transferences_running = true;
+                                                } else {
+                                                    t.setSplitting(true);
+                                                }
+
                                                 t.start();
+
                                                 break;
                                             }
                                         }
@@ -358,6 +458,7 @@ public class Main extends javax.swing.JFrame {
     public void init() {
         runMEGACMDCHecker();
         runTransferenceWatchdog();
+        runFileSplitter();
         loadAccounts();
         loadLog();
     }
@@ -791,6 +892,35 @@ public class Main extends javax.swing.JFrame {
         }
     }
 
+    public void saveFileSplitterTasks() {
+
+        synchronized (FILE_SPLITTER_LOCK) {
+            try (FileOutputStream fos = new FileOutputStream(FILE_SPLITTER_TASKS_FILE); ObjectOutputStream oos = new ObjectOutputStream(fos)) {
+
+                oos.writeObject(FILE_SPLITTER_TASKS);
+
+            } catch (Exception ex) {
+                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    public void loadFileSplitterTasks() {
+        if (Files.exists(Paths.get(FILE_SPLITTER_TASKS_FILE))) {
+            try (FileInputStream fis = new FileInputStream(FILE_SPLITTER_TASKS_FILE); ObjectInputStream ois = new ObjectInputStream(fis)) {
+                FILE_SPLITTER_TASKS = (ConcurrentLinkedQueue<Object[]>) ois.readObject();
+
+            } catch (Exception ex) {
+                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                try {
+                    Files.deleteIfExists(Paths.get(FILE_SPLITTER_TASKS_FILE));
+                } catch (IOException ex1) {
+                    Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex1);
+                }
+            }
+        }
+    }
+
     public void saveTransfers() {
 
         synchronized (TRANSFERENCES_LOCK) {
@@ -813,7 +943,11 @@ public class Main extends javax.swing.JFrame {
 
                             int action = t.getAction();
 
-                            trans.add(new Object[]{email, lpath, rpath, action});
+                            boolean remove_after = t.isRemove_after();
+
+                            Long split_file = t.getSplit_file();
+
+                            trans.add(new Object[]{email, lpath, rpath, action, remove_after, split_file});
                         }
                     }
 
@@ -837,6 +971,8 @@ public class Main extends javax.swing.JFrame {
                 }
             });
         }
+
+        saveFileSplitterTasks();
     }
 
     public void loadTransfers() {
@@ -855,7 +991,7 @@ public class Main extends javax.swing.JFrame {
 
                                 for (Object[] o : trans) {
                                     if (MEGA_SESSIONS.containsKey((String) o[0])) {
-                                        Transference t = new Transference((String) o[0], (String) o[1], (String) o[2], (int) o[3], false);
+                                        Transference t = new Transference((String) o[0], (String) o[1], (String) o[2], (int) o[3], (boolean) o[4], (Long) o[5]);
                                         TRANSFERENCES_MAP.put(transferences.add(t), t);
                                         valid_trans.add(t);
                                     }
@@ -1420,7 +1556,7 @@ public class Main extends javax.swing.JFrame {
                         for (String n : node_list) {
                             Helpers.GUIRunAndWait(() -> {
 
-                                Transference trans = new Transference(email, download_directory.getAbsolutePath(), n, 0, false);
+                                Transference trans = new Transference(email, download_directory.getAbsolutePath(), n, 0, false, null);
                                 TRANSFERENCES_MAP.put(transferences.add(trans), trans);
                                 transferences.revalidate();
                                 transferences.repaint();
@@ -1950,7 +2086,7 @@ public class Main extends javax.swing.JFrame {
                 .addComponent(pause_button)
                 .addGap(18, 18, 18)
                 .addComponent(cancel_all_button)
-                .addContainerGap(1019, Short.MAX_VALUE))
+                .addContainerGap(229, Short.MAX_VALUE))
         );
         transferences_control_panelLayout.setVerticalGroup(
             transferences_control_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1970,14 +2106,14 @@ public class Main extends javax.swing.JFrame {
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(transferences_control_panel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(transferences_panel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(transferences_control_panel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addComponent(transferences_control_panel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(0, 0, 0)
                 .addComponent(transferences_panel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -2496,7 +2632,7 @@ public class Main extends javax.swing.JFrame {
                                     if (dialog.getEmail() != null) {
                                         Helpers.GUIRunAndWait(() -> {
 
-                                            Transference trans = new Transference(dialog.getEmail(), dialog.getLocal_path(), dialog.getRemote_path(), 1, remove_after);
+                                            Transference trans = new Transference(dialog.getEmail(), dialog.getLocal_path(), dialog.getRemote_path(), 1, remove_after, null);
                                             TRANSFERENCES_MAP.put(transferences.add(trans), trans);
                                             transferences.revalidate();
                                             transferences.repaint();
@@ -2505,7 +2641,7 @@ public class Main extends javax.swing.JFrame {
                                         saveTransfers();
                                     } else {
 
-                                        if (f.isDirectory() && dialog.isSplit_folder()) {
+                                        if (f.isDirectory() && dialog.isSplit()) {
 
                                             File[] directoryListing = f.listFiles();
 
@@ -2541,7 +2677,7 @@ public class Main extends javax.swing.JFrame {
 
                                                         Helpers.GUIRunAndWait(() -> {
 
-                                                            Transference trans = new Transference(email, (String) h[0], dialog.getRemote_path(), 1, remove_after);
+                                                            Transference trans = new Transference(email, (String) h[0], dialog.getRemote_path(), 1, remove_after, null);
                                                             TRANSFERENCES_MAP.put(transferences.add(trans), trans);
                                                             transferences.revalidate();
                                                             transferences.repaint();
@@ -2560,14 +2696,14 @@ public class Main extends javax.swing.JFrame {
                                                 Helpers.mostrarMensajeError(null, "EMPTY FOLDER");
                                             }
 
-                                        } else {
+                                        } else if (!dialog.isSplit() || dialog.getSplit_size() >= dialog.getLocal_size()) {
 
                                             String email = Helpers.findFirstAccountWithSpace(dialog.getLocal_size(), f.getName());
 
                                             if (email != null) {
                                                 Helpers.GUIRunAndWait(() -> {
 
-                                                    Transference trans = new Transference(email, f.getAbsolutePath(), dialog.getRemote_path(), 1, remove_after);
+                                                    Transference trans = new Transference(email, f.getAbsolutePath(), dialog.getRemote_path(), 1, remove_after, null);
                                                     TRANSFERENCES_MAP.put(transferences.add(trans), trans);
                                                     transferences.revalidate();
                                                     transferences.repaint();
@@ -2579,8 +2715,48 @@ public class Main extends javax.swing.JFrame {
                                             } else {
                                                 Helpers.mostrarMensajeError(null, "THERE IS NO ACCOUNT WITH ENOUGH FREE SPACE FOR:\n" + f.getName());
                                             }
-                                        }
 
+                                        } else {
+
+                                            long chunk_size = dialog.getSplit_size();
+
+                                            final int tot_chunks = (int) Math.ceil((float) dialog.getLocal_size() / chunk_size);
+
+                                            for (int i = 1; i <= tot_chunks; i++) {
+
+                                                long csize = Math.min(chunk_size, dialog.getLocal_size() - chunk_size * (i - 1));
+
+                                                String email = Helpers.findFirstAccountWithSpace(csize, f.getName());
+
+                                                final int ii = i;
+
+                                                if (email != null) {
+
+                                                    Helpers.GUIRunAndWait(() -> {
+
+                                                        Transference trans = new Transference(email, f.getAbsolutePath() + ".part" + String.valueOf(ii) + "-" + String.valueOf(tot_chunks), dialog.getRemote_path() + f.getName() + ".part" + String.valueOf(ii) + "-" + String.valueOf(tot_chunks), 1, remove_after, csize);
+                                                        TRANSFERENCES_MAP.put(transferences.add(trans), trans);
+                                                        transferences.revalidate();
+                                                        transferences.repaint();
+
+                                                    });
+
+                                                } else {
+                                                    Helpers.mostrarMensajeError(null, "THERE IS NO ACCOUNT WITH ENOUGH FREE SPACE FOR:\n" + f.getName() + ".part" + String.valueOf(ii) + "-" + String.valueOf(tot_chunks));
+                                                }
+                                            }
+
+                                            Object[] file_splitter_task = new Object[]{f.getAbsolutePath(), chunk_size};
+
+                                            FILE_SPLITTER_TASKS.add(file_splitter_task);
+
+                                            synchronized (FILE_SPLITTER_LOCK) {
+                                                FILE_SPLITTER_LOCK.notifyAll();
+                                            }
+
+                                            saveTransfers();
+
+                                        }
                                     }
 
                                     Helpers.GUIRunAndWait(() -> {
