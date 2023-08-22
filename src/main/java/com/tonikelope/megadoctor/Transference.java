@@ -531,6 +531,10 @@ public final class Transference extends javax.swing.JPanel {
 
         if (_split_file != null) {
             _splitting = true;
+
+            Helpers.GUIRun(() -> {
+                action.setForeground(Color.magenta);
+            });
         }
 
         Helpers.threadRun(() -> {
@@ -543,7 +547,6 @@ public final class Transference extends javax.swing.JPanel {
                     int progreso = Files.exists(Paths.get(_lpath)) ? Math.round(((float) Files.size(Paths.get(_lpath)) / _split_file) * 100) : 0;
 
                     Helpers.GUIRun(() -> {
-                        action.setForeground(Color.magenta);
                         action.setText("SPLITTING FILE " + String.valueOf(progreso) + "%");
                     });
 
@@ -560,7 +563,6 @@ public final class Transference extends javax.swing.JPanel {
                 if (_splitting) {
 
                     Helpers.GUIRun(() -> {
-                        action.setForeground(new Color(0, 153, 255));
                         action.setText("(QUEUED)");
                     });
 
@@ -755,13 +757,10 @@ public final class Transference extends javax.swing.JPanel {
                                             } else {
                                                 Files.deleteIfExists(Paths.get(_lpath));
                                             }
-                                            local_path.setBackground(Color.red);
-                                            local_path.setForeground(Color.white);
+                                            local_path.setBackground(Color.YELLOW);
                                         } catch (IOException ex) {
                                             Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
                                         }
-                                    } else {
-                                        local_path.setBackground(null);
                                     }
 
                                     if (!running) {
@@ -967,8 +966,7 @@ public final class Transference extends javax.swing.JPanel {
         _split_file = split_file;
 
         if (_remove_after) {
-            local_path.setBackground(Color.red);
-            local_path.setForeground(Color.white);
+            local_path.setBackground(Color.YELLOW);
         }
 
         _terminate_walk_tree.set(false);
