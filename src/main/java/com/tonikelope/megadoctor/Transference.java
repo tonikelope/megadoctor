@@ -53,6 +53,7 @@ public final class Transference extends javax.swing.JPanel {
     private volatile boolean _starting = false;
     private volatile boolean _finishing = false;
     private volatile boolean _error = false;
+    private volatile boolean _retry = false;
     private volatile String _error_msg = "";
     private volatile long _prog_timestamp = 0;
     private final AtomicBoolean _terminate_walk_tree = new AtomicBoolean();
@@ -62,6 +63,10 @@ public final class Transference extends javax.swing.JPanel {
     private final Object _split_lock = new Object();
     private volatile boolean _splitting = false;
     private volatile boolean _split_finished = false;
+
+    public boolean isRetry() {
+        return _retry;
+    }
 
     public boolean isSplit_finished() {
         return _split_finished;
@@ -491,6 +496,10 @@ public final class Transference extends javax.swing.JPanel {
 
                 _starting = false;
 
+                _split_finished = false;
+
+                _splitting = false;
+
                 _finishing = false;
 
                 _running = false;
@@ -575,13 +584,13 @@ public final class Transference extends javax.swing.JPanel {
 
                 if (!this._canceled) {
 
+                    _running = true;
+
                     Main.MAIN_WINDOW.setCurrent_transference(this);
 
                     if (Main.MAIN_WINDOW.isTransferences_paused()) {
                         this.pause();
                     }
-
-                    _running = true;
 
                     waitPaused();
 

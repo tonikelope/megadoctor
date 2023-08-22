@@ -62,7 +62,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.16";
+    public final static String VERSION = "2.17";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -372,9 +372,10 @@ public class Main extends javax.swing.JFrame {
 
                                 transferences_control_panel.setVisible(true);
 
-                                _transferences_running = false;
-
-                                _current_transference = null;
+                                if (_current_transference != null && (!_current_transference.isRunning() || _current_transference.isFinished() || _current_transference.isCanceled())) {
+                                    _transferences_running = false;
+                                    _current_transference = null;
+                                }
 
                                 for (Component tr : transferences.getComponents()) {
                                     Transference t = TRANSFERENCES_MAP.get(tr);
@@ -395,6 +396,8 @@ public class Main extends javax.swing.JFrame {
                                                         synchronized (t.getSplit_lock()) {
                                                             t.getSplit_lock().notify();
                                                         }
+                                                    } else if (t.isRetry()) {
+                                                        t.start();
                                                     }
                                                 }
 

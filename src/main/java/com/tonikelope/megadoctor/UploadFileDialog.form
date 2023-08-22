@@ -394,11 +394,13 @@
           <Group type="103" groupAlignment="0" attributes="0">
               <Group type="102" attributes="0">
                   <EmptySpace max="-2" attributes="0"/>
-                  <Group type="103" alignment="3" groupAlignment="3" attributes="0">
+                  <Group type="103" alignment="3" groupAlignment="0" attributes="0">
                       <Component id="split_checkbox" alignment="0" min="-2" max="-2" attributes="0"/>
-                      <Component id="split_textbox" alignment="3" min="-2" max="-2" attributes="0"/>
-                      <Component id="split_mb" alignment="3" min="-2" max="-2" attributes="0"/>
-                      <Component id="split_icon" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="split_textbox" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="split_mb" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="split_icon" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
                   </Group>
                   <EmptySpace max="-2" attributes="0"/>
                   <Component id="split_delete" min="-2" max="-2" attributes="0"/>
