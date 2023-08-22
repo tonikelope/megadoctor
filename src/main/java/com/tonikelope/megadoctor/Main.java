@@ -62,7 +62,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.15";
+    public final static String VERSION = "2.16";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -281,11 +281,16 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.threadRun(() -> {
 
-            while (true) {
+            while (!_closing) {
 
                 if (!FILE_SPLITTER_TASKS.isEmpty()) {
+
+                    saveFileSplitterTasks();
+
                     try {
                         Object[] task = (Object[]) FILE_SPLITTER_TASKS.poll();
+
+                        boolean delete_after_split = (boolean) task[2];
 
                         String file_path = (String) task[0];
 
@@ -329,6 +334,10 @@ public class Main extends javax.swing.JFrame {
                             }
 
                         }
+
+                        if (delete_after_split) {
+                            Files.deleteIfExists(Paths.get(file_path));
+                        }
                     } catch (IOException ex) {
                         Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
                     }
@@ -337,7 +346,7 @@ public class Main extends javax.swing.JFrame {
 
                     synchronized (FILE_SPLITTER_LOCK) {
                         try {
-                            FILE_SPLITTER_LOCK.wait(1000);
+                            FILE_SPLITTER_LOCK.wait(5000);
                         } catch (InterruptedException ex) {
                             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
                         }
@@ -355,101 +364,90 @@ public class Main extends javax.swing.JFrame {
             while (!_closing) {
 
                 synchronized (TRANSFERENCES_LOCK) {
+                    Helpers.GUIRunAndWait(() -> {
+
+                        if (!_transfer_drag_drop_adapter.isWorking()) {
+
+                            if (transferences.getComponentCount() > 0) {
+
+                                transferences_control_panel.setVisible(true);
+
+                                _transferences_running = false;
+
+                                _current_transference = null;
+
+                                for (Component tr : transferences.getComponents()) {
+                                    Transference t = TRANSFERENCES_MAP.get(tr);
+
+                                    if (!t.isFinished() && !t.isFinishing() && !t.isCanceled()) {
+
+                                        if (t.getSplit_file() != null) {
+
+                                            if (t.isSplit_finished()) {
+
+                                                if (!isTransferences_running()) {
+                                                    _transferences_running = true;
+                                                    _current_transference = t;
+
+                                                    if (t.isSplitting()) {
+                                                        t.setSplitting(false);
+
+                                                        synchronized (t.getSplit_lock()) {
+                                                            t.getSplit_lock().notify();
+                                                        }
+                                                    }
+                                                }
+
+                                            } else if (!t.isSplitting()) {
+                                                t.setSplitting(true);
+                                                t.start();
+                                            }
+
+                                        } else if (!isTransferences_running() && !t.isRunning()) {
+                                            _transferences_running = true;
+                                            _current_transference = t;
+                                            t.start();
+                                        }
+                                    }
+                                }
+
+                                vamos_button.setEnabled(!busy() || (isRunning_global_check() && !isAborting_global_check()));
+
+                                cuentas_textarea.setEnabled(!busy());
+
+                                getPause_button().setVisible(isTransferences_running());
+
+                                getCancel_all_button().setVisible(isTransferences_running());
+
+                            } else {
+                                _transferences_running = false;
+
+                                _pausing_transference = false;
+
+                                _transferences_paused = false;
+
+                                _current_transference = null;
+
+                                getPause_button().setText("PAUSE");
+
+                                transferences_control_panel.setVisible(false);
+
+                                vamos_button.setEnabled(!busy() || (isRunning_global_check() && !isAborting_global_check()));
+
+                                cuentas_textarea.setEnabled(!busy());
+                            }
+
+                        }
+
+                    });
+
                     try {
-                        TRANSFERENCES_LOCK.wait(1000);
+                        TRANSFERENCES_LOCK.wait(5000);
                     } catch (InterruptedException ex) {
                         Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
 
-                if (!_closing) {
-
-                    synchronized (TRANSFERENCES_LOCK) {
-                        Helpers.GUIRunAndWait(() -> {
-
-                            if (!_transfer_drag_drop_adapter.isWorking()) {
-
-                                if (transferences.getComponentCount() > 0) {
-
-                                    transferences_control_panel.setVisible(true);
-
-                                    _transferences_running = false;
-
-                                    _current_transference = null;
-
-                                    for (Component tr : transferences.getComponents()) {
-
-                                        Transference t = TRANSFERENCES_MAP.get(tr);
-
-                                        if (t.isRunning() && !t.isCanceled()) {
-                                            _transferences_running = true;
-                                            _current_transference = t;
-                                            break;
-                                        }
-                                    }
-
-                                    if (!isTransferences_running()) {
-                                        for (Component tr : transferences.getComponents()) {
-                                            Transference t = TRANSFERENCES_MAP.get(tr);
-
-                                            if (t.getSplit_file() != null && t.isSplit_finished() && !t.isFinished() && !t.isCanceled()) {
-
-                                                t.setSplitting(false);
-
-                                                synchronized (t.getSplit_lock()) {
-                                                    t.getSplit_lock().notify();
-                                                }
-
-                                                _transferences_running = true;
-
-                                                break;
-
-                                            } else if (!t.isRunning() && !t.isFinished() && !t.isCanceled() && !t.isSplitting()) {
-
-                                                if (t.getSplit_file() == null) {
-                                                    _transferences_running = true;
-                                                } else {
-                                                    t.setSplitting(true);
-                                                }
-
-                                                t.start();
-
-                                                break;
-                                            }
-                                        }
-                                    }
-
-                                    vamos_button.setEnabled(!busy() || (isRunning_global_check() && !isAborting_global_check()));
-
-                                    cuentas_textarea.setEnabled(!busy());
-
-                                    getPause_button().setVisible(isTransferences_running());
-
-                                    getCancel_all_button().setVisible(isTransferences_running());
-
-                                } else {
-                                    _transferences_running = false;
-
-                                    _pausing_transference = false;
-
-                                    _transferences_paused = false;
-
-                                    _current_transference = null;
-
-                                    getPause_button().setText("PAUSE");
-
-                                    transferences_control_panel.setVisible(false);
-
-                                    vamos_button.setEnabled(!busy() || (isRunning_global_check() && !isAborting_global_check()));
-
-                                    cuentas_textarea.setEnabled(!busy());
-                                }
-
-                            }
-
-                        });
-                    }
-                }
             }
 
         });
@@ -2746,16 +2744,16 @@ public class Main extends javax.swing.JFrame {
                                                 }
                                             }
 
-                                            Object[] file_splitter_task = new Object[]{f.getAbsolutePath(), chunk_size};
+                                            Object[] file_splitter_task = new Object[]{f.getAbsolutePath(), chunk_size, dialog.getSplit_delete().isSelected()};
 
                                             FILE_SPLITTER_TASKS.add(file_splitter_task);
 
-                                            synchronized (FILE_SPLITTER_LOCK) {
-                                                FILE_SPLITTER_LOCK.notifyAll();
-                                            }
-
                                             saveTransfers();
 
+                                            synchronized (FILE_SPLITTER_LOCK) {
+
+                                                FILE_SPLITTER_LOCK.notifyAll();
+                                            }
                                         }
                                     }
 

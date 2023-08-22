@@ -81,13 +81,13 @@
               </Group>
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Component id="split_panel" min="-2" max="-2" attributes="0"/>
                   <Component id="remove_after" min="-2" max="-2" attributes="0"/>
+                  <Component id="split_panel" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
               <Component id="local_folder_progress" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
-              <Component id="account_stats_scroll" pref="444" max="32767" attributes="0"/>
+              <Component id="account_stats_scroll" pref="378" max="32767" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="3" attributes="0">
                   <Component id="jLabel2" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -148,9 +148,13 @@
     <Component class="javax.swing.JLabel" name="jLabel2">
       <Properties>
         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-          <Font name="Noto Sans" size="18" style="1"/>
+          <Font name="Noto Sans" size="18" style="0"/>
         </Property>
-        <Property name="text" type="java.lang.String" value="Remote path (optional):"/>
+        <Property name="text" type="java.lang.String" value="Customized remote full path (optional):"/>
+        <Property name="toolTipText" type="java.lang.String" value="Default remote path is /filename (if some folder in your remote path does not exist it will be created)"/>
+        <Property name="cursor" type="java.awt.Cursor" editor="org.netbeans.modules.form.editors2.CursorEditor">
+          <Color id="Cursor de Mano"/>
+        </Property>
       </Properties>
     </Component>
     <Component class="javax.swing.JTextField" name="remote_path">
@@ -241,7 +245,7 @@
         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
           <Font name="Noto Sans" size="24" style="1"/>
         </Property>
-        <Property name="text" type="java.lang.String" value="AUTO ALLOCATION"/>
+        <Property name="text" type="java.lang.String" value="AUTO-ALLOCATION"/>
         <Property name="toolTipText" type="java.lang.String" value="Auto search an account with free space"/>
         <Property name="cursor" type="java.awt.Cursor" editor="org.netbeans.modules.form.editors2.CursorEditor">
           <Color id="Cursor de Mano"/>
@@ -342,7 +346,7 @@
         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
           <Font name="Noto Sans" size="18" style="1"/>
         </Property>
-        <Property name="text" type="java.lang.String" value="Remove local file/folder after successful upload"/>
+        <Property name="text" type="java.lang.String" value="Delete local file/folder after successful upload"/>
         <Property name="cursor" type="java.awt.Cursor" editor="org.netbeans.modules.form.editors2.CursorEditor">
           <Color id="Cursor de Mano"/>
         </Property>
@@ -354,34 +358,51 @@
       </Events>
     </Component>
     <Container class="javax.swing.JPanel" name="split_panel">
+      <Properties>
+        <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
+          <Border info="org.netbeans.modules.form.compat2.border.LineBorderInfo">
+            <LineBorder/>
+          </Border>
+        </Property>
+      </Properties>
 
       <Layout>
         <DimensionLayout dim="0">
           <Group type="103" groupAlignment="0" attributes="0">
-              <Group type="102" attributes="0">
-                  <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
-                  <Component id="split_checkbox" min="-2" max="-2" attributes="0"/>
+              <Group type="102" alignment="1" attributes="0">
+                  <Group type="103" groupAlignment="1" attributes="0">
+                      <Group type="102" attributes="0">
+                          <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                          <Component id="split_delete" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <Group type="102" attributes="0">
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Component id="split_checkbox" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Component id="split_icon" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Component id="split_textbox" pref="137" max="32767" attributes="0"/>
+                          <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
+                          <Component id="split_mb" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                  </Group>
                   <EmptySpace max="-2" attributes="0"/>
-                  <Component id="split_icon" min="-2" max="-2" attributes="0"/>
-                  <EmptySpace max="-2" attributes="0"/>
-                  <Component id="split_textbox" pref="137" max="32767" attributes="0"/>
-                  <EmptySpace min="-2" pref="1" max="-2" attributes="0"/>
-                  <Component id="split_mb" min="-2" max="-2" attributes="0"/>
-                  <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
         <DimensionLayout dim="1">
           <Group type="103" groupAlignment="0" attributes="0">
               <Group type="102" attributes="0">
-                  <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
+                  <EmptySpace max="-2" attributes="0"/>
                   <Group type="103" alignment="3" groupAlignment="3" attributes="0">
-                      <Component id="split_checkbox" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="split_checkbox" alignment="0" min="-2" max="-2" attributes="0"/>
                       <Component id="split_textbox" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="split_mb" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="split_icon" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
-                  <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
+                  <EmptySpace max="-2" attributes="0"/>
+                  <Component id="split_delete" min="-2" max="-2" attributes="0"/>
+                  <EmptySpace max="-2" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
@@ -428,6 +449,23 @@
             </Property>
             <Property name="doubleBuffered" type="boolean" value="true"/>
           </Properties>
+        </Component>
+        <Component class="javax.swing.JCheckBox" name="split_delete">
+          <Properties>
+            <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+              <Font name="Noto Sans" size="14" style="0"/>
+            </Property>
+            <Property name="text" type="java.lang.String" value="Delete original file"/>
+            <Property name="toolTipText" type="java.lang.String" value="Delete original file after splitting"/>
+            <Property name="cursor" type="java.awt.Cursor" editor="org.netbeans.modules.form.editors2.CursorEditor">
+              <Color id="Cursor de Mano"/>
+            </Property>
+            <Property name="doubleBuffered" type="boolean" value="true"/>
+            <Property name="opaque" type="boolean" value="true"/>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="split_deleteActionPerformed"/>
+          </Events>
         </Component>
       </SubComponents>
     </Container>
