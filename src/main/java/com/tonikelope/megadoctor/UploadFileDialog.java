@@ -514,9 +514,13 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
             _rpath = remote_path.getText().isBlank() ? "/" : remote_path.getText().trim();
 
-            if (auto_select_account.isSelected()) {
+            if (!auto_select_account.isSelected()) {
+                _email = (String) email_combobox.getSelectedItem();
+            }
 
-                if (f.isDirectory() && _split) {
+            if (_split) {
+
+                if (f.isDirectory()) {
 
                     if (!_rpath.endsWith("/")) {
                         _rpath += "/";
@@ -525,7 +529,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                     if (_rpath.equals("/")) {
                         _rpath += f.getName() + "/";
                     }
-                } else if (_split) {
+                } else {
 
                     Long sp_size = Long.parseLong(getSplit_textbox().getText()) * 1024 * 1024;
 
@@ -556,7 +560,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                 dispose();
 
             } else {
-                _email = (String) email_combobox.getSelectedItem();
+
                 _ok = true;
                 dispose();
             }
@@ -617,11 +621,13 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
             local_size.setText(Helpers.formatBytes(_local_size));
 
-            split_panel.setVisible(auto_select_account.isSelected() && getLocal_path() != null);
+            split_panel.setVisible(getLocal_path() != null);
 
             split_textbox.setVisible(true);
 
             split_mb.setVisible(true);
+
+            split_delete.setVisible(true);
 
             split_checkbox.setText("SPLIT FILE");
 
@@ -686,8 +692,10 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                         local_folder_button.setText("SELECT FOLDER");
                         local_folder_progress.setVisible(false);
                         local_size.setText(Helpers.formatBytes(_local_size));
+                        split_panel.setVisible(auto_select_account.isSelected() && getLocal_path() != null);
                         split_textbox.setVisible(false);
                         split_mb.setVisible(false);
+                        split_delete.setVisible(false);
                         split_checkbox.setText("SPLIT FOLDER");
                         split_checkbox.setToolTipText("Create a transfer for every folder child (first level)");
                         checkFreeSpace();
@@ -823,11 +831,11 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
         free_space.setVisible(!auto_select_account.isSelected());
 
-        split_panel.setVisible(auto_select_account.isSelected() && getLocal_path() != null);
+        split_panel.setVisible((auto_select_account.isSelected() || (getLocal_path() != null && !Files.isDirectory(Paths.get(getLocal_path())))) && getLocal_path() != null);
 
-        split_textbox.setVisible(split_panel.isVisible() && !Files.isDirectory(Paths.get(getLocal_path())));
+        split_textbox.setVisible(getLocal_path() != null && !Files.isDirectory(Paths.get(getLocal_path())));
 
-        split_mb.setVisible(split_panel.isVisible() && !Files.isDirectory(Paths.get(getLocal_path())));
+        split_mb.setVisible(getLocal_path() != null && !Files.isDirectory(Paths.get(getLocal_path())));
 
         if (split_panel.isVisible()) {
             split_checkbox.setText("SPLIT " + (Files.isDirectory(Paths.get(getLocal_path())) ? "FOLDER" : "FILE"));

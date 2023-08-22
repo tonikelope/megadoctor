@@ -62,7 +62,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.19";
+    public final static String VERSION = "2.20";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -2633,7 +2633,7 @@ public class Main extends javax.swing.JFrame {
 
                                 synchronized (TRANSFERENCES_LOCK) {
 
-                                    if (dialog.getEmail() != null) {
+                                    if (dialog.getEmail() != null && !dialog.isSplit()) {
                                         Helpers.GUIRunAndWait(() -> {
 
                                             Transference trans = new Transference(dialog.getEmail(), dialog.getLocal_path(), dialog.getRemote_path(), 1, remove_after, null);
@@ -2730,7 +2730,7 @@ public class Main extends javax.swing.JFrame {
 
                                                 long csize = Math.min(chunk_size, dialog.getLocal_size() - chunk_size * (i - 1));
 
-                                                String email = Helpers.findFirstAccountWithSpace(csize, f.getName());
+                                                String email = dialog.getEmail() != null ? dialog.getEmail() : Helpers.findFirstAccountWithSpace(csize, f.getName());
 
                                                 final int ii = i;
 
