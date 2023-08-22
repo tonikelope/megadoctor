@@ -727,29 +727,51 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
                     String stats = Main.MAIN_WINDOW.getAccountStatistics(email);
 
-                    ConcurrentHashMap<String, Long> reserved = Helpers.getReservedTransfersSpace();
+                    if (stats == null) {
+                        Helpers.mostrarMensajeError(Main.MAIN_WINDOW, "LOGIN ERROR: " + email);
 
-                    _free_space = Helpers.getAccountFreeSpace(email) - (reserved.containsKey(email) ? reserved.get(email) : 0);
+                        _init = true;
 
-                    Main.MAIN_WINDOW.parseAccountNodes(email);
+                        Helpers.GUIRunAndWait(() -> {
 
-                    Helpers.GUIRun(() -> {
+                            progress.setVisible(false);
+                            email_combobox.setEnabled(true);
+                            local_file_button.setEnabled(true);
+                            local_folder_button.setEnabled(true);
+                            mega_button.setEnabled(true);
+                            vamos_button.setEnabled(true);
+                            auto_select_account.setEnabled(true);
+                            email_combobox.setSelectedIndex(-1);
 
-                        free_space.setText(Helpers.formatBytes(_free_space) + " (free)");
-                        account_stats_textarea.setText("[" + email + "] \n\n" + stats + "\n\n");
-                        account_stats_textarea.setCaretPosition(0);
-                        progress.setVisible(false);
-                        email_combobox.setEnabled(true);
-                        local_file_button.setEnabled(true);
-                        local_folder_button.setEnabled(true);
-                        mega_button.setEnabled(true);
-                        vamos_button.setEnabled(true);
-                        auto_select_account.setEnabled(true);
-                        Helpers.smartPack(this);
+                        });
 
-                    });
+                        _init = false;
+                    } else {
 
-                    checkFreeSpace();
+                        ConcurrentHashMap<String, Long> reserved = Helpers.getReservedTransfersSpace();
+
+                        _free_space = Helpers.getAccountFreeSpace(email) - (reserved.containsKey(email) ? reserved.get(email) : 0);
+
+                        Main.MAIN_WINDOW.parseAccountNodes(email);
+
+                        Helpers.GUIRun(() -> {
+
+                            free_space.setText(Helpers.formatBytes(_free_space) + " (free)");
+                            account_stats_textarea.setText("[" + email + "] \n\n" + stats + "\n\n");
+                            account_stats_textarea.setCaretPosition(0);
+                            progress.setVisible(false);
+                            email_combobox.setEnabled(true);
+                            local_file_button.setEnabled(true);
+                            local_folder_button.setEnabled(true);
+                            mega_button.setEnabled(true);
+                            vamos_button.setEnabled(true);
+                            auto_select_account.setEnabled(true);
+                            Helpers.smartPack(this);
+
+                        });
+
+                        checkFreeSpace();
+                    }
 
                 });
             }

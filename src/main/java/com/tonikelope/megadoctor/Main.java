@@ -62,7 +62,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.18";
+    public final static String VERSION = "2.19";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -567,17 +567,20 @@ public class Main extends javax.swing.JFrame {
 
     public String getAccountStatistics(String email) {
 
-        login(email);
+        if (login(email)) {
 
-        String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+            String ls = Helpers.runProcess(new String[]{"mega-ls", "-aahr", "--show-handles", "--tree"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-        String du = DUWithHandles();
+            String du = DUWithHandles();
 
-        String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
+            String df = Helpers.runProcess(new String[]{"mega-df", "-h"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null)[1];
 
-        String[] shared = Helpers.runProcess(new String[]{"mega-share", "/"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+            String[] shared = Helpers.runProcess(new String[]{"mega-share", "/"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-        return df + "\n" + du + "\n" + ls.replace("shared as exported permanent file link: ", "").replace("shared as exported permanent folder link: ", "") + (Integer.parseInt(shared[2]) == 0 ? "\n" + shared[1] : "");
+            return df + "\n" + du + "\n" + ls.replace("shared as exported permanent file link: ", "").replace("shared as exported permanent folder link: ", "") + (Integer.parseInt(shared[2]) == 0 ? "\n" + shared[1] : "");
+        } else {
+            return null;
+        }
     }
 
     public String DUWithHandles() {
