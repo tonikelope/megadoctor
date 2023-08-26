@@ -359,7 +359,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
         split_textbox.setFont(new java.awt.Font("Noto Sans", 0, 18)); // NOI18N
         split_textbox.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-        split_textbox.setText("20500");
+        split_textbox.setText("20450");
         split_textbox.setDoubleBuffered(true);
 
         split_mb.setFont(new java.awt.Font("Noto Sans", 0, 18)); // NOI18N
