@@ -62,7 +62,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.21";
+    public final static String VERSION = "2.22";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -300,7 +300,11 @@ public class Main extends javax.swing.JFrame {
 
                         final int tot_chunks = (int) Math.ceil((float) file_size / chunk_size);
 
-                        for (int i = 0; i < tot_chunks; i++) {
+                        Integer part = (Integer) task[3];
+
+                        if (part != null) {
+
+                            int i = part - 1;
 
                             long current_chunk_size = Math.min(chunk_size, file_size - chunk_size * i);
 
@@ -333,6 +337,42 @@ public class Main extends javax.swing.JFrame {
 
                             }
 
+                        } else {
+
+                            for (int i = 0; i < tot_chunks; i++) {
+
+                                long current_chunk_size = Math.min(chunk_size, file_size - chunk_size * i);
+
+                                try (RandomAccessFile sourceFile = new RandomAccessFile(file_path, "r"); FileChannel sourceChannel = sourceFile.getChannel()) {
+
+                                    Path fileName = Paths.get(file_path + ".part" + String.valueOf(i + 1) + "-" + String.valueOf(tot_chunks));
+
+                                    if (!(Files.exists(fileName) && Files.size(fileName) == current_chunk_size)) {
+
+                                        long position;
+
+                                        long diff = 0;
+
+                                        if (Files.exists(fileName)) {
+
+                                            position = Math.max(Files.size(fileName), chunk_size * i);
+                                            diff = position - chunk_size * i;
+
+                                        } else {
+
+                                            position = chunk_size * i;
+
+                                        }
+
+                                        try (RandomAccessFile toFile = new RandomAccessFile(fileName.toFile(), "rw"); FileChannel toChannel = toFile.getChannel()) {
+                                            sourceChannel.position(position);
+                                            toChannel.transferFrom(sourceChannel, 0, current_chunk_size - diff);
+                                        }
+                                    }
+
+                                }
+
+                            }
                         }
 
                         if (delete_after_split) {
@@ -2726,13 +2766,19 @@ public class Main extends javax.swing.JFrame {
 
                                             final int tot_chunks = (int) Math.ceil((float) dialog.getLocal_size() / chunk_size);
 
-                                            for (int i = 1; i <= tot_chunks; i++) {
+                                            if (dialog.getParts_radio().isSelected()) {
 
-                                                long csize = Math.min(chunk_size, dialog.getLocal_size() - chunk_size * (i - 1));
+                                                Integer part = (Integer) dialog.getParts_spinner().getModel().getValue();
+
+                                                if (part > tot_chunks) {
+                                                    part = 1;
+                                                }
+
+                                                long csize = Math.min(chunk_size, dialog.getLocal_size() - chunk_size * (part - 1));
 
                                                 String email = dialog.getEmail() != null ? dialog.getEmail() : Helpers.findFirstAccountWithSpace(csize, f.getName());
 
-                                                final int ii = i;
+                                                final int ii = part;
 
                                                 if (email != null) {
 
@@ -2745,14 +2791,43 @@ public class Main extends javax.swing.JFrame {
 
                                                     });
 
+                                                    Object[] file_splitter_task = new Object[]{f.getAbsolutePath(), chunk_size, dialog.getSplit_delete().isSelected(), part};
+
+                                                    FILE_SPLITTER_TASKS.add(file_splitter_task);
+
                                                 } else {
                                                     Helpers.mostrarMensajeError(null, "THERE IS NO ACCOUNT WITH ENOUGH FREE SPACE FOR:\n" + f.getName() + ".part" + String.valueOf(ii) + "-" + String.valueOf(tot_chunks));
                                                 }
+
+                                            } else {
+                                                for (int i = 1; i <= tot_chunks; i++) {
+
+                                                    long csize = Math.min(chunk_size, dialog.getLocal_size() - chunk_size * (i - 1));
+
+                                                    String email = dialog.getEmail() != null ? dialog.getEmail() : Helpers.findFirstAccountWithSpace(csize, f.getName());
+
+                                                    final int ii = i;
+
+                                                    if (email != null) {
+
+                                                        Helpers.GUIRunAndWait(() -> {
+
+                                                            Transference trans = new Transference(email, f.getAbsolutePath() + ".part" + String.valueOf(ii) + "-" + String.valueOf(tot_chunks), dialog.getRemote_path() + f.getName() + ".part" + String.valueOf(ii) + "-" + String.valueOf(tot_chunks), 1, remove_after, csize);
+                                                            TRANSFERENCES_MAP.put(transferences.add(trans), trans);
+                                                            transferences.revalidate();
+                                                            transferences.repaint();
+
+                                                        });
+
+                                                    } else {
+                                                        Helpers.mostrarMensajeError(null, "THERE IS NO ACCOUNT WITH ENOUGH FREE SPACE FOR:\n" + f.getName() + ".part" + String.valueOf(ii) + "-" + String.valueOf(tot_chunks));
+                                                    }
+                                                }
+
+                                                Object[] file_splitter_task = new Object[]{f.getAbsolutePath(), chunk_size, dialog.getSplit_delete().isSelected(), null};
+
+                                                FILE_SPLITTER_TASKS.add(file_splitter_task);
                                             }
-
-                                            Object[] file_splitter_task = new Object[]{f.getAbsolutePath(), chunk_size, dialog.getSplit_delete().isSelected()};
-
-                                            FILE_SPLITTER_TASKS.add(file_splitter_task);
 
                                             saveTransfers();
 

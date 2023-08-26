@@ -24,7 +24,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
+import javax.swing.JSpinner;
 import javax.swing.JTextField;
 
 /**
@@ -34,6 +36,14 @@ import javax.swing.JTextField;
 public class UploadFileDialog extends javax.swing.JDialog implements Refresheable {
 
     public static String LAST_FOLDER = null;
+
+    public JRadioButton getParts_radio() {
+        return parts_radio;
+    }
+
+    public JSpinner getParts_spinner() {
+        return parts_spinner;
+    }
 
     public JTextField getSplit_textbox() {
         return split_textbox;
@@ -109,6 +119,14 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         split_mb.setEnabled(false);
 
         split_icon.setEnabled(false);
+
+        parts_spinner.setEnabled(false);
+
+        all_chunks_radio.setSelected(true);
+
+        all_chunks_radio.setEnabled(false);
+
+        parts_radio.setEnabled(false);
 
         local_path_scroll_panel.getHorizontalScrollBar().setPreferredSize(new Dimension(0, 10));
 
@@ -218,6 +236,9 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         split_checkbox = new javax.swing.JCheckBox();
         split_icon = new javax.swing.JLabel();
         split_delete = new javax.swing.JCheckBox();
+        all_chunks_radio = new javax.swing.JRadioButton();
+        parts_radio = new javax.swing.JRadioButton();
+        parts_spinner = new javax.swing.JSpinner();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle("UPLOAD");
@@ -379,7 +400,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         split_icon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/menu/icons8-cut-30.png"))); // NOI18N
         split_icon.setDoubleBuffered(true);
 
-        split_delete.setFont(new java.awt.Font("Noto Sans", 0, 14)); // NOI18N
+        split_delete.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
         split_delete.setText("Delete original file");
         split_delete.setToolTipText("Delete original file after splitting");
         split_delete.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
@@ -391,22 +412,51 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
             }
         });
 
+        all_chunks_radio.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
+        all_chunks_radio.setText("All parts");
+        all_chunks_radio.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        all_chunks_radio.setDoubleBuffered(true);
+        all_chunks_radio.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                all_chunks_radioActionPerformed(evt);
+            }
+        });
+
+        parts_radio.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
+        parts_radio.setText("Part:");
+        parts_radio.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        parts_radio.setDoubleBuffered(true);
+        parts_radio.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                parts_radioActionPerformed(evt);
+            }
+        });
+
+        parts_spinner.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
+        parts_spinner.setModel(new javax.swing.SpinnerNumberModel(1, 1, null, 1));
+        parts_spinner.setDoubleBuffered(true);
+
         javax.swing.GroupLayout split_panelLayout = new javax.swing.GroupLayout(split_panel);
         split_panel.setLayout(split_panelLayout);
         split_panelLayout.setHorizontalGroup(
             split_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, split_panelLayout.createSequentialGroup()
+                .addContainerGap()
                 .addGroup(split_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(split_panelLayout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(all_chunks_radio)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(parts_radio)
+                        .addGap(0, 0, 0)
+                        .addComponent(parts_spinner, javax.swing.GroupLayout.DEFAULT_SIZE, 106, Short.MAX_VALUE)
+                        .addGap(18, 18, 18)
                         .addComponent(split_delete))
                     .addGroup(split_panelLayout.createSequentialGroup()
-                        .addContainerGap()
                         .addComponent(split_checkbox)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(split_icon)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(split_textbox, javax.swing.GroupLayout.DEFAULT_SIZE, 137, Short.MAX_VALUE)
+                        .addComponent(split_textbox)
                         .addGap(0, 0, 0)
                         .addComponent(split_mb)))
                 .addContainerGap())
@@ -422,7 +472,11 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                         .addComponent(split_mb)
                         .addComponent(split_icon)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(split_delete)
+                .addGroup(split_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(split_delete)
+                    .addComponent(all_chunks_radio)
+                    .addComponent(parts_radio)
+                    .addComponent(parts_spinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
         );
 
@@ -455,10 +509,10 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(local_size)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(local_path_scroll_panel, javax.swing.GroupLayout.DEFAULT_SIZE, 339, Short.MAX_VALUE))
+                        .addComponent(local_path_scroll_panel))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(split_panel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGap(18, 18, Short.MAX_VALUE)
                         .addComponent(remove_after)))
                 .addContainerGap())
         );
@@ -480,7 +534,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(local_folder_progress, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(account_stats_scroll, javax.swing.GroupLayout.DEFAULT_SIZE, 378, Short.MAX_VALUE)
+                .addComponent(account_stats_scroll, javax.swing.GroupLayout.DEFAULT_SIZE, 374, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
@@ -857,6 +911,12 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
         split_icon.setEnabled(_split);
 
+        all_chunks_radio.setEnabled(_split);
+
+        parts_radio.setEnabled(_split);
+
+        parts_spinner.setEnabled(_split && parts_radio.isSelected());
+
     }//GEN-LAST:event_split_checkboxActionPerformed
 
     private void remove_afterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_remove_afterActionPerformed
@@ -881,10 +941,27 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
     }//GEN-LAST:event_split_deleteActionPerformed
 
+    private void all_chunks_radioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_all_chunks_radioActionPerformed
+        // TODO add your handling code here:
+
+        all_chunks_radio.setSelected(true);
+        parts_radio.setSelected(false);
+        parts_spinner.setEnabled(false);
+
+    }//GEN-LAST:event_all_chunks_radioActionPerformed
+
+    private void parts_radioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_parts_radioActionPerformed
+        // TODO add your handling code here:
+        all_chunks_radio.setSelected(false);
+        parts_radio.setSelected(true);
+        parts_spinner.setEnabled(true);
+    }//GEN-LAST:event_parts_radioActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JScrollPane account_stats_scroll;
     private javax.swing.JTextArea account_stats_textarea;
     private javax.swing.JPanel accounts_panel;
+    private javax.swing.JRadioButton all_chunks_radio;
     private javax.swing.JCheckBox auto_select_account;
     private javax.swing.JComboBox<String> email_combobox;
     private javax.swing.JLabel free_space;
@@ -896,6 +973,8 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
     private javax.swing.JScrollPane local_path_scroll_panel;
     private javax.swing.JLabel local_size;
     private javax.swing.JButton mega_button;
+    private javax.swing.JRadioButton parts_radio;
+    private javax.swing.JSpinner parts_spinner;
     private javax.swing.JProgressBar progress;
     private javax.swing.JTextField remote_path;
     private javax.swing.JCheckBox remove_after;
