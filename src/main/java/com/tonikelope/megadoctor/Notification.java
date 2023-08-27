@@ -122,11 +122,10 @@ public class Notification extends javax.swing.JDialog {
         }
 
         if (Main.MAIN_WINDOW != null && (Main.MAIN_WINDOW.getExtendedState() & JFrame.ICONIFIED) != 0) {
-
+            MAIN_WINDOW.setExtendedState((MAIN_WINDOW.getExtendedState() & JFrame.MAXIMIZED_BOTH) != 0 ? JFrame.MAXIMIZED_BOTH : JFrame.NORMAL);
+            MAIN_WINDOW.setVisible(true);
             MAIN_WINDOW.revalidate();
             MAIN_WINDOW.repaint();
-            MAIN_WINDOW.setVisible(true);
-            MAIN_WINDOW.setState(JFrame.NORMAL);
         }
 
         dispose();

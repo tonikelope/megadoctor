@@ -125,10 +125,10 @@ public class Helpers {
             public void actionPerformed(ActionEvent evt) {
 
                 if (!MAIN_WINDOW.isVisible()) {
+                    MAIN_WINDOW.setExtendedState((MAIN_WINDOW.getExtendedState() & JFrame.MAXIMIZED_BOTH) != 0 ? JFrame.MAXIMIZED_BOTH : JFrame.NORMAL);
+                    MAIN_WINDOW.setVisible(true);
                     MAIN_WINDOW.revalidate();
                     MAIN_WINDOW.repaint();
-                    MAIN_WINDOW.setVisible(true);
-                    MAIN_WINDOW.setState(JFrame.NORMAL);
                 }
 
             }
@@ -142,10 +142,10 @@ public class Helpers {
                     jpopup.setInvoker(jpopup);
                     jpopup.setVisible(true);
                 } else if (!MAIN_WINDOW.isVisible()) {
+                    MAIN_WINDOW.setExtendedState((MAIN_WINDOW.getExtendedState() & JFrame.MAXIMIZED_BOTH) != 0 ? JFrame.MAXIMIZED_BOTH : JFrame.NORMAL);
+                    MAIN_WINDOW.setVisible(true);
                     MAIN_WINDOW.revalidate();
                     MAIN_WINDOW.repaint();
-                    MAIN_WINDOW.setVisible(true);
-                    MAIN_WINDOW.setState(JFrame.NORMAL);
                 }
 
             }
