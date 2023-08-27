@@ -124,7 +124,7 @@ public class Helpers {
         restore.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
 
-                if (!MAIN_WINDOW.isVisible()) {
+                if (MAIN_WINDOW != null && !MAIN_WINDOW.isVisible()) {
                     MAIN_WINDOW.setExtendedState((MAIN_WINDOW.getExtendedState() & JFrame.MAXIMIZED_BOTH) != 0 ? JFrame.MAXIMIZED_BOTH : JFrame.NORMAL);
                     MAIN_WINDOW.setVisible(true);
                     MAIN_WINDOW.revalidate();
@@ -141,7 +141,7 @@ public class Helpers {
                     jpopup.setLocation(e.getX(), e.getY());
                     jpopup.setInvoker(jpopup);
                     jpopup.setVisible(true);
-                } else if (!MAIN_WINDOW.isVisible()) {
+                } else if (MAIN_WINDOW != null && !MAIN_WINDOW.isVisible()) {
                     MAIN_WINDOW.setExtendedState((MAIN_WINDOW.getExtendedState() & JFrame.MAXIMIZED_BOTH) != 0 ? JFrame.MAXIMIZED_BOTH : JFrame.NORMAL);
                     MAIN_WINDOW.setVisible(true);
                     MAIN_WINDOW.revalidate();
