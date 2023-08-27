@@ -10,9 +10,11 @@ by tonikelope
  */
 package com.tonikelope.megadoctor;
 
+import static com.tonikelope.megadoctor.Main.MAIN_WINDOW;
 import static com.tonikelope.megadoctor.Main.MEGA_CMD_WINDOWS_PATH;
 import static com.tonikelope.megadoctor.Main.MEGA_NODES;
 import static com.tonikelope.megadoctor.Main.THREAD_POOL;
+import java.awt.AWTException;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
@@ -24,11 +26,16 @@ import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.SystemTray;
 import java.awt.Toolkit;
+import java.awt.TrayIcon;
 import java.awt.Window;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
@@ -77,6 +84,7 @@ import javax.sound.sampled.LineEvent;
 import javax.sound.sampled.LineListener;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.ImageIcon;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JMenuItem;
@@ -94,6 +102,52 @@ import javax.swing.undo.UndoManager;
  * @author tonikelope
  */
 public class Helpers {
+
+    public static void createTrayIcon() throws IOException, AWTException {
+
+        //Check for SystemTray support
+        if (!SystemTray.isSupported()) {
+            System.err.println("System tray feature is not supported");
+            return;
+        }
+
+        //Get system tray object
+        SystemTray tray = SystemTray.getSystemTray();
+
+        TrayIcon trayIcon = new TrayIcon(new ImageIcon(Helpers.class.getResource("/images/megadoctor_51.png")).getImage(), "MegaDoctor", null);
+        trayIcon.setImageAutoSize(true);
+
+        JPopupMenu jpopup = new JPopupMenu();
+        JMenuItem restore = new JMenuItem("Restore");
+        jpopup.add(restore);
+
+        restore.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+
+                MAIN_WINDOW.restoreWindowState();
+                MAIN_WINDOW.setVisible(true);
+
+            }
+        });
+
+        trayIcon.addMouseListener(new MouseAdapter() {
+            public void mouseReleased(MouseEvent e) {
+
+                if (SwingUtilities.isRightMouseButton(e)) {
+                    jpopup.setLocation(e.getX(), e.getY());
+                    jpopup.setInvoker(jpopup);
+                    jpopup.setVisible(true);
+                } else {
+                    MAIN_WINDOW.restoreWindowState();
+                    MAIN_WINDOW.setVisible(true);
+                }
+
+            }
+        });
+
+        //Attach TrayIcon to SystemTray
+        tray.add(trayIcon);
+    }
 
     public static class ClipStateListener implements LineListener {
 

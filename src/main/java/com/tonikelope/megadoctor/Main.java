@@ -14,7 +14,6 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -62,7 +61,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.24";
+    public final static String VERSION = "2.25";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -108,18 +107,11 @@ public class Main extends javax.swing.JFrame {
     private volatile boolean _pausing_transference = false;
     private volatile boolean _transferences_paused = false;
     private volatile boolean _provisioning_upload = false;
-    private volatile Dimension _pre_window_size = null;
-    private volatile Point _pre_window_position = null;
-    private volatile int _pre_state;
+    private volatile int _pre_state = JFrame.MAXIMIZED_BOTH;
 
     public void restoreWindowState() {
         Helpers.GUIRun(() -> {
             setExtendedState(_pre_state);
-
-            if (_pre_window_size != null && _pre_window_position != null && (getExtendedState() & JFrame.MAXIMIZED_BOTH) == 0) {
-                setSize(_pre_window_size);
-                setLocation(_pre_window_position);
-            }
         });
     }
 
@@ -1998,6 +1990,9 @@ public class Main extends javax.swing.JFrame {
             public void windowClosing(java.awt.event.WindowEvent evt) {
                 formWindowClosing(evt);
             }
+            public void windowIconified(java.awt.event.WindowEvent evt) {
+                formWindowIconified(evt);
+            }
         });
 
         logo_label.setBackground(new java.awt.Color(255, 255, 255));
@@ -3038,10 +3033,7 @@ public class Main extends javax.swing.JFrame {
     private void formWindowStateChanged(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowStateChanged
         // TODO add your handling code here:
 
-        _pre_window_size = getSize();
-        _pre_window_position = getLocation();
-
-        if ((getExtendedState() & JFrame.ICONIFIED) == 0) {
+        if (isVisible() && (getExtendedState() & JFrame.ICONIFIED) == 0) {
             _pre_state = getExtendedState();
         }
     }//GEN-LAST:event_formWindowStateChanged
@@ -3111,6 +3103,12 @@ public class Main extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jMenuItem2ActionPerformed
 
+    private void formWindowIconified(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowIconified
+        // TODO add your handling code here:
+
+        setVisible(false);
+    }//GEN-LAST:event_formWindowIconified
+
     /**
      * @param args the command line arguments
      */
@@ -3143,6 +3141,8 @@ public class Main extends javax.swing.JFrame {
         try {
             ONE_INSTANCE_SOCKET = new ServerSocket(MEGADOCTOR_ONE_INSTANCE_PORT);
 
+            Helpers.createTrayIcon();
+
             /* Create and display the form */
             java.awt.EventQueue.invokeLater(new Runnable() {
                 public void run() {
@@ -3151,7 +3151,6 @@ public class Main extends javax.swing.JFrame {
                     MAIN_WINDOW.init();
                     MAIN_WINDOW.setExtendedState(JFrame.MAXIMIZED_BOTH);
                     MAIN_WINDOW.setVisible(true);
-
                 }
             });
 
