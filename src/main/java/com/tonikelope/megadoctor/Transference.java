@@ -874,7 +874,7 @@ public final class Transference extends javax.swing.JPanel {
     }
 
     private void waitPaused() {
-        while ((Main.MAIN_WINDOW.isTransferences_paused() || _paused || _size < 0) && !_canceled && !_finished) {
+        while ((Main.MAIN_WINDOW.isTransferences_paused() || Main.MAIN_WINDOW.isProvisioning_upload() || _paused || _size < 0) && !_canceled && !_finished) {
 
             try {
                 Thread.sleep(1000);
