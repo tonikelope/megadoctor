@@ -14,6 +14,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.SystemTray;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -3106,7 +3107,9 @@ public class Main extends javax.swing.JFrame {
     private void formWindowIconified(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowIconified
         // TODO add your handling code here:
 
-        setVisible(false);
+        if (SystemTray.isSupported()) {
+            setVisible(false);
+        }
     }//GEN-LAST:event_formWindowIconified
 
     /**
