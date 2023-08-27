@@ -124,8 +124,12 @@ public class Helpers {
         restore.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
 
-                MAIN_WINDOW.restoreWindowState();
-                MAIN_WINDOW.setVisible(true);
+                if (!MAIN_WINDOW.isVisible()) {
+                    MAIN_WINDOW.revalidate();
+                    MAIN_WINDOW.repaint();
+                    MAIN_WINDOW.setVisible(true);
+                    MAIN_WINDOW.setState(JFrame.NORMAL);
+                }
 
             }
         });
@@ -137,9 +141,11 @@ public class Helpers {
                     jpopup.setLocation(e.getX(), e.getY());
                     jpopup.setInvoker(jpopup);
                     jpopup.setVisible(true);
-                } else {
-                    MAIN_WINDOW.restoreWindowState();
+                } else if (!MAIN_WINDOW.isVisible()) {
+                    MAIN_WINDOW.revalidate();
+                    MAIN_WINDOW.repaint();
                     MAIN_WINDOW.setVisible(true);
+                    MAIN_WINDOW.setState(JFrame.NORMAL);
                 }
 
             }

@@ -62,7 +62,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.25";
+    public final static String VERSION = "2.26";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -108,13 +108,6 @@ public class Main extends javax.swing.JFrame {
     private volatile boolean _pausing_transference = false;
     private volatile boolean _transferences_paused = false;
     private volatile boolean _provisioning_upload = false;
-    private volatile int _pre_state = JFrame.MAXIMIZED_BOTH;
-
-    public void restoreWindowState() {
-        Helpers.GUIRun(() -> {
-            setExtendedState(_pre_state);
-        });
-    }
 
     public boolean isProvisioning_upload() {
         return _provisioning_upload;
@@ -1982,11 +1975,6 @@ public class Main extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle("MegaDoctor");
         setIconImage(new javax.swing.ImageIcon(getClass().getResource("/images/megadoctor_51.png")).getImage() );
-        addWindowStateListener(new java.awt.event.WindowStateListener() {
-            public void windowStateChanged(java.awt.event.WindowEvent evt) {
-                formWindowStateChanged(evt);
-            }
-        });
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
                 formWindowClosing(evt);
@@ -3030,14 +3018,6 @@ public class Main extends javax.swing.JFrame {
         // TODO add your handling code here:
         this._check_only_new = check_only_new_checkbox.isSelected();
     }//GEN-LAST:event_check_only_new_checkboxActionPerformed
-
-    private void formWindowStateChanged(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowStateChanged
-        // TODO add your handling code here:
-
-        if (isVisible() && (getExtendedState() & JFrame.ICONIFIED) == 0) {
-            _pre_state = getExtendedState();
-        }
-    }//GEN-LAST:event_formWindowStateChanged
 
     private void show_accountsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_show_accountsMouseClicked
         // TODO add your handling code here:
