@@ -37,53 +37,53 @@ import javax.swing.SpinnerNumberModel;
  * @author tonikelope
  */
 public class UploadFileDialog extends javax.swing.JDialog implements Refresheable {
-    
+
     public static String LAST_FOLDER = null;
-    
+
     public JRadioButton getParts_radio() {
         return parts_radio;
     }
-    
+
     public JSpinner getParts_spinner() {
         return parts_spinner;
     }
-    
+
     public JTextField getSplit_textbox() {
         return split_textbox;
     }
-    
+
     public boolean isAuto() {
         return _auto;
     }
-    
+
     public boolean isSplit() {
         return _split;
     }
-    
+
     public String getEmail() {
         return _email;
     }
-    
+
     public boolean isOk() {
         return _ok;
     }
-    
+
     public String getLocal_path() {
         return _lpath;
     }
-    
+
     public String getRemote_path() {
         return _rpath;
     }
-    
+
     public long getLocal_size() {
         return _local_size;
     }
-    
+
     public JCheckBox getRemove_after() {
         return remove_after;
     }
-    
+
     private volatile boolean _ok = false;
     private volatile long _local_size = 0;
     private volatile long _free_space = 0;
@@ -97,106 +97,106 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
     private volatile boolean _init = false;
     private final AtomicBoolean _terminate_walk_tree = new AtomicBoolean();
     private static volatile String LAST_EMAIL = null;
-    
+
     public long getSplit_size() {
         return _split_size;
     }
-    
+
     public JCheckBox getSplit_delete() {
         return split_delete;
     }
-    
+
     private void updatePartsSpinnerRange() {
         Helpers.GUIRun(() -> {
-            
+
             try {
                 long chunk_size = Long.parseLong(split_textbox.getText()) * 1024 * 1024;
-                
+
                 if (chunk_size > 0 && _local_size >= chunk_size) {
-                    
+
                     int tot_chunks = (int) Math.ceil((float) _local_size / chunk_size);
-                    
+
                     SpinnerModel sm = new SpinnerNumberModel(1, 1, tot_chunks, 1);
-                    
+
                     parts_spinner.setModel(sm);
-                    
+
                     ((DefaultEditor) parts_spinner.getEditor()).getTextField().setEditable(false);
                 }
             } catch (Exception ex) {
             }
         });
     }
-    
+
     public UploadFileDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
-        
+
         initComponents();
-        
+
         _init = true;
-        
+
         split_panel.setVisible(false);
-        
+
         split_textbox.setEnabled(false);
-        
+
         split_delete.setEnabled(false);
-        
+
         split_mb.setEnabled(false);
-        
+
         split_icon.setEnabled(false);
-        
+
         parts_spinner.setEnabled(false);
-        
+
         all_chunks_radio.setSelected(true);
-        
+
         all_chunks_radio.setEnabled(false);
-        
+
         parts_radio.setEnabled(false);
-        
+
         ((DefaultEditor) parts_spinner.getEditor()).getTextField().setEditable(false);
-        
+
         local_path_scroll_panel.getHorizontalScrollBar().setPreferredSize(new Dimension(0, 10));
-        
+
         _terminate_walk_tree.set(false);
-        
+
         Helpers.JTextFieldRegularPopupMenu.addLiteMEGAAccountPopupMenuTo(account_stats_textarea, this);
-        
+
         Helpers.JTextFieldRegularPopupMenu.addTextActionsPopupMenuTo(remote_path);
-        
+
         vamos_button.setEnabled(false);
-        
+
         ArrayList<String> emails = new ArrayList<>();
-        
+
         for (String email : Main.MEGA_ACCOUNTS.keySet()) {
             emails.add(email);
         }
-        
+
         Collections.sort(emails);
-        
+
         for (String email : emails) {
             email_combobox.addItem(email);
         }
-        
+
         email_combobox.setSelectedItem(LAST_EMAIL != null ? LAST_EMAIL : emails.get(0));
-        
+
         progress.setIndeterminate(true);
-        
+
         progress.setVisible(false);
-        
+
         local_folder_progress.setIndeterminate(true);
-        
+
         local_folder_progress.setVisible(false);
-        
+
         _init = false;
-        
+
         email_comboboxItemStateChanged(null);
-        
+
         pack();
     }
-    
+
     private boolean checkFreeSpace() {
-        
+
         if (_local_size > 0 && _free_space > 0) {
-            
+
             if (auto_select_account.isSelected()) {
                 if (_local_size > 0) {
                     Helpers.GUIRun(() -> {
@@ -218,14 +218,14 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                 return true;
             }
         } else {
-            
+
             Helpers.GUIRun(() -> {
                 vamos_button.setEnabled(_link != null);
             });
-            
+
             return _link != null;
         }
-        
+
         return false;
     }
 
@@ -480,16 +480,16 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(parts_radio)
                         .addGap(0, 0, 0)
-                        .addComponent(parts_spinner, javax.swing.GroupLayout.DEFAULT_SIZE, 106, Short.MAX_VALUE)
-                        .addGap(18, 18, 18)
+                        .addComponent(parts_spinner, javax.swing.GroupLayout.DEFAULT_SIZE, 112, Short.MAX_VALUE)
+                        .addGap(18, 18, Short.MAX_VALUE)
                         .addComponent(split_delete))
                     .addGroup(split_panelLayout.createSequentialGroup()
                         .addComponent(split_checkbox)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(split_icon)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(split_textbox)
-                        .addGap(0, 0, 0)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(split_mb)))
                 .addContainerGap())
         );
@@ -497,12 +497,11 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
             split_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(split_panelLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(split_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(split_checkbox)
-                    .addGroup(split_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(split_textbox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(split_mb)
-                        .addComponent(split_icon)))
+                .addGroup(split_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(split_textbox)
+                    .addComponent(split_mb)
+                    .addComponent(split_icon, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(split_checkbox, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(split_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(split_delete)
@@ -595,39 +594,39 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
             mega_button.setEnabled(false);
             vamos_button.setEnabled(false);
             progress.setVisible(true);
-            
+
             File f = new File(_lpath);
-            
+
             _rpath = remote_path.getText().isBlank() ? "/" : remote_path.getText().trim();
-            
+
             if (!auto_select_account.isSelected()) {
                 _email = (String) email_combobox.getSelectedItem();
             }
-            
+
             if (_split) {
-                
+
                 if (f.isDirectory()) {
-                    
+
                     if (!_rpath.endsWith("/")) {
                         _rpath += "/";
                     }
-                    
+
                     if (_rpath.equals("/")) {
                         _rpath += f.getName() + "/";
                     }
                 } else {
-                    
+
                     Long sp_size = Long.parseLong(getSplit_textbox().getText()) * 1024 * 1024;
-                    
+
                     try {
                         if (Files.size(Paths.get(this._lpath)) > sp_size) {
-                            
+
                             _split_size = sp_size;
-                            
+
                             if (!_rpath.endsWith("/")) {
                                 _rpath += "/" + f.getName() + "/";
                             }
-                            
+
                             if (_rpath.equals("/")) {
                                 _rpath += f.getName() + "/";
                             }
@@ -639,131 +638,137 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                     } catch (IOException ex) {
                         Logger.getLogger(UploadFileDialog.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                    
+
                 }
-                
+
                 _ok = true;
                 dispose();
-                
+
             } else {
-                
+
                 _ok = true;
                 dispose();
             }
         } else {
             dispose();
         }
-        
+
     }//GEN-LAST:event_vamos_buttonActionPerformed
-    
+
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
         // TODO add your handling code here:
         if (!progress.isVisible()) {
-            
+
             _terminate_walk_tree.set(true);
-            
+
             dispose();
         }
     }//GEN-LAST:event_formWindowClosing
-    
+
     private void local_file_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_local_file_buttonActionPerformed
         // TODO add your handling code here:
 
         local_file_button.setEnabled(false);
-        
+
         local_folder_button.setEnabled(false);
-        
+
         mega_button.setEnabled(false);
-        
+
         JFileChooser fileChooser = new JFileChooser();
-        
+
         fileChooser.setPreferredSize(new Dimension(800, 600));
-        
+
         if (LAST_FOLDER != null) {
             fileChooser.setCurrentDirectory(new File(LAST_FOLDER));
         }
-        
+
         Helpers.updateComponentFont(fileChooser, fileChooser.getFont(), 1.20f);
-        
+
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        
+
         int option = fileChooser.showOpenDialog(this);
-        
+
         if (option == JFileChooser.APPROVE_OPTION) {
-            
+
             File file = fileChooser.getSelectedFile();
-            
+
             LAST_FOLDER = file.getParentFile().getAbsolutePath();
-            
+
             _lpath = file.getAbsolutePath();
-            
+
             local_path.setText(file.getAbsolutePath());
-            
+
             local_size.setText("");
-            
+
             _local_size = file.length();
-            
+
             _link = null;
-            
+
             local_size.setText(Helpers.formatBytes(_local_size));
-            
+
             split_panel.setVisible(getLocal_path() != null);
-            
+
             split_textbox.setVisible(true);
-            
+
             split_mb.setVisible(true);
-            
+
             split_delete.setVisible(true);
-            
+
+            all_chunks_radio.setVisible(true);
+            parts_radio.setVisible(true);
+            parts_spinner.setVisible(true);
+
             split_checkbox.setText("SPLIT FILE");
-            
+
             split_checkbox.setToolTipText("Split file in chunks");
-            
+
+            remove_after.setText(_split ? "Delete local FILE PART after successful upload" : "Delete local file/folder after successful upload");
+
             updatePartsSpinnerRange();
-            
+
             checkFreeSpace();
         }
-        
+
         local_folder_button.setEnabled(true);
-        
+
         local_file_button.setEnabled(true);
-        
+
         mega_button.setEnabled(true);
-        
+
         Helpers.smartPack(this);
     }//GEN-LAST:event_local_file_buttonActionPerformed
-    
+
     private void local_folder_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_local_folder_buttonActionPerformed
         // TODO add your handling code here:
 
         local_folder_button.setEnabled(false);
-        
+
         local_file_button.setEnabled(false);
-        
+
         mega_button.setEnabled(false);
-        
+
         JFileChooser fileChooser = new JFileChooser();
-        
+
         fileChooser.setPreferredSize(new Dimension(800, 600));
-        
+
         if (LAST_FOLDER != null) {
             fileChooser.setCurrentDirectory(new File(LAST_FOLDER));
         }
-        
+
         Helpers.updateComponentFont(fileChooser, fileChooser.getFont(), 1.20f);
-        
+
         fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        
+
         int option = fileChooser.showOpenDialog(this);
-        
+
         if (option == JFileChooser.APPROVE_OPTION) {
-            
+
             File file = fileChooser.getSelectedFile();
-            
+
             LAST_FOLDER = file.getAbsolutePath();
-            
+
             _lpath = file.getAbsolutePath();
-            
+
             local_path.setText(file.getAbsolutePath());
             local_folder_progress.setVisible(true);
             local_folder_button.setText("Calculating folder size...");
@@ -784,12 +789,16 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                         split_textbox.setVisible(false);
                         split_mb.setVisible(false);
                         split_delete.setVisible(false);
+                        all_chunks_radio.setVisible(false);
+                        parts_radio.setVisible(false);
+                        parts_spinner.setVisible(false);
                         split_checkbox.setText("SPLIT FOLDER");
                         split_checkbox.setToolTipText("Create a transfer for every folder child (first level)");
+                        remove_after.setText("Delete local file/folder after successful upload");
                         checkFreeSpace();
                     });
                 }
-                
+
             });
         } else {
             local_folder_button.setEnabled(true);
@@ -797,16 +806,16 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
             mega_button.setEnabled(true);
             local_folder_button.setText("SELECT FOLDER");
         }
-        
+
         Helpers.smartPack(this);
     }//GEN-LAST:event_local_folder_buttonActionPerformed
-    
+
     private void email_comboboxItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_email_comboboxItemStateChanged
         // TODO add your handling code here:
 
         if (!_init) {
             String email = (String) email_combobox.getSelectedItem();
-            
+
             if (email != null && !email.isBlank() && email_combobox.isEnabled()) {
                 LAST_EMAIL = email;
                 progress.setVisible(true);
@@ -818,18 +827,18 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                 account_stats_textarea.setText("");
                 free_space.setText("");
                 auto_select_account.setEnabled(false);
-                
+
                 Helpers.threadRun(() -> {
-                    
+
                     String stats = Main.MAIN_WINDOW.getAccountStatistics(email);
-                    
+
                     if (stats == null) {
                         Helpers.mostrarMensajeError(Main.MAIN_WINDOW, "LOGIN ERROR: " + email);
-                        
+
                         _init = true;
-                        
+
                         Helpers.GUIRunAndWait(() -> {
-                            
+
                             progress.setVisible(false);
                             email_combobox.setEnabled(true);
                             local_file_button.setEnabled(true);
@@ -838,20 +847,20 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                             vamos_button.setEnabled(true);
                             auto_select_account.setEnabled(true);
                             email_combobox.setSelectedIndex(-1);
-                            
+
                         });
-                        
+
                         _init = false;
                     } else {
-                        
+
                         ConcurrentHashMap<String, Long> reserved = Helpers.getReservedTransfersSpace();
-                        
+
                         _free_space = Helpers.getAccountFreeSpace(email) - (reserved.containsKey(email) ? reserved.get(email) : 0);
-                        
+
                         Main.MAIN_WINDOW.parseAccountNodes(email);
-                        
+
                         Helpers.GUIRun(() -> {
-                            
+
                             free_space.setText(Helpers.formatBytes(_free_space) + " (free)");
                             account_stats_textarea.setText("[" + email + "] \n\n" + stats + "\n\n");
                             account_stats_textarea.setCaretPosition(0);
@@ -863,26 +872,26 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                             vamos_button.setEnabled(true);
                             auto_select_account.setEnabled(true);
                             Helpers.smartPack(this);
-                            
+
                         });
-                        
+
                         checkFreeSpace();
                     }
-                    
+
                 });
             }
-            
+
         }
     }//GEN-LAST:event_email_comboboxItemStateChanged
-    
+
     private void mega_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mega_buttonActionPerformed
         // TODO add your handling code here:
         boolean vamos_button_enabled = vamos_button.isEnabled();
-        
+
         UploadMegaLinkDialog dialog = new UploadMegaLinkDialog(null, true);
         Helpers.setCenterOfParent(this, dialog);
         dialog.setVisible(true);
-        
+
         if (dialog.getLink() != null) {
             auto_select_account.setSelected(false);
             auto_select_accountActionPerformed(evt);
@@ -892,13 +901,13 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
             _local_size = 0;
             _lpath = dialog.getLink();
             vamos_button.setEnabled(true);
-            
+
             Helpers.smartPack(this);
         } else {
             vamos_button.setEnabled(vamos_button_enabled);
         }
     }//GEN-LAST:event_mega_buttonActionPerformed
-    
+
     private void auto_select_accountActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_auto_select_accountActionPerformed
         // TODO add your handling code here:
 
@@ -910,95 +919,95 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
             _rpath = null;
             local_path.setText("");
         }
-        
+
         _auto = auto_select_account.isSelected();
         email_combobox.setEnabled(!auto_select_account.isSelected());
         account_stats_textarea.setVisible(!auto_select_account.isSelected());
         account_stats_scroll.setHorizontalScrollBarPolicy(!auto_select_account.isSelected() ? JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED : JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         account_stats_scroll.setVerticalScrollBarPolicy(!auto_select_account.isSelected() ? JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED : JScrollPane.VERTICAL_SCROLLBAR_NEVER);
-        
+
         free_space.setVisible(!auto_select_account.isSelected());
-        
+
         split_panel.setVisible((auto_select_account.isSelected() || (getLocal_path() != null && !Files.isDirectory(Paths.get(getLocal_path())))) && getLocal_path() != null);
-        
+
         split_textbox.setVisible(getLocal_path() != null && !Files.isDirectory(Paths.get(getLocal_path())));
-        
+
         split_mb.setVisible(getLocal_path() != null && !Files.isDirectory(Paths.get(getLocal_path())));
-        
+
         if (split_panel.isVisible()) {
             split_checkbox.setText("SPLIT " + (Files.isDirectory(Paths.get(getLocal_path())) ? "FOLDER" : "FILE"));
             split_checkbox.setToolTipText(Files.isDirectory(Paths.get(getLocal_path())) ? "Create a transfer for every folder child (first level)" : "Split file in chunks");
         }
-        
+
         checkFreeSpace();
     }//GEN-LAST:event_auto_select_accountActionPerformed
-    
+
     private void split_checkboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_split_checkboxActionPerformed
         // TODO add your handling code here:
         _split = split_checkbox.isSelected();
-        
+
         split_textbox.setEnabled(_split);
-        
+
         split_mb.setEnabled(_split);
-        
+
         split_delete.setEnabled(_split);
-        
+
         split_icon.setEnabled(_split);
-        
+
         all_chunks_radio.setEnabled(_split);
-        
+
         parts_radio.setEnabled(_split);
-        
+
         parts_spinner.setEnabled(_split && parts_radio.isSelected());
-        
-        remove_after.setText(_split ? "Delete local FILE PART after successful upload" : "Delete local file/folder after successful upload");
-        
+
+        remove_after.setText((_split && !Files.isDirectory(Paths.get(_lpath))) ? "Delete local FILE PART after successful upload" : "Delete local file/folder after successful upload");
+
     }//GEN-LAST:event_split_checkboxActionPerformed
-    
+
     private void remove_afterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_remove_afterActionPerformed
         // TODO add your handling code here:
         if (remove_after.isSelected() && Helpers.mostrarMensajeInformativoSINO(Main.MAIN_WINDOW, "SURE?") != 0) {
             remove_after.setSelected(false);
         }
-        
+
         remove_after.setBackground(remove_after.isSelected() ? Color.red : null);
         remove_after.setForeground(remove_after.isSelected() ? Color.white : null);
-        
+
     }//GEN-LAST:event_remove_afterActionPerformed
-    
+
     private void split_deleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_split_deleteActionPerformed
         // TODO add your handling code here:
         if (split_delete.isSelected() && Helpers.mostrarMensajeInformativoSINO(Main.MAIN_WINDOW, "SURE?") != 0) {
             split_delete.setSelected(false);
         }
-        
+
         split_delete.setBackground(split_delete.isSelected() ? Color.red : null);
         split_delete.setForeground(split_delete.isSelected() ? Color.white : null);
-        
+
     }//GEN-LAST:event_split_deleteActionPerformed
-    
+
     private void all_chunks_radioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_all_chunks_radioActionPerformed
         // TODO add your handling code here:
 
         all_chunks_radio.setSelected(true);
         parts_radio.setSelected(false);
         parts_spinner.setEnabled(false);
-        
+
     }//GEN-LAST:event_all_chunks_radioActionPerformed
-    
+
     private void parts_radioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_parts_radioActionPerformed
         // TODO add your handling code here:
         all_chunks_radio.setSelected(false);
         parts_radio.setSelected(true);
         parts_spinner.setEnabled(true);
     }//GEN-LAST:event_parts_radioActionPerformed
-    
+
     private void split_textboxKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_split_textboxKeyReleased
         // TODO add your handling code here:
         try {
-            
+
             updatePartsSpinnerRange();
-            
+
         } catch (Exception ex) {
         }
     }//GEN-LAST:event_split_textboxKeyReleased
@@ -1039,14 +1048,14 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
             email_comboboxItemStateChanged(null);
         });
     }
-    
+
     @Override
     public void enableR(boolean enable) {
         Helpers.GUIRun(() -> {
-            
+
             progress.setVisible(!enable);
             email_combobox.setEnabled(enable);
-            
+
         });
     }
 }
