@@ -152,6 +152,8 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
         parts_radio.setEnabled(false);
 
+        remove_after.setVisible(false);
+
         ((DefaultEditor) parts_spinner.getEditor()).getTextField().setEditable(false);
 
         local_path_scroll_panel.getHorizontalScrollBar().setPreferredSize(new Dimension(0, 10));
@@ -497,11 +499,12 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
             split_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(split_panelLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(split_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(split_textbox)
-                    .addComponent(split_mb)
+                .addGroup(split_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(split_icon, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(split_checkbox, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(split_checkbox, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(split_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(split_textbox)
+                        .addComponent(split_mb)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(split_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(split_delete)
@@ -722,7 +725,9 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
             split_checkbox.setToolTipText("Split file in chunks");
 
-            remove_after.setText(_split ? "Delete local FILE PART after successful upload" : "Delete local file/folder after successful upload");
+            remove_after.setText(_split ? "Delete local file PART after successful upload" : "Delete local file after successful upload");
+
+            remove_after.setVisible(true);
 
             updatePartsSpinnerRange();
 
@@ -794,7 +799,8 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                         parts_spinner.setVisible(false);
                         split_checkbox.setText("SPLIT FOLDER");
                         split_checkbox.setToolTipText("Create a transfer for every folder child (first level)");
-                        remove_after.setText("Delete local file/folder after successful upload");
+                        remove_after.setText("Delete local folder after successful upload");
+                        remove_after.setVisible(true);
                         checkFreeSpace();
                     });
                 }
@@ -960,7 +966,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
         parts_spinner.setEnabled(_split && parts_radio.isSelected());
 
-        remove_after.setText((_split && !Files.isDirectory(Paths.get(_lpath))) ? "Delete local FILE PART after successful upload" : "Delete local file/folder after successful upload");
+        remove_after.setText((_split && !Files.isDirectory(Paths.get(_lpath))) ? "Delete local file PART after successful upload" : "Delete local " + (Files.isDirectory(Paths.get(_lpath)) ? "folder" : "file") + " after successful upload");
 
     }//GEN-LAST:event_split_checkboxActionPerformed
 

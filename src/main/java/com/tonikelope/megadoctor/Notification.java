@@ -10,10 +10,8 @@ by tonikelope
  */
 package com.tonikelope.megadoctor;
 
-import static com.tonikelope.megadoctor.Main.MAIN_WINDOW;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import javax.swing.JFrame;
 import javax.swing.Timer;
 
 /**
@@ -121,12 +119,7 @@ public class Notification extends javax.swing.JDialog {
             timer.stop();
         }
 
-        if (Main.MAIN_WINDOW != null && (Main.MAIN_WINDOW.getExtendedState() & JFrame.ICONIFIED) != 0) {
-            MAIN_WINDOW.setExtendedState((MAIN_WINDOW.getExtendedState() & JFrame.MAXIMIZED_BOTH) != 0 ? JFrame.MAXIMIZED_BOTH : JFrame.NORMAL);
-            MAIN_WINDOW.setVisible(true);
-            MAIN_WINDOW.revalidate();
-            MAIN_WINDOW.repaint();
-        }
+        Helpers.restoreMegaDoctorMainWindow();
 
         dispose();
     }//GEN-LAST:event_mensajeMouseClicked
@@ -141,50 +134,6 @@ public class Notification extends javax.swing.JDialog {
             });
         }
     }//GEN-LAST:event_formComponentShown
-
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(Notification.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(Notification.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(Notification.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(Notification.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
-
-        /* Create and display the dialog */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                Notification dialog = new Notification(new javax.swing.JFrame(), true, "ALL TRANSFERS FINISHED", 3000, "finish.wav");
-                dialog.addWindowListener(new java.awt.event.WindowAdapter() {
-                    @Override
-                    public void windowClosing(java.awt.event.WindowEvent e) {
-                        System.exit(0);
-                    }
-                });
-                Helpers.setWindowLowRightCorner(dialog);
-
-                dialog.setVisible(true);
-            }
-        });
-    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel jPanel1;

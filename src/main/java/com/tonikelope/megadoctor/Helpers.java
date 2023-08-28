@@ -103,6 +103,17 @@ import javax.swing.undo.UndoManager;
  */
 public class Helpers {
 
+    public static void restoreMegaDoctorMainWindow() {
+        Helpers.GUIRun(() -> {
+            if (MAIN_WINDOW != null && !MAIN_WINDOW.isVisible()) {
+                MAIN_WINDOW.setExtendedState((MAIN_WINDOW.getExtendedState() & JFrame.MAXIMIZED_BOTH) != 0 ? JFrame.MAXIMIZED_BOTH : JFrame.NORMAL);
+                MAIN_WINDOW.setVisible(true);
+                MAIN_WINDOW.revalidate();
+                MAIN_WINDOW.repaint();
+            }
+        });
+    }
+
     public static void createTrayIcon() throws IOException, AWTException {
 
         //Check for SystemTray support
@@ -119,33 +130,27 @@ public class Helpers {
 
         JPopupMenu jpopup = new JPopupMenu();
         JMenuItem restore = new JMenuItem("Restore");
+        restore.setIcon(new ImageIcon(Helpers.class.getResource("/images/menu/refresh.png")));
         jpopup.add(restore);
 
         restore.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
 
-                if (MAIN_WINDOW != null && !MAIN_WINDOW.isVisible()) {
-                    MAIN_WINDOW.setExtendedState((MAIN_WINDOW.getExtendedState() & JFrame.MAXIMIZED_BOTH) != 0 ? JFrame.MAXIMIZED_BOTH : JFrame.NORMAL);
-                    MAIN_WINDOW.setVisible(true);
-                    MAIN_WINDOW.revalidate();
-                    MAIN_WINDOW.repaint();
-                }
+                restoreMegaDoctorMainWindow();
 
             }
         });
 
         trayIcon.addMouseListener(new MouseAdapter() {
             public void mouseReleased(MouseEvent e) {
-
-                if (SwingUtilities.isRightMouseButton(e)) {
-                    jpopup.setLocation(e.getX(), e.getY());
-                    jpopup.setInvoker(jpopup);
-                    jpopup.setVisible(true);
-                } else if (MAIN_WINDOW != null && !MAIN_WINDOW.isVisible()) {
-                    MAIN_WINDOW.setExtendedState((MAIN_WINDOW.getExtendedState() & JFrame.MAXIMIZED_BOTH) != 0 ? JFrame.MAXIMIZED_BOTH : JFrame.NORMAL);
-                    MAIN_WINDOW.setVisible(true);
-                    MAIN_WINDOW.revalidate();
-                    MAIN_WINDOW.repaint();
+                if (MAIN_WINDOW != null && !MAIN_WINDOW.isVisible()) {
+                    if (SwingUtilities.isRightMouseButton(e)) {
+                        jpopup.setLocation(e.getX(), e.getY());
+                        jpopup.setInvoker(jpopup);
+                        jpopup.setVisible(true);
+                    } else {
+                        restoreMegaDoctorMainWindow();
+                    }
                 }
 
             }
