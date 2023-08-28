@@ -1699,19 +1699,17 @@ public class Helpers {
             txtArea.setComponentPopupMenu(popup);
         }
 
-        public static void addTransferencePopupMenuTo(Transference t) {
+        public static void addTransferencePopupMenuTo(Transference transference) {
             JPopupMenu popup = new JPopupMenu();
-
-            Transference _t = t;
 
             Action copyPublicLinkAction = new AbstractAction("COPY PUBLIC LINK") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
-                    if (_t.isFinished()) {
-                        File f = new File(_t.getLpath());
+                    if (transference.isFinished()) {
+                        File f = new File(transference.getLpath());
                         Helpers.threadRun(() -> {
-                            Helpers.copyTextToClipboard(_t.getPublic_link() != null ? f.getName() + "   [" + t.getEmail() + "]   " + t.getPublic_link() : "");
-                            Helpers.mostrarMensajeInformativo(Main.MAIN_WINDOW, "<b>" + f.getName() + "</b><br>" + _t.getPublic_link() + "<br><br>COPIED TO CLIPBOARD");
+                            Helpers.copyTextToClipboard(transference.getPublic_link() != null ? f.getName() + "   [" + transference.getEmail() + "]   " + transference.getPublic_link() : "");
+                            Helpers.mostrarMensajeInformativo(Main.MAIN_WINDOW, "<b>" + f.getName() + "</b><br>" + transference.getPublic_link() + "<br><br>COPIED TO CLIPBOARD");
                         });
                     }
                 }
@@ -1720,10 +1718,10 @@ public class Helpers {
             Action cancelTransferenceLinkAction = new AbstractAction("CANCEL") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
-                    File f = new File(_t.getLpath());
-                    if (!_t.isFinished() && !_t.isCanceled() && Helpers.mostrarMensajeInformativoSINO(Main.MAIN_WINDOW, "<b>" + f.getName() + "</b><br><br><b>CANCEL</b> this transference?") == 0) {
+                    File f = new File(transference.getLpath());
+                    if (!transference.isFinished() && !transference.isCanceled() && Helpers.mostrarMensajeInformativoSINO(Main.MAIN_WINDOW, "<b>" + f.getName() + "</b><br><br><b>CANCEL</b> this transference?") == 0) {
                         Helpers.threadRun(() -> {
-                            _t.stop();
+                            transference.stop();
                         });
                     }
                 }
@@ -1733,7 +1731,7 @@ public class Helpers {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
 
-                    _t.clearTransference();
+                    transference.clearTransference();
                 }
             };
 
@@ -1741,12 +1739,12 @@ public class Helpers {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
 
-                    _t.retry();
+                    transference.retry();
 
                 }
             };
 
-            if (!_t.isFinishing() && !_t.isFinished() && !_t.isCanceled()) {
+            if (!transference.isFinishing() && !transference.isFinished() && !transference.isCanceled()) {
 
                 JMenuItem cancelTransference = new JMenuItem(cancelTransferenceLinkAction);
 
@@ -1762,7 +1760,7 @@ public class Helpers {
 
                 popup.add(clearTransference);
 
-                if (_t.getPublic_link() != null) {
+                if (transference.getPublic_link() != null) {
 
                     popup.addSeparator();
 
@@ -1774,7 +1772,7 @@ public class Helpers {
 
                 }
 
-                if (_t.isError() || _t.isCanceled()) {
+                if (transference.isError() || transference.isCanceled()) {
 
                     popup.addSeparator();
 
@@ -1790,7 +1788,7 @@ public class Helpers {
 
             popup.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-            _t.getMain_panel().setComponentPopupMenu(popup);
+            transference.getMain_panel().setComponentPopupMenu(popup);
         }
 
         private JTextFieldRegularPopupMenu() {

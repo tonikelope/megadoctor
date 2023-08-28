@@ -63,6 +63,7 @@ public final class Transference extends javax.swing.JPanel {
     private final Object _split_lock = new Object();
     private volatile boolean _splitting = false;
     private volatile boolean _split_finished = false;
+    private volatile Long _thread_id = null;
 
     public boolean isRetry() {
         return _retry;
@@ -373,7 +374,7 @@ public final class Transference extends javax.swing.JPanel {
 
         synchronized (TRANSFERENCES_LOCK) {
 
-            if (!_finished && !_canceled) {
+            if (!_finished && !_canceled && !isTransferenceThreadCanceled()) {
 
                 Helpers.GUIRun(() -> {
                     action.setText("(PAUSING...)");
@@ -484,49 +485,63 @@ public final class Transference extends javax.swing.JPanel {
     }
 
     public void retry() {
-        Helpers.threadRun(() -> {
-            synchronized (TRANSFERENCES_LOCK) {
 
-                _tag = -1;
+        if (!_retry) {
+            _retry = true;
 
-                _prog = 0;
+            Helpers.threadRun(() -> {
+                synchronized (TRANSFERENCES_LOCK) {
 
-                _prog_init = 0;
+                    _thread_id = null;
 
-                _starting = false;
+                    _tag = -1;
 
-                _split_finished = false;
+                    _prog = 0;
 
-                _splitting = false;
+                    _prog_init = 0;
 
-                _finishing = false;
+                    _starting = false;
 
-                _running = false;
+                    _split_finished = false;
 
-                _finished = false;
+                    _splitting = false;
 
-                _canceled = false;
+                    _finishing = false;
 
-                _error = false;
+                    _running = false;
 
-                _error_msg = "";
+                    _finished = false;
 
-                Helpers.GUIRunAndWait(() -> {
-                    Helpers.JTextFieldRegularPopupMenu.addTransferencePopupMenuTo(this);
-                    status_icon.setVisible(false);
-                    status_icon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/ok.png")));
-                    progress.setValue(progress.getMinimum());
-                    progress.setIndeterminate(true);
-                    folder_stats_scroll.setVisible(false);
-                    action.setText("RETRY (QUEUED)");
-                });
+                    _canceled = false;
 
-                TRANSFERENCES_LOCK.notifyAll();
-            }
-        });
+                    _error = false;
+
+                    _error_msg = "";
+
+                    Helpers.GUIRunAndWait(() -> {
+                        Helpers.JTextFieldRegularPopupMenu.addTransferencePopupMenuTo(this);
+                        status_icon.setVisible(false);
+                        status_icon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/ok.png")));
+                        progress.setValue(progress.getMinimum());
+                        progress.setIndeterminate(true);
+                        folder_stats_scroll.setVisible(false);
+                        action.setText("RETRY (QUEUED)");
+                    });
+
+                    TRANSFERENCES_LOCK.notifyAll();
+                }
+            });
+        }
+    }
+
+    private boolean isTransferenceThreadCanceled() {
+
+        return (_thread_id != Thread.currentThread().getId());
     }
 
     public void start() {
+
+        Logger.getLogger(Main.class.getName()).log(Level.INFO, "STARTING " + (_action == 0 ? "DOWNLOAD " : "UPLOAD ") + _lpath);
 
         if (_split_file != null) {
             _splitting = true;
@@ -538,10 +553,10 @@ public final class Transference extends javax.swing.JPanel {
 
         Helpers.threadRun(() -> {
 
-            try {
-                while (!_canceled && _split_file != null && !(Files.exists(Paths.get(_lpath)) && Files.size(Paths.get(_lpath)) == _split_file)) {
+            _thread_id = Thread.currentThread().getId();
 
-                    _splitting = true;
+            try {
+                while (!isTransferenceThreadCanceled() && !_canceled && _split_file != null && !(Files.exists(Paths.get(_lpath)) && Files.size(Paths.get(_lpath)) == _split_file)) {
 
                     int progreso = Files.exists(Paths.get(_lpath)) ? Math.round(((float) Files.size(Paths.get(_lpath)) / _split_file) * 100) : 0;
 
@@ -553,19 +568,22 @@ public final class Transference extends javax.swing.JPanel {
                         _split_lock.wait(1000);
                     }
                 }
+
             } catch (Exception ex) {
                 Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
             }
 
-            if (!this._canceled) {
+            if (_splitting) {
+                _split_finished = true;
+            }
+
+            if (!isTransferenceThreadCanceled() && !this._canceled) {
 
                 if (_splitting) {
 
                     Helpers.GUIRun(() -> {
                         action.setText("(QUEUED)");
                     });
-
-                    _split_finished = true;
 
                     while (_splitting) {
 
@@ -583,7 +601,7 @@ public final class Transference extends javax.swing.JPanel {
                     }
                 }
 
-                if (!this._canceled) {
+                if (!isTransferenceThreadCanceled() && !this._canceled) {
 
                     _running = true;
 
@@ -595,7 +613,7 @@ public final class Transference extends javax.swing.JPanel {
 
                     waitPaused();
 
-                    if (!_canceled) {
+                    if (!isTransferenceThreadCanceled() && !_canceled) {
 
                         synchronized (TRANSFERENCES_LOCK) {
 
@@ -670,7 +688,7 @@ public final class Transference extends javax.swing.JPanel {
                                 Main.FREE_SPACE_CACHE.put(_email, Helpers.getAccountFreeSpace(_email));
                             }
 
-                            if (!_canceled) {
+                            if (!isTransferenceThreadCanceled() && !_canceled) {
 
                                 _finishing = true;
 
@@ -796,7 +814,7 @@ public final class Transference extends javax.swing.JPanel {
 
     private boolean transferRunning() {
 
-        if (_canceled) {
+        if (_canceled || isTransferenceThreadCanceled()) {
             return false;
         }
 
@@ -873,7 +891,7 @@ public final class Transference extends javax.swing.JPanel {
     }
 
     private void waitPaused() {
-        while ((Main.MAIN_WINDOW.isTransferences_paused() || Main.MAIN_WINDOW.isProvisioning_upload() || _paused || _size < 0) && !_canceled && !_finished) {
+        while ((Main.MAIN_WINDOW.isTransferences_paused() || Main.MAIN_WINDOW.isProvisioning_upload() || _paused || _size < 0) && !isTransferenceThreadCanceled() && !_canceled && !_finished) {
 
             try {
                 Thread.sleep(1000);
