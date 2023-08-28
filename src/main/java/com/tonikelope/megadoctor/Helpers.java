@@ -1732,12 +1732,8 @@ public class Helpers {
             Action clearTransferenceLinkAction = new AbstractAction("CLEAR") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
-                    File f = new File(_t.getLpath());
-                    if (_t.isFinished() && !_t.isCanceled()) {
-                        Helpers.threadRun(() -> {
-                            _t.stop();
-                        });
-                    }
+
+                    _t.clearTransference();
                 }
             };
 
@@ -1750,7 +1746,7 @@ public class Helpers {
                 }
             };
 
-            if (!_t.isFinishing() && !_t.isFinished()) {
+            if (!_t.isFinishing() && !_t.isFinished() && !_t.isCanceled()) {
 
                 JMenuItem cancelTransference = new JMenuItem(cancelTransferenceLinkAction);
 
@@ -1778,7 +1774,7 @@ public class Helpers {
 
                 }
 
-                if (_t.isError()) {
+                if (_t.isError() || _t.isCanceled()) {
 
                     popup.addSeparator();
 

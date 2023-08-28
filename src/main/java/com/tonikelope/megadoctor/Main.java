@@ -62,7 +62,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.29";
+    public final static String VERSION = "2.30";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -2057,7 +2057,7 @@ public class Main extends javax.swing.JFrame {
         cancel_all_button.setBackground(new java.awt.Color(255, 51, 0));
         cancel_all_button.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
         cancel_all_button.setForeground(new java.awt.Color(255, 255, 255));
-        cancel_all_button.setText("CANCEL ALL");
+        cancel_all_button.setText("CANCEL AND REMOVE ALL");
         cancel_all_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         cancel_all_button.setDoubleBuffered(true);
         cancel_all_button.addActionListener(new java.awt.event.ActionListener() {
@@ -2070,7 +2070,7 @@ public class Main extends javax.swing.JFrame {
         clear_trans_button.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
         clear_trans_button.setForeground(new java.awt.Color(255, 255, 255));
         clear_trans_button.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/menu/clear.png"))); // NOI18N
-        clear_trans_button.setText("CLEAR ALL FINISHED");
+        clear_trans_button.setText("CLEAR ALL OK FINISHED");
         clear_trans_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         clear_trans_button.setDoubleBuffered(true);
         clear_trans_button.addActionListener(new java.awt.event.ActionListener() {
@@ -2870,7 +2870,7 @@ public class Main extends javax.swing.JFrame {
 
                             Transference t = TRANSFERENCES_MAP.get(c);
 
-                            if (t.isFinished()) {
+                            if (t.isFinished() && !t.isCanceled() && !t.isError()) {
                                 TRANSFERENCES_MAP.remove(c);
                                 transferences.remove(c);
                             }

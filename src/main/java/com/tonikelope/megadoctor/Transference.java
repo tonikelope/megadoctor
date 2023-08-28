@@ -272,26 +272,24 @@ public final class Transference extends javax.swing.JPanel {
         return false;
     }
 
-    public void clearFinished() {
+    public void clearTransference() {
         Helpers.threadRun(() -> {
 
             synchronized (TRANSFERENCES_LOCK) {
 
                 Helpers.GUIRunAndWait(() -> {
-                    Helpers.GUIRunAndWait(() -> {
-                        for (Component c : Main.TRANSFERENCES_MAP.keySet()) {
+                    for (Component c : Main.TRANSFERENCES_MAP.keySet()) {
 
-                            if (Main.TRANSFERENCES_MAP.get(c) == this) {
-                                Main.TRANSFERENCES_MAP.remove(c);
-                                Main.MAIN_WINDOW.getTransferences().remove(c);
-                                break;
-                            }
+                        if (Main.TRANSFERENCES_MAP.get(c) == this) {
+                            Main.TRANSFERENCES_MAP.remove(c);
+                            Main.MAIN_WINDOW.getTransferences().remove(c);
+                            break;
                         }
+                    }
 
-                        Main.MAIN_WINDOW.getTransferences().revalidate();
-                        Main.MAIN_WINDOW.getTransferences().repaint();
+                    Main.MAIN_WINDOW.getTransferences().revalidate();
+                    Main.MAIN_WINDOW.getTransferences().repaint();
 
-                    });
                 });
 
                 TRANSFERENCES_LOCK.notifyAll();
@@ -313,16 +311,17 @@ public final class Transference extends javax.swing.JPanel {
             }
 
             Helpers.GUIRunAndWait(() -> {
-                for (Component c : Main.TRANSFERENCES_MAP.keySet()) {
 
-                    if (Main.TRANSFERENCES_MAP.get(c) == this) {
-                        Main.TRANSFERENCES_MAP.remove(c);
-                        Main.MAIN_WINDOW.getTransferences().remove(c);
-                        break;
-                    }
-                }
+                Helpers.JTextFieldRegularPopupMenu.addTransferencePopupMenuTo(this);
+
+                status_icon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/warning_transference.png")));
+
+                status_icon.setToolTipText("CANCELED TRANSFERENCE");
+
+                status_icon.setVisible(true);
 
                 Main.MAIN_WINDOW.getTransferences().revalidate();
+
                 Main.MAIN_WINDOW.getTransferences().repaint();
 
             });
