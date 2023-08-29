@@ -62,7 +62,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.32";
+    public final static String VERSION = "2.33";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -79,6 +79,7 @@ public class Main extends javax.swing.JFrame {
     public final static String LOG_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_log";
     public final static Object TRANSFERENCES_LOCK = new Object();
     public volatile static ServerSocket ONE_INSTANCE_SOCKET = null;
+    public volatile static boolean EXIT = false;
 
     public final static ConcurrentHashMap<Component, Transference> TRANSFERENCES_MAP = new ConcurrentHashMap<>();
     public final static Object FILE_SPLITTER_LOCK = new Object();
@@ -237,6 +238,11 @@ public class Main extends javax.swing.JFrame {
                         Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
+
+                Main.EXIT = true;
+
+                Helpers.destroyAllExternalProcesses();
+
                 System.exit(1);
             }
 
@@ -894,6 +900,10 @@ public class Main extends javax.swing.JFrame {
                     Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
+
+            Main.EXIT = true;
+
+            Helpers.destroyAllExternalProcesses();
 
             System.exit(0);
 
@@ -2553,7 +2563,11 @@ public class Main extends javax.swing.JFrame {
                 }
             }
 
-            System.exit(1); //Forzamos
+            Main.EXIT = true;
+
+            Helpers.destroyAllExternalProcesses();
+
+            System.exit(1);
         }
     }//GEN-LAST:event_formWindowClosing
 
@@ -3144,6 +3158,10 @@ public class Main extends javax.swing.JFrame {
                     Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
+
+            Main.EXIT = true;
+
+            Helpers.destroyAllExternalProcesses();
 
             System.exit(1);
         }

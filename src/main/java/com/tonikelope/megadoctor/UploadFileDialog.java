@@ -39,6 +39,7 @@ import javax.swing.SpinnerNumberModel;
 public class UploadFileDialog extends javax.swing.JDialog implements Refresheable {
 
     public static String LAST_FOLDER = null;
+    private volatile boolean _closing = false;
 
     public JRadioButton getParts_radio() {
         return parts_radio;
@@ -661,10 +662,14 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
         // TODO add your handling code here:
         if (!progress.isVisible()) {
-
             _terminate_walk_tree.set(true);
-
             dispose();
+        } else if (!_closing) {
+            _closing = true;
+        } else if (_closing && Helpers.mostrarMensajeInformativoSINO(Main.MAIN_WINDOW, "FORCE MegaDoctor EXIT?") == 0) {
+            Main.EXIT = true;
+            Helpers.destroyAllExternalProcesses();
+            System.exit(1);
         }
     }//GEN-LAST:event_formWindowClosing
 

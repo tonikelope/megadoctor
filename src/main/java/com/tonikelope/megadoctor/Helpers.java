@@ -64,6 +64,7 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -102,6 +103,18 @@ import javax.swing.undo.UndoManager;
  * @author tonikelope
  */
 public class Helpers {
+
+    public static final ConcurrentLinkedQueue<Process> PROCESSES_QUEUE = new ConcurrentLinkedQueue<>();
+
+    public static void destroyAllExternalProcesses() {
+
+        while (!PROCESSES_QUEUE.isEmpty()) {
+
+            Process p = PROCESSES_QUEUE.poll();
+
+            p.destroyForcibly();
+        }
+    }
 
     public static void restoreMegaDoctorMainWindow() {
         Helpers.GUIRun(() -> {
@@ -737,6 +750,13 @@ public class Helpers {
     }
 
     public static String[] runProcess(String[] command, String path, boolean redirectstream, Pattern stop_regex) {
+
+        if (Main.EXIT) {
+            return null;
+        }
+
+        Process process = null;
+
         try {
 
             ProcessBuilder processbuilder = new ProcessBuilder(Helpers.buildCommand(command));
@@ -747,7 +767,9 @@ public class Helpers {
 
             processbuilder.redirectErrorStream(redirectstream);
 
-            Process process = processbuilder.start();
+            process = processbuilder.start();
+
+            PROCESSES_QUEUE.add(process);
 
             long pid = process.pid();
 
@@ -774,10 +796,17 @@ public class Helpers {
             } catch (Exception ex) {
                 Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
             }
+
             process.waitFor();
+
+            PROCESSES_QUEUE.remove(process);
+
             return new String[]{String.valueOf(pid), new String(sb.toString().getBytes(), StandardCharsets.UTF_8), String.valueOf(process.exitValue())};
         } catch (Exception ex) {
         }
+
+        PROCESSES_QUEUE.remove(process);
+
         return null;
     }
 
