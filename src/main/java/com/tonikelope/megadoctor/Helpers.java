@@ -303,7 +303,7 @@ public class Helpers {
 
         for (String email : emails) {
             Helpers.GUIRunAndWait(() -> {
-                Main.MAIN_WINDOW.getStatus_label().setText("[" + Helpers.formatBytes(required) + "] " + filename + " -> " + email);
+                Main.MAIN_WINDOW.getStatus_label().setText("AUTO-ALLOCATION: [" + Helpers.formatBytes(required) + "] " + filename + " -> " + email);
             });
             Long r = reserved.get(email);
             Long s = Main.FREE_SPACE_CACHE.get(email);
