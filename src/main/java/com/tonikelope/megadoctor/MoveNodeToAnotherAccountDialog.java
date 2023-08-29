@@ -23,6 +23,7 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog implemen
 
     private volatile long _free_space = 0;
     private volatile long _size = 0;
+    private volatile boolean _closing;
 
     public String getSelected_email() {
         return selected_email;
@@ -213,7 +214,14 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog implemen
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
         // TODO add your handling code here:
         if (!progress.isVisible()) {
+
             dispose();
+        } else if (!_closing) {
+            _closing = true;
+        } else if (_closing && Helpers.mostrarMensajeInformativoSINO(Main.MAIN_WINDOW, "FORCE MegaDoctor EXIT?") == 0) {
+            Main.EXIT = true;
+            Helpers.destroyAllExternalProcesses();
+            System.exit(1);
         }
     }//GEN-LAST:event_formWindowClosing
 
