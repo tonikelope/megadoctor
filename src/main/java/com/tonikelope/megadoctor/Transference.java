@@ -53,7 +53,6 @@ public final class Transference extends javax.swing.JPanel {
     private volatile boolean _starting = false;
     private volatile boolean _finishing = false;
     private volatile boolean _error = false;
-    private volatile boolean _retry = false;
     private volatile String _error_msg = "";
     private volatile long _prog_timestamp = 0;
     private final AtomicBoolean _terminate_walk_tree = new AtomicBoolean();
@@ -64,10 +63,6 @@ public final class Transference extends javax.swing.JPanel {
     private volatile boolean _splitting = false;
     private volatile boolean _split_finished = false;
     private volatile Long _thread_id = null;
-
-    public boolean isRetry() {
-        return _retry;
-    }
 
     public boolean isSplit_finished() {
         return _split_finished;
@@ -427,10 +422,6 @@ public final class Transference extends javax.swing.JPanel {
         }
     }
 
-    public void setCanceled(boolean _canceled) {
-        this._canceled = _canceled;
-    }
-
     private long readRemoteFolderSize() {
         long folder_size = -1;
         if (isDirectory()) {
@@ -486,52 +477,49 @@ public final class Transference extends javax.swing.JPanel {
 
     public void retry() {
 
-        if (!_retry) {
-            _retry = true;
+        Helpers.threadRun(() -> {
+            synchronized (TRANSFERENCES_LOCK) {
 
-            Helpers.threadRun(() -> {
-                synchronized (TRANSFERENCES_LOCK) {
+                _thread_id = null;
 
-                    _thread_id = null;
+                _tag = -1;
 
-                    _tag = -1;
+                _prog = 0;
 
-                    _prog = 0;
+                _prog_init = 0;
 
-                    _prog_init = 0;
+                _starting = false;
 
-                    _starting = false;
+                _split_finished = false;
 
-                    _split_finished = false;
+                _splitting = false;
 
-                    _splitting = false;
+                _finishing = false;
 
-                    _finishing = false;
+                _running = false;
 
-                    _running = false;
+                _finished = false;
 
-                    _finished = false;
+                _canceled = false;
 
-                    _canceled = false;
+                _error = false;
 
-                    _error = false;
+                _error_msg = "";
 
-                    _error_msg = "";
+                Helpers.GUIRunAndWait(() -> {
+                    Helpers.JTextFieldRegularPopupMenu.addTransferencePopupMenuTo(this);
+                    status_icon.setVisible(false);
+                    status_icon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/ok.png")));
+                    progress.setValue(progress.getMinimum());
+                    progress.setIndeterminate(true);
+                    folder_stats_scroll.setVisible(false);
+                    action.setText("RETRY (QUEUED)");
+                });
 
-                    Helpers.GUIRunAndWait(() -> {
-                        Helpers.JTextFieldRegularPopupMenu.addTransferencePopupMenuTo(this);
-                        status_icon.setVisible(false);
-                        status_icon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/ok.png")));
-                        progress.setValue(progress.getMinimum());
-                        progress.setIndeterminate(true);
-                        folder_stats_scroll.setVisible(false);
-                        action.setText("RETRY (QUEUED)");
-                    });
+                TRANSFERENCES_LOCK.notifyAll();
+            }
+        });
 
-                    TRANSFERENCES_LOCK.notifyAll();
-                }
-            });
-        }
     }
 
     private boolean isTransferenceThreadCanceled() {
@@ -541,19 +529,19 @@ public final class Transference extends javax.swing.JPanel {
 
     public void start() {
 
-        Logger.getLogger(Main.class.getName()).log(Level.INFO, "STARTING " + (_action == 0 ? "DOWNLOAD " : "UPLOAD ") + _lpath);
-
-        if (_split_file != null) {
-            _splitting = true;
-
-            Helpers.GUIRun(() -> {
-                action.setForeground(Color.magenta);
-            });
-        }
-
         Helpers.threadRun(() -> {
 
+            Logger.getLogger(Main.class.getName()).log(Level.INFO, "STARTING " + (_action == 0 ? "DOWNLOAD " : "UPLOAD ") + _lpath);
+
             _thread_id = Thread.currentThread().getId();
+
+            if (_split_file != null) {
+                _splitting = true;
+
+                Helpers.GUIRun(() -> {
+                    action.setForeground(Color.magenta);
+                });
+            }
 
             try {
                 while (!isTransferenceThreadCanceled() && !_canceled && _split_file != null && !(Files.exists(Paths.get(_lpath)) && Files.size(Paths.get(_lpath)) == _split_file)) {
@@ -585,7 +573,7 @@ public final class Transference extends javax.swing.JPanel {
                         action.setText("(QUEUED)");
                     });
 
-                    while (_splitting) {
+                    while (!isTransferenceThreadCanceled() && _splitting) {
 
                         synchronized (TRANSFERENCES_LOCK) {
                             TRANSFERENCES_LOCK.notifyAll();
@@ -814,7 +802,7 @@ public final class Transference extends javax.swing.JPanel {
 
     private boolean transferRunning() {
 
-        if (_canceled || isTransferenceThreadCanceled()) {
+        if (isTransferenceThreadCanceled() || _canceled) {
             return false;
         }
 
