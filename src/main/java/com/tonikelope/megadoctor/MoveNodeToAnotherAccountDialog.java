@@ -222,6 +222,8 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog implemen
             Main.EXIT = true;
             Helpers.destroyAllExternalProcesses();
             System.exit(1);
+        } else {
+            _closing = false;
         }
     }//GEN-LAST:event_formWindowClosing
 

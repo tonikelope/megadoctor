@@ -670,6 +670,8 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
             Main.EXIT = true;
             Helpers.destroyAllExternalProcesses();
             System.exit(1);
+        } else {
+            _closing = false;
         }
     }//GEN-LAST:event_formWindowClosing
 
