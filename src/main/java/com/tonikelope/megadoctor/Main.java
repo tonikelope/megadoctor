@@ -62,7 +62,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.37";
+    public final static String VERSION = "2.38";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -378,7 +378,7 @@ public class Main extends javax.swing.JFrame {
 
                     synchronized (FILE_SPLITTER_LOCK) {
                         try {
-                            FILE_SPLITTER_LOCK.wait(5000);
+                            FILE_SPLITTER_LOCK.wait(1000);
                         } catch (InterruptedException ex) {
                             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
                         }
@@ -474,7 +474,7 @@ public class Main extends javax.swing.JFrame {
                     });
 
                     try {
-                        TRANSFERENCES_LOCK.wait(5000);
+                        TRANSFERENCES_LOCK.wait(1000);
                     } catch (InterruptedException ex) {
                         Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
                     }
