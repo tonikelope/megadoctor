@@ -806,7 +806,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                         parts_spinner.setVisible(false);
                         split_checkbox.setText("SPLIT FOLDER");
                         split_checkbox.setToolTipText("Create a transfer for every folder child (first level)");
-                        remove_after.setText("Delete local folder after successful upload");
+                        remove_after.setText("Delete local " + (_split ? "file" : "folder") + " after successful upload");
                         remove_after.setVisible(true);
                         checkFreeSpace();
                     });
@@ -973,7 +973,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
         parts_spinner.setEnabled(_split && parts_radio.isSelected());
 
-        remove_after.setText((_split && !Files.isDirectory(Paths.get(_lpath))) ? "Delete local file PART after successful upload" : "Delete local " + (Files.isDirectory(Paths.get(_lpath)) ? "folder" : "file") + " after successful upload");
+        remove_after.setText((_split && !Files.isDirectory(Paths.get(_lpath))) ? "Delete local file PART after successful upload" : "Delete local " + ((Files.isDirectory(Paths.get(_lpath)) && !_split) ? "folder" : "file") + " after successful upload");
 
     }//GEN-LAST:event_split_checkboxActionPerformed
 
