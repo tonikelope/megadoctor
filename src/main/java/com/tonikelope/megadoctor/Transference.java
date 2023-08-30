@@ -369,7 +369,7 @@ public final class Transference extends javax.swing.JPanel {
 
         synchronized (TRANSFERENCES_LOCK) {
 
-            if (!_finished && !_canceled && !isTransferenceThreadCanceled()) {
+            if (!_finished && !_canceled) {
 
                 Helpers.GUIRun(() -> {
                     action.setText("(PAUSING...)");
