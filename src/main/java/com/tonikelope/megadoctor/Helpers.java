@@ -361,7 +361,26 @@ public class Helpers {
 
         Helpers.GUIRun(() -> {
             if (w.getPreferredSize().getHeight() > w.getSize().getHeight() || w.getPreferredSize().getWidth() > w.getSize().getWidth()) {
+
                 w.pack();
+
+                int width = w.getWidth(), height = w.getHeight();
+
+                if (w.getWidth() > ((Window) w.getParent()).getWidth()) {
+                    width = ((Window) w.getParent()).getWidth();
+                }
+
+                if (w.getHeight() > ((Window) w.getParent()).getHeight()) {
+                    height = ((Window) w.getParent()).getHeight();
+                }
+
+                if (width != w.getWidth() || height != w.getHeight()) {
+
+                    w.setPreferredSize(new Dimension(width, height));
+
+                    w.setSize(w.getPreferredSize());
+                }
+
                 setCenterOfParent((Window) w.getParent(), w);
             }
 
