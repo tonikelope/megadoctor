@@ -62,7 +62,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.39";
+    public final static String VERSION = "2.40";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -2647,7 +2647,9 @@ public class Main extends javax.swing.JFrame {
 
                             Helpers.threadRun(() -> {
 
-                                importLink(dialog.getEmail(), dialog.getLocal_path(), dialog.getRemote_path());
+                                String email = dialog.getEmail() != null ? dialog.getEmail() : Helpers.findFirstAccountWithSpace(dialog.getLocal_size(), dialog.getLocal_path());
+
+                                importLink(email, dialog.getLocal_path(), dialog.getRemote_path());
 
                                 Helpers.GUIRunAndWait(() -> {
                                     progressbar.setIndeterminate(false);

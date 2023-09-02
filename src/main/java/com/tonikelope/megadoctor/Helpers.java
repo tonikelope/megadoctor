@@ -41,9 +41,14 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileVisitOption;
@@ -460,6 +465,88 @@ public class Helpers {
                 + (parentSize.width / 2 - size.width / 2), parentPosition.y
                 + (parentSize.height / 2 - size.height / 2));
         dialog.setLocation(position);
+    }
+
+    public static String findFirstRegex(String regex, String data, int group) {
+        Pattern pattern = Pattern.compile(regex, Pattern.DOTALL);
+
+        Matcher matcher = pattern.matcher(data);
+
+        return matcher.find() ? matcher.group(group) : null;
+    }
+
+    public static long getMEGALinkSize(String link) {
+
+        if (link.contains("#F!") || link.contains("/folder/")) {
+
+            Main.MAIN_WINDOW.logout(true);
+
+            Helpers.runProcess(new String[]{"mega-login", link}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+            String[] du = Helpers.runProcess(new String[]{"mega-du"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+            Helpers.runProcess(new String[]{"mega-logout"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+            if (Integer.parseInt(du[2]) == 0) {
+
+                String[] lines = du[1].split("\n");
+
+                String[] size = lines[lines.length - 1].split(":");
+
+                return Long.parseLong(size[1].trim());
+            }
+        } else {
+
+            String file_id = findFirstRegex("(<?=#!)[^!]+|(?<=/file/)[^#]+", link, 0);
+
+            try {
+
+                URL api_url = new URL("https://g.api.mega.co.nz/cs?id=");
+
+                String request = "[{\"a\":\"g\", \"p\":\"" + file_id + "\"}]";
+
+                HttpURLConnection con = (HttpURLConnection) api_url.openConnection();
+
+                con.setRequestMethod("POST");
+
+                con.setRequestProperty("Content-Type", "application/json");
+
+                con.setRequestProperty("Accept", "application/json");
+
+                con.setDoOutput(true);
+
+                try (OutputStream os = con.getOutputStream()) {
+                    byte[] input = request.getBytes("utf-8");
+                    os.write(input, 0, input.length);
+                }
+
+                StringBuilder response = new StringBuilder();
+
+                try (BufferedReader br = new BufferedReader(
+                        new InputStreamReader(con.getInputStream(), "utf-8"))) {
+
+                    String responseLine = null;
+                    while ((responseLine = br.readLine()) != null) {
+                        response.append(responseLine.trim());
+                    }
+                }
+
+                String size = findFirstRegex("\" *s *\" *: *(\\d+)", response.toString(), 1);
+
+                if (size != null) {
+                    return Long.parseLong(size);
+                }
+
+            } catch (MalformedURLException ex) {
+                Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (ProtocolException ex) {
+                Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
+                Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+        return -1;
     }
 
     public static String[] getAccountSpaceData(String email) {

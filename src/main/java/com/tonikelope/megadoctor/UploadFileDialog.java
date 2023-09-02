@@ -607,7 +607,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                 _email = (String) email_combobox.getSelectedItem();
             }
 
-            if (_split) {
+            if (_split && _link != null) {
 
                 if (f.isDirectory()) {
 
@@ -910,11 +910,19 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
             auto_select_accountActionPerformed(evt);
             _link = dialog.getLink();
             local_path.setText(dialog.getLink());
-            local_size.setText("");
-            _local_size = 0;
+
+            _local_size = Helpers.getMEGALinkSize(_link);
+
+            if (_local_size > 0) {
+                local_size.setText(Helpers.formatBytes(_local_size));
+            } else {
+                local_size.setText("");
+                _local_size = 0;
+            }
+
             _lpath = dialog.getLink();
             vamos_button.setEnabled(true);
-
+            email_comboboxItemStateChanged(null);
             Helpers.smartPack(this);
         } else {
             vamos_button.setEnabled(vamos_button_enabled);
@@ -924,15 +932,6 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
     private void auto_select_accountActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_auto_select_accountActionPerformed
         // TODO add your handling code here:
 
-        if (_link != null && auto_select_account.isSelected()) {
-            _local_size = 0;
-            _email = null;
-            _link = null;
-            _lpath = null;
-            _rpath = null;
-            local_path.setText("");
-        }
-
         _auto = auto_select_account.isSelected();
         email_combobox.setEnabled(!auto_select_account.isSelected());
         account_stats_textarea.setVisible(!auto_select_account.isSelected());
@@ -941,7 +940,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
         free_space.setVisible(!auto_select_account.isSelected());
 
-        split_panel.setVisible((auto_select_account.isSelected() || (getLocal_path() != null && !Files.isDirectory(Paths.get(getLocal_path())))) && getLocal_path() != null);
+        split_panel.setVisible((auto_select_account.isSelected() || (getLocal_path() != null && !Files.isDirectory(Paths.get(getLocal_path())))) && getLocal_path() != null && this._link == null);
 
         split_textbox.setVisible(getLocal_path() != null && !Files.isDirectory(Paths.get(getLocal_path())));
 
