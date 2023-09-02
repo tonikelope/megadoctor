@@ -607,7 +607,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                 _email = (String) email_combobox.getSelectedItem();
             }
 
-            if (_split && _link != null) {
+            if (_split && _link == null) {
 
                 if (f.isDirectory()) {
 
@@ -649,6 +649,19 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                 dispose();
 
             } else {
+
+                if (_link != null) {
+
+                    if (_link.contains("/folder/") || _link.contains("#F!")) {
+                        if (!_rpath.endsWith("/")) {
+                            _rpath += "/";
+                        }
+
+                        if (_rpath.equals("/")) {
+                            _rpath += f.getName() + "/";
+                        }
+                    }
+                }
 
                 _ok = true;
                 dispose();
