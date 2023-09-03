@@ -650,17 +650,8 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
             } else {
 
-                if (_link != null) {
-
-                    if (_link.contains("/folder/") || _link.contains("#F!")) {
-                        if (!_rpath.endsWith("/")) {
-                            _rpath += "/";
-                        }
-
-                        if (_rpath.equals("/")) {
-                            _rpath += f.getName() + "/";
-                        }
-                    }
+                if (!_rpath.endsWith("/")) {
+                    _rpath += "/";
                 }
 
                 _ok = true;
@@ -934,6 +925,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
             }
 
             _lpath = dialog.getLink();
+            split_panel.setVisible(false);
             vamos_button.setEnabled(true);
             email_comboboxItemStateChanged(null);
             Helpers.smartPack(this);

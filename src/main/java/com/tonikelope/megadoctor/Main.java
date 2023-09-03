@@ -62,7 +62,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.41";
+    public final static String VERSION = "2.42";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -1419,6 +1419,10 @@ public class Main extends javax.swing.JFrame {
         if (MEGA_ACCOUNTS.containsKey(email)) {
 
             login(email);
+
+            if (!rpath.equals("/")) {
+                Helpers.runProcess(new String[]{"mega-mkdir", "-p", rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+            }
 
             String[] import_result = Helpers.runProcess(new String[]{"mega-import", link, rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
