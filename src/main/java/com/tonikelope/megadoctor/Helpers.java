@@ -1514,7 +1514,7 @@ public class Helpers {
                     }
                 }
             };
-            Action enableAllExporMEGANodesAction = new AbstractAction("ENABLE ALL PUBLIC LINKS ON SELECTED MEGA ACCOUNT") {
+            Action enableAllExporMEGANodesAction = new AbstractAction("ENABLE ALL PUBLIC LINKS ON SELECTED ACCOUNT") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
                     if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
@@ -1528,14 +1528,14 @@ public class Helpers {
                     }
                 }
             };
-            Action disableAllExporMEGANodesAction = new AbstractAction("DISABLE ALL PUBLIC LINKS ON SELECTED MEGA ACCOUNT") {
+            Action disableAllExporMEGANodesAction = new AbstractAction("DISABLE ALL PUBLIC LINKS ON SELECTED ACCOUNT") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
                     if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
                         Helpers.threadRun(() -> {
                             String email = Helpers.extractFirstEmailFromtext(txtArea.getSelectedText());
 
-                            if (email != null && Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "This could take quite some time. Continue?") == 0) {
+                            if (email != null && Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "This could take quite some time.\n\n<b>CONTINUE?</b>") == 0) {
                                 Main.MAIN_WINDOW.exportAllNodesInAccount(email, false);
                             }
                         });
