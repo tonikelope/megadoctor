@@ -1514,6 +1514,34 @@ public class Helpers {
                     }
                 }
             };
+            Action enableAllExporMEGANodesAction = new AbstractAction("ENABLE ALL PUBLIC LINKS ON SELECTED MEGA ACCOUNT") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                        Helpers.threadRun(() -> {
+                            String email = Helpers.extractFirstEmailFromtext(txtArea.getSelectedText());
+
+                            if (email != null && Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "This could take quite some time.\n\n<b>CONTINUE?</b>") == 0) {
+                                Main.MAIN_WINDOW.exportAllNodesInAccount(email, true);
+                            }
+                        });
+                    }
+                }
+            };
+            Action disableAllExporMEGANodesAction = new AbstractAction("DISABLE ALL PUBLIC LINKS ON SELECTED MEGA ACCOUNT") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                        Helpers.threadRun(() -> {
+                            String email = Helpers.extractFirstEmailFromtext(txtArea.getSelectedText());
+
+                            if (email != null && Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "This could take quite some time. Continue?") == 0) {
+                                Main.MAIN_WINDOW.exportAllNodesInAccount(email, false);
+                            }
+                        });
+                    }
+                }
+            };
             Action forceRefreshAccountAction = new AbstractAction("REFRESH SELECTED ACCOUNT") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
@@ -1651,12 +1679,23 @@ public class Helpers {
 
             popup.add(publicONNodes);
 
-            popup.addSeparator();
-
             JMenuItem publicOFFNodes = new JMenuItem(disableExporMEGANodesAction);
+
             publicOFFNodes.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/export_off.png")));
 
             popup.add(publicOFFNodes);
+
+            JMenuItem publicONNodesAll = new JMenuItem(enableAllExporMEGANodesAction);
+
+            publicONNodesAll.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/export_on.png")));
+
+            popup.add(publicONNodesAll);
+
+            JMenuItem publicOFFNodesAll = new JMenuItem(disableAllExporMEGANodesAction);
+
+            publicOFFNodesAll.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/export_off.png")));
+
+            popup.add(publicOFFNodesAll);
 
             popup.addSeparator();
 

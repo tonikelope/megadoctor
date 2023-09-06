@@ -62,7 +62,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.42";
+    public final static String VERSION = "2.43";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -1909,6 +1909,56 @@ public class Main extends javax.swing.JFrame {
 
             }
         }
+    }
+
+    public void exportAllNodesInAccount(String email, boolean enable) {
+
+        _running_main_action = true;
+
+        Helpers.GUIRunAndWait(() -> {
+
+            enableTOPControls(false);
+            MAIN_WINDOW.getProgressbar().setIndeterminate(true);
+            MAIN_WINDOW.getStatus_label().setText((enable ? "ENABLING" : "DISABLING") + " ALL PUBLIC LINKS FROM " + email + " PLEASE WAIT...");
+
+        });
+
+        parseAccountNodes(email);
+
+        ArrayList<String> node_list = new ArrayList<>();
+
+        for (String node : MEGA_NODES.keySet()) {
+            node_list.add(node);
+        }
+
+        ArrayList<String> export_command = new ArrayList<>();
+
+        export_command.add("mega-export");
+
+        export_command.add(enable ? "-af" : "-d");
+
+        export_command.addAll(node_list);
+
+        login(email);
+
+        Helpers.runProcess(export_command.toArray(String[]::new), Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+        refreshAccount(email, "Refreshed after public links generated/removed", false, false);
+
+        Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL <b>" + email + "</b> " + (enable ? "PUBLIC LINKS GENERATED" : "PUBLIC LINKS REMOVED"));
+
+        logout(true);
+
+        Helpers.GUIRunAndWait(() -> {
+
+            enableTOPControls(true);
+            MAIN_WINDOW.getProgressbar().setIndeterminate(false);
+            MAIN_WINDOW.getStatus_label().setText("");
+
+        });
+
+        _running_main_action = false;
+
     }
 
     public void clearAccountNodes(String email) {
