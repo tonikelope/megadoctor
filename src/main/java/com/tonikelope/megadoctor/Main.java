@@ -62,7 +62,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.44";
+    public final static String VERSION = "2.45";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -1927,8 +1927,20 @@ public class Main extends javax.swing.JFrame {
 
         ArrayList<String> node_list = new ArrayList<>();
 
-        for (String node : MEGA_NODES.keySet()) {
-            node_list.add(node);
+        synchronized (MEGA_NODES) {
+
+            var it = MEGA_NODES.entrySet().iterator();
+
+            while (it.hasNext()) {
+
+                Map.Entry<String, Object[]> node = (Map.Entry<String, Object[]>) it.next();
+
+                Object[] o = node.getValue();
+
+                if (o[1].equals(email)) {
+                    node_list.add(node.getKey());
+                }
+            }
         }
 
         ArrayList<String> export_command = new ArrayList<>();
@@ -1945,9 +1957,9 @@ public class Main extends javax.swing.JFrame {
 
         refreshAccount(email, "Refreshed after public links generated/removed", false, false);
 
-        Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL <b>" + email + "</b> " + (enable ? "PUBLIC LINKS GENERATED" : "PUBLIC LINKS REMOVED"));
-
         logout(true);
+
+        Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL <b>" + email + "</b> " + (enable ? "PUBLIC LINKS GENERATED" : "PUBLIC LINKS REMOVED"));
 
         Helpers.GUIRunAndWait(() -> {
 

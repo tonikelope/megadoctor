@@ -1494,7 +1494,7 @@ public class Helpers {
                     }
                 }
             };
-            Action enableExporMEGANodesAction = new AbstractAction("ENABLE PUBLIC LINK ON SELECTED MEGA FOLDERS/FILES") {
+            Action enableExportMEGANodesAction = new AbstractAction("ENABLE PUBLIC LINK ON SELECTED MEGA FOLDERS/FILES") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
                     if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
@@ -1504,7 +1504,7 @@ public class Helpers {
                     }
                 }
             };
-            Action disableExporMEGANodesAction = new AbstractAction("DISABLE PUBLIC LINK ON SELECTED MEGA FOLDERS/FILES") {
+            Action disableExportMEGANodesAction = new AbstractAction("DISABLE PUBLIC LINK ON SELECTED MEGA FOLDERS/FILES") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
                     if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
@@ -1514,7 +1514,7 @@ public class Helpers {
                     }
                 }
             };
-            Action enableAllExporMEGANodesAction = new AbstractAction("ENABLE ALL PUBLIC LINKS ON SELECTED ACCOUNT") {
+            Action enableAllExportMEGANodesAction = new AbstractAction("ENABLE ALL PUBLIC LINKS ON SELECTED ACCOUNT") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
                     if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
@@ -1528,7 +1528,7 @@ public class Helpers {
                     }
                 }
             };
-            Action disableAllExporMEGANodesAction = new AbstractAction("DISABLE ALL PUBLIC LINKS ON SELECTED ACCOUNT") {
+            Action disableAllExportMEGANodesAction = new AbstractAction("DISABLE ALL PUBLIC LINKS ON SELECTED ACCOUNT") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
                     if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
@@ -1674,24 +1674,24 @@ public class Helpers {
 
             popup.addSeparator();
 
-            JMenuItem publicONNodes = new JMenuItem(enableExporMEGANodesAction);
+            JMenuItem publicONNodes = new JMenuItem(enableExportMEGANodesAction);
             publicONNodes.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/export_on.png")));
 
             popup.add(publicONNodes);
 
-            JMenuItem publicOFFNodes = new JMenuItem(disableExporMEGANodesAction);
+            JMenuItem publicOFFNodes = new JMenuItem(disableExportMEGANodesAction);
 
             publicOFFNodes.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/export_off.png")));
 
             popup.add(publicOFFNodes);
 
-            JMenuItem publicONNodesAll = new JMenuItem(enableAllExporMEGANodesAction);
+            JMenuItem publicONNodesAll = new JMenuItem(enableAllExportMEGANodesAction);
 
             publicONNodesAll.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/export_on.png")));
 
             popup.add(publicONNodesAll);
 
-            JMenuItem publicOFFNodesAll = new JMenuItem(disableAllExporMEGANodesAction);
+            JMenuItem publicOFFNodesAll = new JMenuItem(disableAllExportMEGANodesAction);
 
             publicOFFNodesAll.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/export_off.png")));
 
