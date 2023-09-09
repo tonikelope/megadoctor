@@ -62,7 +62,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.46";
+    public final static String VERSION = "2.47";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -2338,7 +2338,6 @@ public class Main extends javax.swing.JFrame {
         purge_cache_menu.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
         purge_cache_menu.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/menu/clear.png"))); // NOI18N
         purge_cache_menu.setText("PURGE MEGAcmd CACHE");
-        purge_cache_menu.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         purge_cache_menu.setDoubleBuffered(true);
         purge_cache_menu.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
