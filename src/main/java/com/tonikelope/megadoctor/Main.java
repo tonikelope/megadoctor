@@ -62,7 +62,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.48";
+    public final static String VERSION = "2.49";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -2335,7 +2335,7 @@ public class Main extends javax.swing.JFrame {
         session_menu.setText("Keep session on disk");
         jMenu2.add(session_menu);
 
-        purge_cache_menu.setFont(new java.awt.Font("Noto Sans", 1, 16)); // NOI18N
+        purge_cache_menu.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
         purge_cache_menu.setForeground(new java.awt.Color(255, 0, 0));
         purge_cache_menu.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/menu/clear.png"))); // NOI18N
         purge_cache_menu.setText("Purge MEGAcmd CACHE");

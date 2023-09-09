@@ -1373,6 +1373,8 @@ public class Helpers {
 
             JMenuItem truncateAccount = new JMenuItem(truncateAccountAction);
 
+            truncateAccount.setForeground(Color.red);
+
             truncateAccount.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/remove.png")));
 
             popup.add(truncateAccount);
@@ -1739,8 +1741,6 @@ public class Helpers {
 
             truncateAccount.setForeground(Color.red);
 
-            truncateAccount.setFont(truncateAccount.getFont().deriveFont(Font.BOLD));
-
             truncateAccount.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/remove.png")));
 
             popup.add(truncateAccount);
@@ -1867,6 +1867,8 @@ public class Helpers {
             popup.addSeparator();
 
             JMenuItem truncateAccount = new JMenuItem(truncateAccountAction);
+
+            truncateAccount.setForeground(Color.red);
 
             truncateAccount.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/remove.png")));
 
