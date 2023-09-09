@@ -62,7 +62,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.45";
+    public final static String VERSION = "2.46";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -447,6 +447,8 @@ public class Main extends javax.swing.JFrame {
 
                                 cuentas_textarea.setEnabled(!busy());
 
+                                purge_cache_menu.setEnabled(!busy());
+
                                 getPause_button().setVisible(isTransferences_running());
 
                                 getCancel_all_button().setVisible(isTransferences_running());
@@ -467,6 +469,8 @@ public class Main extends javax.swing.JFrame {
                                 vamos_button.setEnabled(!busy() || (isRunning_global_check() && !isAborting_global_check()));
 
                                 cuentas_textarea.setEnabled(!busy());
+
+                                purge_cache_menu.setEnabled(!busy());
                             }
 
                         }
@@ -1911,6 +1915,50 @@ public class Main extends javax.swing.JFrame {
         }
     }
 
+    public void purgeMEGAcmdCache() {
+
+        _running_main_action = true;
+
+        Helpers.GUIRunAndWait(() -> {
+
+            enableTOPControls(false);
+            MAIN_WINDOW.getProgressbar().setIndeterminate(true);
+            MAIN_WINDOW.getStatus_label().setText("PURGING MEGAcmd cache PLEASE WAIT...");
+
+        });
+
+        Helpers.runProcess(new String[]{"mega-quit"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+        String cache_dir = (Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : System.getProperty("user.home")) + File.separator + ".megaCmd";
+
+        try {
+            Helpers.deleteDirectoryRecursion(Paths.get(cache_dir));
+
+            Helpers.runProcess(new String[]{"mega-version"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null, false, Pattern.compile("MEGAcmd version:"));
+
+            Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "MEGAcmd cache PURGED");
+
+        } catch (IOException ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+
+            Helpers.runProcess(new String[]{"mega-version"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null, false, Pattern.compile("MEGAcmd version:"));
+
+            Helpers.mostrarMensajeError(MAIN_WINDOW, "ERROR deleting MEGAcmd cache directory");
+        }
+
+        Helpers.GUIRunAndWait(() -> {
+
+            enableTOPControls(true);
+            MAIN_WINDOW.getProgressbar().setIndeterminate(false);
+            MAIN_WINDOW.getStatus_label().setText("");
+            purge_cache_menu.setEnabled(true);
+
+        });
+
+        _running_main_action = false;
+
+    }
+
     public void exportAllNodesInAccount(String email, boolean enable) {
 
         _running_main_action = true;
@@ -2042,6 +2090,7 @@ public class Main extends javax.swing.JFrame {
         jMenu2 = new javax.swing.JMenu();
         jMenuItem2 = new javax.swing.JMenuItem();
         session_menu = new javax.swing.JCheckBoxMenuItem();
+        purge_cache_menu = new javax.swing.JMenuItem();
         jMenu1 = new javax.swing.JMenu();
         jMenuItem1 = new javax.swing.JMenuItem();
 
@@ -2285,6 +2334,18 @@ public class Main extends javax.swing.JFrame {
         session_menu.setSelected(true);
         session_menu.setText("Keep session on disk");
         jMenu2.add(session_menu);
+
+        purge_cache_menu.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
+        purge_cache_menu.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/menu/clear.png"))); // NOI18N
+        purge_cache_menu.setText("PURGE MEGAcmd CACHE");
+        purge_cache_menu.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        purge_cache_menu.setDoubleBuffered(true);
+        purge_cache_menu.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                purge_cache_menuActionPerformed(evt);
+            }
+        });
+        jMenu2.add(purge_cache_menu);
 
         jMenuBar1.add(jMenu2);
 
@@ -3171,6 +3232,18 @@ public class Main extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_formWindowIconified
 
+    private void purge_cache_menuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_purge_cache_menuActionPerformed
+        // TODO add your handling code here:
+        if (Helpers.mostrarMensajeInformativoSINO(Main.MAIN_WINDOW, "This will cancel all MEGAcmd transfers and delete MEGAcmd cache folder.\nAll scheduled backups of MEGAcmd will also be deleted (it will be like reinstalling MEGACmd).\n\n<b>CONTINUE?</b>") == 0) {
+
+            purge_cache_menu.setEnabled(false);
+
+            Helpers.threadRun(() -> {
+                purgeMEGAcmdCache();
+            });
+        }
+    }//GEN-LAST:event_purge_cache_menuActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -3254,6 +3327,7 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JTextArea output_textarea;
     private javax.swing.JButton pause_button;
     private javax.swing.JProgressBar progressbar;
+    private javax.swing.JMenuItem purge_cache_menu;
     private javax.swing.JButton save_button;
     private javax.swing.JCheckBoxMenuItem session_menu;
     private javax.swing.JLabel show_accounts;
