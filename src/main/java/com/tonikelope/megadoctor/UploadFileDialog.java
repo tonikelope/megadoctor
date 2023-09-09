@@ -270,7 +270,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         parts_spinner = new javax.swing.JSpinner();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
-        setTitle("UPLOAD");
+        setTitle("NEW UPLOAD");
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
                 formWindowClosing(evt);

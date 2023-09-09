@@ -62,7 +62,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.47";
+    public final static String VERSION = "2.48";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -2335,9 +2335,10 @@ public class Main extends javax.swing.JFrame {
         session_menu.setText("Keep session on disk");
         jMenu2.add(session_menu);
 
-        purge_cache_menu.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
+        purge_cache_menu.setFont(new java.awt.Font("Noto Sans", 1, 16)); // NOI18N
+        purge_cache_menu.setForeground(new java.awt.Color(255, 0, 0));
         purge_cache_menu.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/menu/clear.png"))); // NOI18N
-        purge_cache_menu.setText("PURGE MEGAcmd CACHE");
+        purge_cache_menu.setText("Purge MEGAcmd CACHE");
         purge_cache_menu.setDoubleBuffered(true);
         purge_cache_menu.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -2428,7 +2429,7 @@ public class Main extends javax.swing.JFrame {
     private void vamos_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_vamos_buttonActionPerformed
         // TODO add your handling code here:
 
-        if (MEGA_CMD_VERSION != null && Helpers.mostrarMensajeInformativoSINO(this, "This will run through all your accounts to generate a report on their status.\n<b>It may take a long time</b> and while the report is being generated\nyou will not be able to make transfers in MegaDoctor.\n\n<b>DO YOU WANT TO CONTINUE?</b>") == 0) {
+        if (MEGA_CMD_VERSION != null && Helpers.mostrarMensajeInformativoSINO(this, "This will run through all your accounts to generate a report on their status.\n<b>It may take a long time</b> and while the report is being generated\nyou will not be able to make transfers in MegaDoctor.\n\n<b>CONTINUE?</b>") == 0) {
 
             if (!isRunning_global_check()) {
 
@@ -3233,7 +3234,7 @@ public class Main extends javax.swing.JFrame {
 
     private void purge_cache_menuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_purge_cache_menuActionPerformed
         // TODO add your handling code here:
-        if (Helpers.mostrarMensajeInformativoSINO(Main.MAIN_WINDOW, "This will cancel all MEGAcmd transfers and delete MEGAcmd cache folder.\nAll scheduled backups of MEGAcmd will also be deleted (it will be like reinstalling MEGAcmd).\n\n<b>CONTINUE?</b>") == 0) {
+        if (Helpers.mostrarMensajeInformativoSINO(Main.MAIN_WINDOW, "This will cancel all MEGAcmd transfers and delete MEGAcmd cache folder.\nAll scheduled backups of MEGAcmd will also be removed.\n\n<span color='red'><b>CONTINUE?</b></span>") == 0) {
 
             purge_cache_menu.setEnabled(false);
 

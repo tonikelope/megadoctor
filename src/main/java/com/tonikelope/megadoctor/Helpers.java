@@ -1434,7 +1434,7 @@ public class Helpers {
                 }
             };
 
-            Action copyInsideMEGANodesAction = new AbstractAction("COPY SELECTED MEGA FOLDERS/FILES (INSIDE THE ACCOUNT)") {
+            Action copyInsideMEGANodesAction = new AbstractAction("COPY SELECTED MEGA FOLDERS/FILES") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
                     if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
@@ -1444,7 +1444,7 @@ public class Helpers {
                     }
                 }
             };
-            Action moveInsideMEGANodesAction = new AbstractAction("MOVE SELECTED MEGA FOLDERS/FILES (INSIDE THE ACCOUNT)") {
+            Action moveInsideMEGANodesAction = new AbstractAction("MOVE SELECTED MEGA FOLDERS/FILES") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
                     if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
@@ -1706,6 +1706,8 @@ public class Helpers {
 
             JMenuItem refreshFastAccount = new JMenuItem(forceRefreshFastAccountAction);
 
+            refreshFastAccount.setFont(refreshFastAccount.getFont().deriveFont(Font.BOLD));
+
             refreshFastAccount.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/refresh.png")));
 
             popup.add(refreshFastAccount);
@@ -1734,6 +1736,10 @@ public class Helpers {
             popup.addSeparator();
 
             JMenuItem truncateAccount = new JMenuItem(truncateAccountAction);
+
+            truncateAccount.setForeground(Color.red);
+
+            truncateAccount.setFont(truncateAccount.getFont().deriveFont(Font.BOLD));
 
             truncateAccount.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/remove.png")));
 
