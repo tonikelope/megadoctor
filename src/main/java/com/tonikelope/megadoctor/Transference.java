@@ -802,7 +802,7 @@ public final class Transference extends javax.swing.JPanel {
 
     private boolean transferRunning() {
 
-        if (isTransferenceThreadCanceled() || _canceled) {
+        if (_canceled) {
             return false;
         }
 
