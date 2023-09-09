@@ -3233,7 +3233,7 @@ public class Main extends javax.swing.JFrame {
 
     private void purge_cache_menuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_purge_cache_menuActionPerformed
         // TODO add your handling code here:
-        if (Helpers.mostrarMensajeInformativoSINO(Main.MAIN_WINDOW, "This will cancel all MEGAcmd transfers and delete MEGAcmd cache folder.\nAll scheduled backups of MEGAcmd will also be deleted (it will be like reinstalling MEGACmd).\n\n<b>CONTINUE?</b>") == 0) {
+        if (Helpers.mostrarMensajeInformativoSINO(Main.MAIN_WINDOW, "This will cancel all MEGAcmd transfers and delete MEGAcmd cache folder.\nAll scheduled backups of MEGAcmd will also be deleted (it will be like reinstalling MEGAcmd).\n\n<b>CONTINUE?</b>") == 0) {
 
             purge_cache_menu.setEnabled(false);
 
