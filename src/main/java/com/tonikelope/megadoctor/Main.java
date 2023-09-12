@@ -62,7 +62,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.51";
+    public final static String VERSION = "2.52";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -277,10 +277,8 @@ public class Main extends javax.swing.JFrame {
 
                 if (!FILE_SPLITTER_TASKS.isEmpty()) {
 
-                    saveFileSplitterTasks();
-
                     try {
-                        Object[] task = (Object[]) FILE_SPLITTER_TASKS.poll();
+                        Object[] task = (Object[]) FILE_SPLITTER_TASKS.peek();
 
                         boolean delete_after_split = (boolean) task[2];
 
@@ -308,12 +306,9 @@ public class Main extends javax.swing.JFrame {
 
                                     long position;
 
-                                    long diff = 0;
-
                                     if (Files.exists(fileName)) {
 
-                                        position = Math.max(Files.size(fileName), chunk_size * i);
-                                        diff = position - chunk_size * i;
+                                        position = Files.size(fileName);
 
                                     } else {
 
@@ -323,7 +318,7 @@ public class Main extends javax.swing.JFrame {
 
                                     try (RandomAccessFile toFile = new RandomAccessFile(fileName.toFile(), "rw"); FileChannel toChannel = toFile.getChannel()) {
                                         sourceChannel.position(position);
-                                        toChannel.transferFrom(sourceChannel, 0, current_chunk_size - diff);
+                                        toChannel.transferFrom(sourceChannel, position - chunk_size * i, current_chunk_size - (position - chunk_size * i));
                                     }
                                 }
 
@@ -343,12 +338,9 @@ public class Main extends javax.swing.JFrame {
 
                                         long position;
 
-                                        long diff = 0;
-
                                         if (Files.exists(fileName)) {
 
-                                            position = Math.max(Files.size(fileName), chunk_size * i);
-                                            diff = position - chunk_size * i;
+                                            position = Files.size(fileName);
 
                                         } else {
 
@@ -358,7 +350,7 @@ public class Main extends javax.swing.JFrame {
 
                                         try (RandomAccessFile toFile = new RandomAccessFile(fileName.toFile(), "rw"); FileChannel toChannel = toFile.getChannel()) {
                                             sourceChannel.position(position);
-                                            toChannel.transferFrom(sourceChannel, 0, current_chunk_size - diff);
+                                            toChannel.transferFrom(sourceChannel, position - chunk_size * i, current_chunk_size - (position - chunk_size * i));
                                         }
                                     }
 
@@ -372,6 +364,14 @@ public class Main extends javax.swing.JFrame {
                         }
                     } catch (IOException ex) {
                         Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+
+                    synchronized (FILE_SPLITTER_LOCK) {
+
+                        FILE_SPLITTER_TASKS.poll();
+
+                        saveFileSplitterTasks();
+
                     }
 
                 } else {

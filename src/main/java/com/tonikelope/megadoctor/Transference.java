@@ -10,6 +10,8 @@ by tonikelope
  */
 package com.tonikelope.megadoctor;
 
+import static com.tonikelope.megadoctor.Main.FILE_SPLITTER_LOCK;
+import static com.tonikelope.megadoctor.Main.FILE_SPLITTER_TASKS;
 import static com.tonikelope.megadoctor.Main.MEGA_CMD_WINDOWS_PATH;
 import static com.tonikelope.megadoctor.Main.TRANSFERENCES_LOCK;
 import java.awt.Color;
@@ -19,6 +21,7 @@ import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -63,6 +66,22 @@ public final class Transference extends javax.swing.JPanel {
     private volatile boolean _splitting = false;
     private volatile boolean _split_finished = false;
     private volatile Long _thread_id = null;
+
+    private void cancelFileSplitterTasks() {
+
+        synchronized (FILE_SPLITTER_LOCK) {
+
+            Iterator<Object[]> it = FILE_SPLITTER_TASKS.iterator();
+
+            while (it.hasNext()) {
+                Object[] task = it.next();
+
+                if (_lpath.replaceAll("\\.part[0-9]+-[0-9]+$", "").equals(task[0])) {
+                    it.remove();
+                }
+            }
+        }
+    }
 
     public boolean isSplit_finished() {
         return _split_finished;
@@ -299,6 +318,10 @@ public final class Transference extends javax.swing.JPanel {
         _terminate_walk_tree.set(true);
 
         _canceled = true;
+
+        if (_split_file != null) {
+            cancelFileSplitterTasks();
+        }
 
         synchronized (TRANSFERENCES_LOCK) {
 
