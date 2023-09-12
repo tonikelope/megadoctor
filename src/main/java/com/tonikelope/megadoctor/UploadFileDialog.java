@@ -203,10 +203,37 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
             if (auto_select_account.isSelected()) {
                 if (_local_size > 0) {
                     Helpers.GUIRun(() -> {
+                        free_space.setForeground(new Color(0, 153, 0));
                         vamos_button.setEnabled(true);
                     });
                     return true;
                 }
+            } else if (_split) {
+
+                if (all_chunks_radio.isSelected()) {
+
+                    if (_local_size > _free_space) {
+                        Helpers.GUIRun(() -> {
+                            free_space.setForeground(Color.red);
+                            vamos_button.setEnabled(false);
+                        });
+                        return false;
+                    }
+                } else if (Long.parseLong(split_textbox.getText()) * 1024 * 1024 > _free_space || Long.parseLong(split_textbox.getText()) * 1024 * 1024 > _free_space) {
+                    Helpers.GUIRun(() -> {
+                        free_space.setForeground(Color.red);
+                        vamos_button.setEnabled(false);
+                    });
+                    return false;
+
+                } else {
+                    Helpers.GUIRun(() -> {
+                        free_space.setForeground(new Color(0, 153, 0));
+                        vamos_button.setEnabled(true);
+                    });
+                    return true;
+                }
+
             } else if (_local_size > _free_space) {
                 Helpers.GUIRun(() -> {
                     free_space.setForeground(Color.red);
@@ -220,14 +247,12 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                 });
                 return true;
             }
-        } else {
-
-            Helpers.GUIRun(() -> {
-                vamos_button.setEnabled(_link != null);
-            });
-
-            return _link != null;
         }
+
+        Helpers.GUIRun(() -> {
+            free_space.setForeground(Color.red);
+            vamos_button.setEnabled(false);
+        });
 
         return false;
     }
@@ -979,6 +1004,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
         remove_after.setText((_split && !Files.isDirectory(Paths.get(_lpath))) ? "Delete local file PART after successful upload" : "Delete local " + ((Files.isDirectory(Paths.get(_lpath)) && !_split) ? "folder" : "file") + " after successful upload");
 
+        checkFreeSpace();
     }//GEN-LAST:event_split_checkboxActionPerformed
 
     private void remove_afterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_remove_afterActionPerformed
@@ -1009,7 +1035,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         all_chunks_radio.setSelected(true);
         parts_radio.setSelected(false);
         parts_spinner.setEnabled(false);
-
+        checkFreeSpace();
     }//GEN-LAST:event_all_chunks_radioActionPerformed
 
     private void parts_radioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_parts_radioActionPerformed
@@ -1017,6 +1043,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         all_chunks_radio.setSelected(false);
         parts_radio.setSelected(true);
         parts_spinner.setEnabled(true);
+        checkFreeSpace();
     }//GEN-LAST:event_parts_radioActionPerformed
 
     private void split_textboxKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_split_textboxKeyReleased
@@ -1024,6 +1051,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         try {
 
             updatePartsSpinnerRange();
+            checkFreeSpace();
 
         } catch (Exception ex) {
         }
