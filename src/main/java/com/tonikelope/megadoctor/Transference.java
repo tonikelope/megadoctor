@@ -552,19 +552,21 @@ public final class Transference extends javax.swing.JPanel {
 
     public void start() {
 
+        Logger.getLogger(Main.class.getName()).log(Level.INFO, "STARTING " + (_action == 0 ? "DOWNLOAD " : "UPLOAD ") + _lpath);
+
+        if (_split_file != null) {
+            _splitting = true;
+
+            Helpers.GUIRun(() -> {
+                action.setForeground(Color.magenta);
+            });
+        } else {
+            _running = true;
+        }
+
         Helpers.threadRun(() -> {
 
-            Logger.getLogger(Main.class.getName()).log(Level.INFO, "STARTING " + (_action == 0 ? "DOWNLOAD " : "UPLOAD ") + _lpath);
-
             _thread_id = Thread.currentThread().getId();
-
-            if (_split_file != null) {
-                _splitting = true;
-
-                Helpers.GUIRun(() -> {
-                    action.setForeground(Color.magenta);
-                });
-            }
 
             try {
                 while (!isTransferenceThreadCanceled() && !_canceled && _split_file != null && !(Files.exists(Paths.get(_lpath)) && Files.size(Paths.get(_lpath)) == _split_file)) {
@@ -693,126 +695,129 @@ public final class Transference extends javax.swing.JPanel {
 
                         long finish_timestamp = System.currentTimeMillis();
 
-                        synchronized (TRANSFERENCES_LOCK) {
+                        if (!isTransferenceThreadCanceled()) {
+                            synchronized (TRANSFERENCES_LOCK) {
 
-                            if (_action == 1 && Main.MAIN_WINDOW.isProvisioning_upload()) {
-                                Main.FREE_SPACE_CACHE.put(_email, Helpers.getAccountFreeSpace(_email));
-                            }
+                                if (_action == 1 && Main.MAIN_WINDOW.isProvisioning_upload()) {
+                                    Main.FREE_SPACE_CACHE.put(_email, Helpers.getAccountFreeSpace(_email));
+                                }
 
-                            if (!isTransferenceThreadCanceled() && !_canceled) {
+                                if (!isTransferenceThreadCanceled() && !_canceled) {
 
-                                _finishing = true;
+                                    _finishing = true;
 
-                                waitPaused();
+                                    waitPaused();
 
-                                Helpers.GUIRun(() -> {
-                                    progress.setValue(progress.getMaximum());
-                                    progress.setIndeterminate(true);
-                                    action.setText("(FINISHING...)");
-                                    folder_stats_textarea.setText("");
-                                    folder_stats_scroll.setVisible(false);
-                                });
+                                    Helpers.GUIRun(() -> {
+                                        progress.setValue(progress.getMaximum());
+                                        progress.setIndeterminate(true);
+                                        action.setText("(FINISHING...)");
+                                        folder_stats_textarea.setText("");
+                                        folder_stats_scroll.setVisible(false);
+                                    });
 
-                                boolean c_error = false;
+                                    boolean c_error = false;
 
-                                if (_action == 0) {
-                                    if (!isDirectory()) {
-                                        c_error = waitCompletedTAG();
-                                    }
-                                } else {
-                                    if (isDirectory()) {
-
-                                        c_error = (waitRemoteExists() && waitUsedSpaceChange(used_space));
-
+                                    if (_action == 0) {
+                                        if (!isDirectory()) {
+                                            c_error = waitCompletedTAG();
+                                        }
                                     } else {
+                                        if (isDirectory()) {
 
-                                        c_error = (waitRemoteExists() && waitCompletedTAG() && waitUsedSpaceChange(used_space));
+                                            c_error = (waitRemoteExists() && waitUsedSpaceChange(used_space));
+
+                                        } else {
+
+                                            c_error = (waitRemoteExists() && waitCompletedTAG() && waitUsedSpaceChange(used_space));
+                                        }
                                     }
-                                }
 
-                                if (c_error) {
-                                    _error_msg = _error_msg + "#Unable to verify that transfer was completed correctly (TIMEOUT)";
-                                }
+                                    if (c_error) {
+                                        _error_msg = _error_msg + "#Unable to verify that transfer was completed correctly (TIMEOUT)";
+                                    }
 
-                                _error = c_error;
+                                    _error = c_error;
 
-                                if (_action == 1 && isDirectory() && readRemoteFolderSize() != _size) {
-                                    _error = true;
-                                    _error_msg = _error_msg + "#REMOTE FOLDER SIZE IS DIFFERENT FROM FOLDER LOCAL SIZE";
-                                }
-
-                                if (_action == 1) {
-                                    _public_link = Helpers.exportPathFromCurrentAccount(_rpath);
-
-                                    if (_public_link == null) {
+                                    if (_action == 1 && isDirectory() && readRemoteFolderSize() != _size) {
                                         _error = true;
-                                        _error_msg = _error_msg + "#PUBLIC LINK GENERATION FAILED";
-                                    }
-                                }
-
-                                long speed = calculateSpeed(_size, _prog_init < 0 ? 0 : _prog_init, 10000, start_timestamp, finish_timestamp);
-
-                                Helpers.GUIRunAndWait(() -> {
-                                    progress.setIndeterminate(false);
-
-                                    status_icon.setVisible(true);
-
-                                    local_path.setText("[" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + (_action == 1 ? _lpath : (_lpath + (_rpath.startsWith("/") ? "" : "/") + _rpath)));
-
-                                    action.setText("(Avg: " + Helpers.formatBytes(speed) + "/s)");
-
-                                    if (_error) {
-                                        status_icon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/warning_transference.png")));
-                                        status_icon.setToolTipText(_error_msg);
+                                        _error_msg = _error_msg + "#REMOTE FOLDER SIZE IS DIFFERENT FROM FOLDER LOCAL SIZE";
                                     }
 
-                                    boolean running = false;
+                                    if (_action == 1) {
+                                        _public_link = Helpers.exportPathFromCurrentAccount(_rpath);
 
-                                    for (Component c : Main.TRANSFERENCES_MAP.keySet()) {
-
-                                        Transference t = Main.TRANSFERENCES_MAP.get(c);
-
-                                        if (t != this && !t.isFinished() && !t.isCanceled()) {
-                                            running = true;
-                                            break;
+                                        if (_public_link == null) {
+                                            _error = true;
+                                            _error_msg = _error_msg + "#PUBLIC LINK GENERATION FAILED";
                                         }
                                     }
 
-                                    if (!_error && _remove_after) {
-                                        try {
-                                            if (isDirectory()) {
-                                                Helpers.deleteDirectoryRecursion(Paths.get(_lpath));
-                                            } else {
-                                                Files.deleteIfExists(Paths.get(_lpath));
+                                    long speed = calculateSpeed(_size, _prog_init < 0 ? 0 : _prog_init, 10000, start_timestamp, finish_timestamp);
+
+                                    Helpers.GUIRunAndWait(() -> {
+                                        progress.setIndeterminate(false);
+
+                                        status_icon.setVisible(true);
+
+                                        local_path.setText("[" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + (_action == 1 ? _lpath : (_lpath + (_rpath.startsWith("/") ? "" : "/") + _rpath)));
+
+                                        action.setText("(Avg: " + Helpers.formatBytes(speed) + "/s)");
+
+                                        if (_error) {
+                                            status_icon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/warning_transference.png")));
+                                            status_icon.setToolTipText(_error_msg);
+                                        }
+
+                                        boolean running = false;
+
+                                        for (Component c : Main.TRANSFERENCES_MAP.keySet()) {
+
+                                            Transference t = Main.TRANSFERENCES_MAP.get(c);
+
+                                            if (t != this && !t.isFinished() && !t.isCanceled()) {
+                                                running = true;
+                                                break;
                                             }
-                                            local_path.setBackground(Color.YELLOW);
-                                        } catch (IOException ex) {
-                                            Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
                                         }
+
+                                        if (!_error && _remove_after) {
+                                            try {
+                                                if (isDirectory()) {
+                                                    Helpers.deleteDirectoryRecursion(Paths.get(_lpath));
+                                                } else {
+                                                    Files.deleteIfExists(Paths.get(_lpath));
+                                                }
+                                                local_path.setBackground(Color.YELLOW);
+                                            } catch (IOException ex) {
+                                                Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
+                                            }
+                                        }
+
+                                        if (!running) {
+                                            Notification notification = new Notification(new javax.swing.JFrame(), false, "ALL TRANSFERS FINISHED", (Main.MAIN_WINDOW.getExtendedState() & JFrame.ICONIFIED) == 0 ? 3000 : 0, "finish.wav");
+                                            Helpers.setWindowLowRightCorner(notification);
+                                            notification.setVisible(true);
+                                        }
+
+                                        Helpers.JTextFieldRegularPopupMenu.addTransferencePopupMenuTo(this);
+
+                                    });
+
+                                    if (_action == 1) {
+                                        Main.MAIN_WINDOW.refreshAccount(_email, "Refreshed after upload [" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + _rpath, false, false);
                                     }
 
-                                    if (!running) {
-                                        Notification notification = new Notification(new javax.swing.JFrame(), false, "ALL TRANSFERS FINISHED", (Main.MAIN_WINDOW.getExtendedState() & JFrame.ICONIFIED) == 0 ? 3000 : 0, "finish.wav");
-                                        Helpers.setWindowLowRightCorner(notification);
-                                        notification.setVisible(true);
-                                    }
-
-                                    Helpers.JTextFieldRegularPopupMenu.addTransferencePopupMenuTo(this);
-
-                                });
-
-                                if (_action == 1) {
-                                    Main.MAIN_WINDOW.refreshAccount(_email, "Refreshed after upload [" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + _rpath, false, false);
+                                    _finishing = false;
                                 }
 
-                                _finishing = false;
+                                _running = false;
+
+                                _finished = true;
+
+                                TRANSFERENCES_LOCK.notifyAll();
+
                             }
-
-                            _running = false;
-
-                            _finished = true;
-
-                            TRANSFERENCES_LOCK.notifyAll();
 
                         }
 
@@ -916,7 +921,7 @@ public final class Transference extends javax.swing.JPanel {
 
         waitPaused();
 
-        if (!transferRunning()) {
+        if (!transferRunning() || isTransferenceThreadCanceled()) {
             return false;
         }
 
