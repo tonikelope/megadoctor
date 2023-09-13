@@ -62,7 +62,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.53";
+    public final static String VERSION = "2.54";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -267,6 +267,20 @@ public class Main extends javax.swing.JFrame {
 
     }
 
+    private boolean existsAnySplitTransference(String path) {
+
+        synchronized (TRANSFERENCES_LOCK) {
+
+            for (Map.Entry<Component, Transference> entry : TRANSFERENCES_MAP.entrySet()) {
+                if (entry.getValue().getLpath().replaceAll("\\.part[0-9]+-[0-9]+$", "").equals(path)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     private void runFileSplitter() {
 
         loadFileSplitterTasks();
@@ -280,53 +294,23 @@ public class Main extends javax.swing.JFrame {
                     try {
                         Object[] task = (Object[]) FILE_SPLITTER_TASKS.peek();
 
-                        boolean delete_after_split = (boolean) task[2];
+                        if (existsAnySplitTransference((String) task[0])) {
 
-                        String file_path = (String) task[0];
+                            boolean delete_after_split = (boolean) task[2];
 
-                        Long file_size = Files.size(Paths.get(file_path));
+                            String file_path = (String) task[0];
 
-                        Long chunk_size = (Long) task[1];
+                            Long file_size = Files.size(Paths.get(file_path));
 
-                        final int tot_chunks = (int) Math.ceil((float) file_size / chunk_size);
+                            Long chunk_size = (Long) task[1];
 
-                        Integer part = (Integer) task[3];
+                            final int tot_chunks = (int) Math.ceil((float) file_size / chunk_size);
 
-                        if (part != null) {
+                            Integer part = (Integer) task[3];
 
-                            int i = part - 1;
+                            if (part != null) {
 
-                            long current_chunk_size = Math.min(chunk_size, file_size - chunk_size * i);
-
-                            try (RandomAccessFile sourceFile = new RandomAccessFile(file_path, "r"); FileChannel sourceChannel = sourceFile.getChannel()) {
-
-                                Path fileName = Paths.get(file_path + ".part" + String.valueOf(i + 1) + "-" + String.valueOf(tot_chunks));
-
-                                if (!(Files.exists(fileName) && Files.size(fileName) == current_chunk_size)) {
-
-                                    long position;
-
-                                    if (Files.exists(fileName)) {
-
-                                        position = Files.size(fileName);
-
-                                    } else {
-
-                                        position = chunk_size * i;
-
-                                    }
-
-                                    try (RandomAccessFile toFile = new RandomAccessFile(fileName.toFile(), "rw"); FileChannel toChannel = toFile.getChannel()) {
-                                        sourceChannel.position(position);
-                                        toChannel.transferFrom(sourceChannel, position - chunk_size * i, current_chunk_size - (position - chunk_size * i));
-                                    }
-                                }
-
-                            }
-
-                        } else {
-
-                            for (int i = 0; i < tot_chunks; i++) {
+                                int i = part - 1;
 
                                 long current_chunk_size = Math.min(chunk_size, file_size - chunk_size * i);
 
@@ -356,23 +340,55 @@ public class Main extends javax.swing.JFrame {
 
                                 }
 
-                            }
-                        }
+                            } else {
 
-                        if (delete_after_split) {
-                            Files.deleteIfExists(Paths.get(file_path));
+                                for (int i = 0; i < tot_chunks; i++) {
+
+                                    long current_chunk_size = Math.min(chunk_size, file_size - chunk_size * i);
+
+                                    try (RandomAccessFile sourceFile = new RandomAccessFile(file_path, "r"); FileChannel sourceChannel = sourceFile.getChannel()) {
+
+                                        Path fileName = Paths.get(file_path + ".part" + String.valueOf(i + 1) + "-" + String.valueOf(tot_chunks));
+
+                                        if (!(Files.exists(fileName) && Files.size(fileName) == current_chunk_size)) {
+
+                                            long position;
+
+                                            if (Files.exists(fileName)) {
+
+                                                position = Files.size(fileName);
+
+                                            } else {
+
+                                                position = chunk_size * i;
+
+                                            }
+
+                                            try (RandomAccessFile toFile = new RandomAccessFile(fileName.toFile(), "rw"); FileChannel toChannel = toFile.getChannel()) {
+                                                sourceChannel.position(position);
+                                                toChannel.transferFrom(sourceChannel, position - chunk_size * i, current_chunk_size - (position - chunk_size * i));
+                                            }
+                                        }
+
+                                    }
+
+                                }
+                            }
+
+                            if (delete_after_split) {
+                                Files.deleteIfExists(Paths.get(file_path));
+                            }
+
+                        } else {
+                            Logger.getLogger(Main.class.getName()).log(Level.WARNING, "FileSplitter transference not found: " + task[0]);
                         }
                     } catch (IOException ex) {
                         Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
                     }
 
-                    synchronized (FILE_SPLITTER_LOCK) {
+                    FILE_SPLITTER_TASKS.poll();
 
-                        FILE_SPLITTER_TASKS.poll();
-
-                        saveFileSplitterTasks();
-
-                    }
+                    saveFileSplitterTasks();
 
                 } else {
 
@@ -492,8 +508,7 @@ public class Main extends javax.swing.JFrame {
     public void init() {
         runMEGACMDCHecker();
         runTransferenceWatchdog();
-        runFileSplitter();
-        loadAccounts();
+        loadAccountsAndTransfers();
         loadLog();
     }
 
@@ -1777,7 +1792,7 @@ public class Main extends javax.swing.JFrame {
         }
     }
 
-    private void loadAccounts() {
+    private void loadAccountsAndTransfers() {
 
         Helpers.threadRun(() -> {
 
@@ -1889,6 +1904,8 @@ public class Main extends javax.swing.JFrame {
                     session_menu.setSelected(false);
                 });
             }
+
+            runFileSplitter();
 
         });
     }
