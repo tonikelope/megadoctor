@@ -1346,6 +1346,8 @@ public class Helpers {
 
             refreshFastAccount.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/refresh.png")));
 
+            refreshFastAccount.setFont(refreshFastAccount.getFont().deriveFont(Font.BOLD));
+
             popup.add(refreshFastAccount);
 
             if (Main.MAIN_WINDOW != null && Main.MAIN_WINDOW.getLast_email_force_refresh() != null) {
@@ -1425,7 +1427,7 @@ public class Helpers {
                 }
             };
 
-            Action downloadMEGANodesAction = new AbstractAction("DOWNLOAD SELECTED MEGA FOLDERS/FILES") {
+            Action downloadMEGANodesAction = new AbstractAction("DOWNLOAD SELECTED FOLDERS/FILES") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
                     if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
@@ -1436,7 +1438,7 @@ public class Helpers {
                 }
             };
 
-            Action copyInsideMEGANodesAction = new AbstractAction("COPY SELECTED MEGA FOLDERS/FILES") {
+            Action copyInsideMEGANodesAction = new AbstractAction("COPY SELECTED FOLDERS/FILES") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
                     if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
@@ -1446,7 +1448,7 @@ public class Helpers {
                     }
                 }
             };
-            Action moveInsideMEGANodesAction = new AbstractAction("MOVE SELECTED MEGA FOLDERS/FILES") {
+            Action moveInsideMEGANodesAction = new AbstractAction("MOVE SELECTED FOLDERS/FILES") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
                     if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
@@ -1456,7 +1458,7 @@ public class Helpers {
                     }
                 }
             };
-            Action removeMEGANodesAction = new AbstractAction("DELETE SELECTED MEGA FOLDERS/FILES") {
+            Action removeMEGANodesAction = new AbstractAction("DELETE SELECTED FOLDERS/FILES") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
                     if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
@@ -1466,7 +1468,7 @@ public class Helpers {
                     }
                 }
             };
-            Action copyMEGANodesAction = new AbstractAction("COPY SELECTED MEGA FOLDERS/FILES TO ANOTHER ACCOUNT") {
+            Action copyMEGANodesAction = new AbstractAction("COPY SELECTED FOLDERS/FILES TO ANOTHER ACCOUNT") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
                     if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
@@ -1476,7 +1478,7 @@ public class Helpers {
                     }
                 }
             };
-            Action moveMEGANodesAction = new AbstractAction("MOVE SELECTED MEGA FOLDERS/FILES TO ANOTHER ACCOUNT") {
+            Action moveMEGANodesAction = new AbstractAction("MOVE SELECTED FOLDERS/FILES TO ANOTHER ACCOUNT") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
                     if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
@@ -1486,7 +1488,7 @@ public class Helpers {
                     }
                 }
             };
-            Action renameMEGANodesAction = new AbstractAction("RENAME SELECTED MEGA FOLDERS/FILES") {
+            Action renameMEGANodesAction = new AbstractAction("RENAME SELECTED FOLDERS/FILES") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
                     if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
@@ -1496,7 +1498,7 @@ public class Helpers {
                     }
                 }
             };
-            Action enableExportMEGANodesAction = new AbstractAction("ENABLE PUBLIC LINK ON SELECTED MEGA FOLDERS/FILES") {
+            Action enableExportMEGANodesAction = new AbstractAction("ENABLE PUBLIC LINK ON SELECTED FOLDERS/FILES") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
                     if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
@@ -1506,7 +1508,7 @@ public class Helpers {
                     }
                 }
             };
-            Action disableExportMEGANodesAction = new AbstractAction("DISABLE PUBLIC LINK ON SELECTED MEGA FOLDERS/FILES") {
+            Action disableExportMEGANodesAction = new AbstractAction("DISABLE PUBLIC LINK ON SELECTED FOLDERS/FILES") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
                     if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
@@ -1792,7 +1794,7 @@ public class Helpers {
                 }
             };
 
-            Action removeMEGANodesAction = new AbstractAction("DELETE SELECTED MEGA FOLDERS/FILES") {
+            Action removeMEGANodesAction = new AbstractAction("DELETE SELECTED FOLDERS/FILES") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
                     if (txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
@@ -1897,7 +1899,7 @@ public class Helpers {
                 }
             };
 
-            Action cancelTransferenceLinkAction = new AbstractAction("CANCEL") {
+            Action cancelTransferenceLinkAction = new AbstractAction("CANCEL TRANSFERENCE") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
                     File f = new File(transference.getLpath());
@@ -1909,7 +1911,19 @@ public class Helpers {
                 }
             };
 
-            Action clearTransferenceLinkAction = new AbstractAction("CLEAR") {
+            Action cancelAndRetryTransferenceLinkAction = new AbstractAction("RESET TRANSFERENCE") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    File f = new File(transference.getLpath());
+                    if (!transference.isFinished() && !transference.isCanceled() && Helpers.mostrarMensajeInformativoSINO(Main.MAIN_WINDOW, "<b>" + f.getName() + "</b><br><br><b>RESET</b> this transference?") == 0) {
+                        Helpers.threadRun(() -> {
+                            transference.stopAndRetry();
+                        });
+                    }
+                }
+            };
+
+            Action clearTransferenceLinkAction = new AbstractAction("CLEAR TRANSFERENCE") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
 
@@ -1917,7 +1931,7 @@ public class Helpers {
                 }
             };
 
-            Action retryTransferenceLinkAction = new AbstractAction("RETRY TRANSFER") {
+            Action retryTransferenceLinkAction = new AbstractAction("RETRY TRANSFERENCE") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
 
@@ -1933,6 +1947,12 @@ public class Helpers {
                 cancelTransference.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/cancel.png")));
 
                 popup.add(cancelTransference);
+
+                JMenuItem cancelAndRetryTransference = new JMenuItem(cancelAndRetryTransferenceLinkAction);
+
+                cancelAndRetryTransference.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/refresh.png")));
+
+                popup.add(cancelAndRetryTransference);
 
             } else {
 

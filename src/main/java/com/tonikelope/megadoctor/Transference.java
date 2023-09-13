@@ -294,6 +294,65 @@ public final class Transference extends javax.swing.JPanel {
         });
     }
 
+    public void stopAndRetry() {
+
+        _terminate_walk_tree.set(true);
+
+        synchronized (TRANSFERENCES_LOCK) {
+
+            if (_running) {
+                Helpers.runProcess(new String[]{"mega-transfers", "-ca"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+            }
+
+            Main.FREE_SPACE_CACHE.remove(_email);
+
+            if (_running) {
+                Main.MAIN_WINDOW.refreshAccount(_email, "Refreshed after upload CANCEL [" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + _rpath, false, false);
+            }
+
+            _thread_id = null;
+
+            _tag = -1;
+
+            _prog = 0;
+
+            _prog_init = 0;
+
+            _starting = false;
+
+            _split_finished = false;
+
+            _splitting = false;
+
+            _finishing = false;
+
+            _running = false;
+
+            _finished = false;
+
+            _canceled = false;
+
+            _error = false;
+
+            _error_msg = "";
+
+            Helpers.GUIRunAndWait(() -> {
+                Helpers.JTextFieldRegularPopupMenu.addTransferencePopupMenuTo(this);
+                status_icon.setVisible(false);
+                status_icon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/ok.png")));
+                progress.setValue(progress.getMinimum());
+                progress.setIndeterminate(true);
+                folder_stats_scroll.setVisible(false);
+                action.setText("RETRY (QUEUED)");
+                Main.MAIN_WINDOW.getTransferences().revalidate();
+                Main.MAIN_WINDOW.getTransferences().repaint();
+            });
+
+            TRANSFERENCES_LOCK.notifyAll();
+
+        }
+    }
+
     public void stop() {
 
         _terminate_walk_tree.set(true);
@@ -514,6 +573,8 @@ public final class Transference extends javax.swing.JPanel {
                     progress.setIndeterminate(true);
                     folder_stats_scroll.setVisible(false);
                     action.setText("RETRY (QUEUED)");
+                    Main.MAIN_WINDOW.getTransferences().revalidate();
+                    Main.MAIN_WINDOW.getTransferences().repaint();
                 });
 
                 TRANSFERENCES_LOCK.notifyAll();
