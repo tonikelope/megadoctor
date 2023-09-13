@@ -62,7 +62,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.54";
+    public final static String VERSION = "2.55";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -290,6 +290,8 @@ public class Main extends javax.swing.JFrame {
             while (!_closing) {
 
                 if (!FILE_SPLITTER_TASKS.isEmpty()) {
+
+                    saveFileSplitterTasks();
 
                     try {
                         Object[] task = (Object[]) FILE_SPLITTER_TASKS.peek();
