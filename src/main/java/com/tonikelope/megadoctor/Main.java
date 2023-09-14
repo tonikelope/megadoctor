@@ -62,7 +62,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.56";
+    public final static String VERSION = "2.57";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -101,7 +101,6 @@ public class Main extends javax.swing.JFrame {
     private volatile boolean _firstAccountsTextareaClick = false;
     private volatile MoveNodeToAnotherAccountDialog _email_dialog = null;
     private volatile MoveNodeDialog _move_dialog = null;
-    private volatile boolean _transferences_running = false;
     private volatile Transference _current_transference = null;
     private volatile String _last_email_force_refresh = null;
     private volatile JPanel transferences = null;
@@ -139,7 +138,7 @@ public class Main extends javax.swing.JFrame {
     }
 
     public boolean busy() {
-        return isRunning_global_check() || isRunning_main_action() || isTransferences_running();
+        return isRunning_global_check() || isRunning_main_action() || isSomeTransference_running();
     }
 
     public boolean isRunning_global_check() {
@@ -154,8 +153,10 @@ public class Main extends javax.swing.JFrame {
         return _running_main_action;
     }
 
-    public boolean isTransferences_running() {
-        return (_transferences_running && _current_transference != null);
+    public boolean isSomeTransference_running() {
+
+        return (_current_transference != null && !_current_transference.isFinished() && !_current_transference.isCanceled());
+
     }
 
     public String getLast_email_force_refresh() {
@@ -190,10 +191,6 @@ public class Main extends javax.swing.JFrame {
         return transferences;
     }
 
-    public Transference getCurrent_transference() {
-        return _current_transference;
-    }
-
     /**
      * Creates new form Main
      */
@@ -216,10 +213,6 @@ public class Main extends javax.swing.JFrame {
         pack();
         setEnabled(false);
 
-    }
-
-    public void setCurrent_transference(Transference _current_transference) {
-        this._current_transference = _current_transference;
     }
 
     private void runMEGACMDCHecker() {
@@ -414,51 +407,57 @@ public class Main extends javax.swing.JFrame {
             while (!_closing) {
 
                 synchronized (TRANSFERENCES_LOCK) {
+
+                    if (!isSomeTransference_running()) {
+                        _current_transference = null;
+                    }
+
                     Helpers.GUIRunAndWait(() -> {
 
                         if (!_transfer_drag_drop_adapter.isWorking()) {
 
                             if (transferences.getComponentCount() > 0) {
 
-                                transferences_control_panel.setVisible(true);
+                                if (!isSomeTransference_running()) {
 
-                                if (_current_transference != null && (!_current_transference.isRunning() || _current_transference.isFinished() || _current_transference.isCanceled())) {
-                                    _transferences_running = false;
-                                    _current_transference = null;
-                                }
+                                    transferences_control_panel.setVisible(true);
 
-                                for (Component tr : transferences.getComponents()) {
-                                    Transference t = TRANSFERENCES_MAP.get(tr);
+                                    for (Component tr : transferences.getComponents()) {
 
-                                    if (!t.isFinished() && !t.isFinishing() && !t.isCanceled()) {
+                                        Transference t = TRANSFERENCES_MAP.get(tr);
 
-                                        if (t.getSplit_file() != null) {
+                                        if (!t.isFinished() && !t.isFinishing() && !t.isCanceled()) {
 
-                                            if (t.isSplit_finished()) {
+                                            if (t.getSplit_file() != null) {
 
-                                                if (!isTransferences_running()) {
-                                                    _transferences_running = true;
+                                                if (!t.isSplitting() && !t.isSplit_finished()) {
+
+                                                    t.start();
+
+                                                } else if (_current_transference != t) {
                                                     _current_transference = t;
 
-                                                    if (t.isSplitting()) {
-                                                        t.setSplitting(false);
+                                                    t.setSplitting(false);
 
-                                                        synchronized (t.getSplit_lock()) {
-                                                            t.getSplit_lock().notify();
-                                                        }
+                                                    synchronized (t.getSplit_lock()) {
+                                                        t.getSplit_lock().notify();
                                                     }
+
+                                                    break;
                                                 }
 
-                                            } else if (!t.isSplitting()) {
-                                                t.start();
-                                            }
+                                            } else if (_current_transference != t) {
 
-                                        } else if (!isTransferences_running() && !t.isRunning()) {
-                                            _transferences_running = true;
-                                            _current_transference = t;
-                                            t.start();
+                                                _current_transference = t;
+
+                                                t.start();
+
+                                                break;
+                                            }
                                         }
+
                                     }
+
                                 }
 
                                 vamos_button.setEnabled(!busy() || (isRunning_global_check() && !isAborting_global_check()));
@@ -467,12 +466,11 @@ public class Main extends javax.swing.JFrame {
 
                                 purge_cache_menu.setEnabled(!busy());
 
-                                getPause_button().setVisible(isTransferences_running());
+                                getPause_button().setVisible(isSomeTransference_running());
 
-                                getCancel_all_button().setVisible(isTransferences_running());
+                                getCancel_all_button().setVisible(isSomeTransference_running());
 
                             } else {
-                                _transferences_running = false;
 
                                 _pausing_transference = false;
 
@@ -604,7 +602,7 @@ public class Main extends javax.swing.JFrame {
 
         MEGA_SESSIONS.put(email, getCurrentSessionID());
 
-        if (isTransferences_running() && _current_transference.getEmail().equals(email) && _current_transference.isPaused()) {
+        if (isSomeTransference_running() && _current_transference.getEmail().equals(email) && _current_transference.isPaused()) {
             _current_transference.pause();
         }
 
@@ -728,7 +726,7 @@ public class Main extends javax.swing.JFrame {
 
         if (!nodesToCopy.isEmpty() && MEGA_ACCOUNTS.size() > nodesToCopy.keySet().size()) {
 
-            if (isTransferences_running()) {
+            if (isSomeTransference_running()) {
                 _current_transference.pause();
             }
 
@@ -740,7 +738,7 @@ public class Main extends javax.swing.JFrame {
                 _email_dialog.setVisible(true);
             });
 
-            if (isTransferences_running()) {
+            if (isSomeTransference_running()) {
                 Helpers.threadRun(() -> {
                     _current_transference.resume();
                 });
@@ -858,7 +856,7 @@ public class Main extends javax.swing.JFrame {
                 setEnabled(false);
             });
 
-            if (isTransferences_running()) {
+            if (isSomeTransference_running()) {
                 _current_transference.pause();
             } else {
                 Helpers.runProcess(new String[]{"mega-transfers", "-ca"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
@@ -2679,7 +2677,7 @@ public class Main extends javax.swing.JFrame {
 
                 if (Helpers.mostrarMensajeInformativoSINO(this, "EXIT NOW?") == 0) {
 
-                    if (isTransferences_running()) {
+                    if (isSomeTransference_running()) {
 
                         if (!session_menu.isSelected()) {
                             if (Helpers.mostrarMensajeInformativoSINO(this, "All transactions in progress or on hold will be lost. ARE YOU SURE?") == 0) {
@@ -2749,7 +2747,7 @@ public class Main extends javax.swing.JFrame {
 
             Helpers.threadRun(() -> {
 
-                while (isTransferences_running() && isPausing_transference()) {
+                while (isSomeTransference_running() && isPausing_transference()) {
                     synchronized (TRANSFERENCES_LOCK) {
                         try {
                             TRANSFERENCES_LOCK.wait(1000);
@@ -2759,13 +2757,13 @@ public class Main extends javax.swing.JFrame {
                     }
                 }
 
-                if (isTransferences_running() && !isTransferences_paused()) {
+                if (isSomeTransference_running() && !isTransferences_paused()) {
                     _current_transference.pause();
                 }
 
                 Helpers.GUIRunAndWait(() -> {
 
-                    if (isTransferences_running()) {
+                    if (isSomeTransference_running()) {
                         getPause_button().setText("RESUME");
                     }
 
@@ -3131,7 +3129,7 @@ public class Main extends javax.swing.JFrame {
             Helpers.threadRun(() -> {
                 synchronized (TRANSFERENCES_LOCK) {
 
-                    if (isTransferences_running()) {
+                    if (isSomeTransference_running()) {
 
                         if (this.isTransferences_paused()) {
 

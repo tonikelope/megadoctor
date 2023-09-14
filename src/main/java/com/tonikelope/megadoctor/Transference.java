@@ -61,8 +61,8 @@ public final class Transference extends javax.swing.JPanel {
     private volatile Long _split_file = null;
     private final Object _split_lock = new Object();
     private volatile boolean _splitting = false;
-    private volatile boolean _split_finished = false;
     private volatile Long _thread_id = null;
+    private volatile boolean _split_finished;
 
     public boolean isSplit_finished() {
         return _split_finished;
@@ -306,10 +306,6 @@ public final class Transference extends javax.swing.JPanel {
 
             Main.FREE_SPACE_CACHE.remove(_email);
 
-            if (_running) {
-                Main.MAIN_WINDOW.refreshAccount(_email, "Refreshed after upload CANCEL [" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + _rpath, false, false);
-            }
-
             _thread_id = null;
 
             _tag = -1;
@@ -320,9 +316,9 @@ public final class Transference extends javax.swing.JPanel {
 
             _starting = false;
 
-            _split_finished = false;
-
             _splitting = false;
+
+            _split_finished = false;
 
             _finishing = false;
 
@@ -343,7 +339,7 @@ public final class Transference extends javax.swing.JPanel {
                 progress.setValue(progress.getMinimum());
                 progress.setIndeterminate(true);
                 folder_stats_scroll.setVisible(false);
-                action.setText("RETRY (QUEUED)");
+                action.setText("RESET (QUEUED)");
                 Main.MAIN_WINDOW.getTransferences().revalidate();
                 Main.MAIN_WINDOW.getTransferences().repaint();
             });
@@ -549,9 +545,9 @@ public final class Transference extends javax.swing.JPanel {
 
                 _starting = false;
 
-                _split_finished = false;
-
                 _splitting = false;
+
+                _split_finished = false;
 
                 _finishing = false;
 
@@ -624,16 +620,14 @@ public final class Transference extends javax.swing.JPanel {
                 Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
             }
 
-            if (_splitting) {
-                _split_finished = true;
-            }
-
             if (!isTransferenceThreadCanceled() && !this._canceled) {
 
                 if (_splitting) {
 
+                    _split_finished = true;
+
                     Helpers.GUIRun(() -> {
-                        action.setText("(QUEUED)");
+                        action.setText("FILE ALREADY SPLIT (QUEUED)");
                     });
 
                     while (!isTransferenceThreadCanceled() && _splitting) {
@@ -655,8 +649,6 @@ public final class Transference extends javax.swing.JPanel {
                 if (!isTransferenceThreadCanceled() && !this._canceled) {
 
                     _running = true;
-
-                    Main.MAIN_WINDOW.setCurrent_transference(this);
 
                     if (Main.MAIN_WINDOW.isTransferences_paused()) {
                         this.pause();
