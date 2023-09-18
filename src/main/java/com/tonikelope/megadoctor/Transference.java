@@ -567,9 +567,9 @@ public final class Transference extends javax.swing.JPanel {
                 _error = false;
 
                 _error_msg = "";
-                
+
                 _retry = true;
-                
+
                 Helpers.GUIRunAndWait(() -> {
                     Helpers.JTextFieldRegularPopupMenu.addTransferencePopupMenuTo(this);
                     status_icon.setVisible(false);
@@ -857,6 +857,8 @@ public final class Transference extends javax.swing.JPanel {
                                 _finished = true;
 
                                 Main.MAIN_WINDOW.saveTransfers();
+
+                                Main.MAIN_WINDOW.saveLog();
 
                                 TRANSFERENCES_LOCK.notifyAll();
 

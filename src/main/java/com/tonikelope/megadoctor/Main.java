@@ -62,7 +62,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.58";
+    public final static String VERSION = "2.59";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -853,6 +853,7 @@ public class Main extends javax.swing.JFrame {
         Helpers.threadRun(() -> {
 
             Helpers.GUIRun(() -> {
+
                 setEnabled(false);
             });
 
@@ -863,10 +864,31 @@ public class Main extends javax.swing.JFrame {
             }
 
             if (_firstAccountsTextareaClick && !MEGA_ACCOUNTS.isEmpty() && (session_menu.isSelected() || Helpers.mostrarMensajeInformativoSINO(this, "Do you want to save your MEGA accounts/sessions/transfers to disk to speed up next time?\n\n(If you are using a public computer it is NOT recommended to do so for security reasons).") == 0)) {
+                synchronized (TRANSFERENCES_LOCK) {
+                    Helpers.GUIRunAndWait(() -> {
+                        progressbar.setIndeterminate(true);
 
-                Helpers.GUIRun(() -> {
-                    progressbar.setIndeterminate(true);
-                });
+                        if (transferences.getComponentCount() > 0) {
+                            ArrayList<String> links = new ArrayList<>();
+
+                            for (Component c : transferences.getComponents()) {
+
+                                Transference t = TRANSFERENCES_MAP.get(c);
+
+                                if (t.isFinished() && t.getPublic_link() != null) {
+                                    String filename = new File(t.getLpath()).getName();
+                                    links.add(filename + "   [" + t.getEmail() + "]   " + t.getPublic_link());
+                                }
+                            }
+
+                            if (!links.isEmpty()) {
+                                Collections.sort(links);
+                                output_textarea.append("\n\nTRANSFERENCES CLEARED (on exit):\n\n" + String.join("\n", links) + "\n\n");
+                            }
+                        }
+
+                    });
+                }
 
                 String cuentas_text = cuentas_textarea.getText();
 
@@ -1768,7 +1790,7 @@ public class Main extends javax.swing.JFrame {
         }
     }
 
-    private void saveLog() {
+    public void saveLog() {
 
         try {
             Files.writeString(Paths.get(LOG_FILE), output_textarea.getText());
@@ -3023,14 +3045,27 @@ public class Main extends javax.swing.JFrame {
                 Helpers.GUIRunAndWait(() -> {
                     if (transferences.getComponentCount() > 0) {
 
+                        ArrayList<String> links = new ArrayList<>();
+
                         for (Component c : transferences.getComponents()) {
 
                             Transference t = TRANSFERENCES_MAP.get(c);
+
+                            if (t.isFinished() && t.getPublic_link() != null) {
+                                String filename = new File(t.getLpath()).getName();
+                                links.add(filename + "   [" + t.getEmail() + "]   " + t.getPublic_link());
+                            }
 
                             if (t.isFinished() && !t.isCanceled() && !t.isError()) {
                                 TRANSFERENCES_MAP.remove(c);
                                 transferences.remove(c);
                             }
+                        }
+
+                        if (!links.isEmpty()) {
+
+                            Collections.sort(links);
+                            output_textarea.append("\n\nTRANSFERENCES CLEARED:\n\n" + String.join("\n", links) + "\n\n");
                         }
 
                         transferences.revalidate();
