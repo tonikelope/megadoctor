@@ -63,6 +63,11 @@ public final class Transference extends javax.swing.JPanel {
     private volatile boolean _splitting = false;
     private volatile Long _thread_id = null;
     private volatile boolean _split_finished;
+    private volatile boolean _retry;
+
+    public boolean isRetry() {
+        return _retry;
+    }
 
     public boolean isSplit_finished() {
         return _split_finished;
@@ -332,6 +337,8 @@ public final class Transference extends javax.swing.JPanel {
 
             _error_msg = "";
 
+            _retry = true;
+
             Helpers.GUIRunAndWait(() -> {
                 Helpers.JTextFieldRegularPopupMenu.addTransferencePopupMenuTo(this);
                 status_icon.setVisible(false);
@@ -560,7 +567,9 @@ public final class Transference extends javax.swing.JPanel {
                 _error = false;
 
                 _error_msg = "";
-
+                
+                _retry = true;
+                
                 Helpers.GUIRunAndWait(() -> {
                     Helpers.JTextFieldRegularPopupMenu.addTransferencePopupMenuTo(this);
                     status_icon.setVisible(false);
@@ -585,6 +594,8 @@ public final class Transference extends javax.swing.JPanel {
     }
 
     public void start() {
+
+        _retry = false;
 
         Logger.getLogger(Main.class.getName()).log(Level.INFO, "STARTING " + (_action == 0 ? "DOWNLOAD " : "UPLOAD ") + _lpath);
 
@@ -844,6 +855,8 @@ public final class Transference extends javax.swing.JPanel {
                                 _running = false;
 
                                 _finished = true;
+
+                                Main.MAIN_WINDOW.saveTransfers();
 
                                 TRANSFERENCES_LOCK.notifyAll();
 
