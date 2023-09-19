@@ -684,6 +684,8 @@ public final class Transference extends javax.swing.JPanel {
 
                             Helpers.runProcess(new String[]{"mega-transfers", "-pa"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
+                            Helpers.runProcess(new String[]{"mega-https", (Main.MEGADOCTOR_MISC.containsKey("megacmd_https") && (boolean) Main.MEGADOCTOR_MISC.get("megacmd_https")) ? "on" : "off"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
                             if (!transferRunning()) {
 
                                 if (_action == 0) {

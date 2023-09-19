@@ -62,13 +62,13 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.59";
+    public final static String VERSION = "2.60";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
-    public final static String MEGA_CMD_CHECK_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_megacmd_ok";
+    public final static String MEGADOCTOR_MISC_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_misc";
     public final static String SESSIONS_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_sessions";
     public final static String ACCOUNTS_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_accounts";
     public final static String FILE_SPLITTER_TASKS_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_file_splitter";
@@ -86,6 +86,7 @@ public class Main extends javax.swing.JFrame {
 
     public volatile static Main MAIN_WINDOW;
     public volatile static String MEGA_CMD_VERSION = null;
+    public volatile static ConcurrentHashMap<String, Object> MEGADOCTOR_MISC = new ConcurrentHashMap<>();
     public volatile static LinkedHashMap<String, String> MEGA_ACCOUNTS = new LinkedHashMap<>();
     public volatile static ConcurrentLinkedQueue<String> MEGA_EXCLUDED_ACCOUNTS = new ConcurrentLinkedQueue<>();
     public volatile static HashMap<String, String> MEGA_SESSIONS = new HashMap<>();
@@ -239,14 +240,13 @@ public class Main extends javax.swing.JFrame {
                 System.exit(1);
             }
 
-            if (!Files.exists(Paths.get(MEGA_CMD_CHECK_FILE))) {
+            if (!MEGADOCTOR_MISC.containsKey("mega_cmd_installed")) {
+
                 Helpers.mostrarMensajeInformativo(this, "MEGAcmd IS CORRECTLY INSTALLED 😃\n\nRemember that to avoid possible failures, <b>YOU MUST NOT USE MEGAcmd WHILE USING MegaDoctor.</b>");
 
-                try {
-                    Files.createFile(Paths.get(MEGA_CMD_CHECK_FILE));
-                } catch (IOException ex) {
-                    Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-                }
+                MEGADOCTOR_MISC.put("mega_cmd_installed", true);
+
+                saveMISC();
             }
 
             Helpers.GUIRunAndWait(() -> {
@@ -506,6 +506,7 @@ public class Main extends javax.swing.JFrame {
     }
 
     public void init() {
+        loadMISC();
         runMEGACMDCHecker();
         runTransferenceWatchdog();
         loadAccountsAndTransfers();
@@ -925,6 +926,7 @@ public class Main extends javax.swing.JFrame {
                     }
                 }
 
+                saveMISC();
                 saveAccounts();
                 saveTransfers();
                 saveLog();
@@ -1799,6 +1801,35 @@ public class Main extends javax.swing.JFrame {
         }
     }
 
+    private void saveMISC() {
+
+        try (FileOutputStream fos = new FileOutputStream(Main.MEGADOCTOR_MISC_FILE); ObjectOutputStream oos = new ObjectOutputStream(fos)) {
+
+            oos.writeObject(Main.MEGADOCTOR_MISC);
+
+        } catch (Exception ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void loadMISC() {
+        if (Files.exists(Paths.get(Main.MEGADOCTOR_MISC_FILE))) {
+            try (FileInputStream fis = new FileInputStream(Main.MEGADOCTOR_MISC_FILE); ObjectInputStream ois = new ObjectInputStream(fis)) {
+                Main.MEGADOCTOR_MISC = (ConcurrentHashMap<String, Object>) ois.readObject();
+            } catch (Exception ex) {
+                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+        Helpers.GUIRunAndWait(() -> {
+            menu_https.setSelected(Main.MEGADOCTOR_MISC.containsKey("megacmd_https") && (boolean) Main.MEGADOCTOR_MISC.get("megacmd_https"));
+            cuentas_scrollpanel.setVisible(!(Main.MEGADOCTOR_MISC.containsKey("hide_accounts") && (boolean) Main.MEGADOCTOR_MISC.get("hide_accounts")));
+            show_accounts.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/vertical_" + (cuentas_scrollpanel.isVisible() ? "less" : "more") + ".png")));
+            revalidate();
+            repaint();
+        });
+    }
+
     private void loadLog() {
 
         if (Files.exists(Paths.get(LOG_FILE))) {
@@ -2129,6 +2160,7 @@ public class Main extends javax.swing.JFrame {
         jMenu2 = new javax.swing.JMenu();
         jMenuItem2 = new javax.swing.JMenuItem();
         session_menu = new javax.swing.JCheckBoxMenuItem();
+        menu_https = new javax.swing.JCheckBoxMenuItem();
         purge_cache_menu = new javax.swing.JMenuItem();
         jMenu1 = new javax.swing.JMenu();
         jMenuItem1 = new javax.swing.JMenuItem();
@@ -2361,7 +2393,7 @@ public class Main extends javax.swing.JFrame {
         jMenu2.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
 
         jMenuItem2.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
-        jMenuItem2.setText("Auto allocation excluded accounts");
+        jMenuItem2.setText("Configure auto allocation excluded accounts");
         jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jMenuItem2ActionPerformed(evt);
@@ -2373,6 +2405,16 @@ public class Main extends javax.swing.JFrame {
         session_menu.setSelected(true);
         session_menu.setText("Keep session on disk");
         jMenu2.add(session_menu);
+
+        menu_https.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
+        menu_https.setSelected(true);
+        menu_https.setText("Use HTTPS TRANSFERS");
+        menu_https.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menu_httpsActionPerformed(evt);
+            }
+        });
+        jMenu2.add(menu_https);
 
         purge_cache_menu.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
         purge_cache_menu.setForeground(new java.awt.Color(255, 0, 0));
@@ -3214,6 +3256,8 @@ public class Main extends javax.swing.JFrame {
     private void show_accountsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_show_accountsMouseClicked
         // TODO add your handling code here:
         cuentas_scrollpanel.setVisible(!cuentas_scrollpanel.isVisible());
+        Main.MEGADOCTOR_MISC.put("hide_accounts", !cuentas_scrollpanel.isVisible());
+        saveMISC();
         show_accounts.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/vertical_" + (cuentas_scrollpanel.isVisible() ? "less" : "more") + ".png")));
         revalidate();
         repaint();
@@ -3296,6 +3340,12 @@ public class Main extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_purge_cache_menuActionPerformed
 
+    private void menu_httpsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menu_httpsActionPerformed
+        // TODO add your handling code here:
+        Main.MEGADOCTOR_MISC.put("megacmd_https", menu_https.isSelected());
+        saveMISC();
+    }//GEN-LAST:event_menu_httpsActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -3376,6 +3426,7 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JLabel logo_label;
+    private javax.swing.JCheckBoxMenuItem menu_https;
     private javax.swing.JTextArea output_textarea;
     private javax.swing.JButton pause_button;
     private javax.swing.JProgressBar progressbar;
