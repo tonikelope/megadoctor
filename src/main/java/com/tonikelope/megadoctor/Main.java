@@ -62,7 +62,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.60";
+    public final static String VERSION = "2.61";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -315,27 +315,35 @@ public class Main extends javax.swing.JFrame {
 
                                     if (!(Files.exists(fileName) && Files.size(fileName) == current_chunk_size)) {
 
-                                        long position;
+                                        Logger.getLogger(Main.class.getName()).log(Level.WARNING, "FileSplitter PART " + String.valueOf(i + 1) + " " + task[0]);
+
+                                        long position = chunk_size * i;
 
                                         if (Files.exists(fileName)) {
 
-                                            position = Files.size(fileName);
-
-                                        } else {
-
-                                            position = chunk_size * i;
+                                            position += Files.size(fileName);
 
                                         }
 
                                         try (RandomAccessFile toFile = new RandomAccessFile(fileName.toFile(), "rw"); FileChannel toChannel = toFile.getChannel()) {
+
+                                            if (toFile.length() > 0) {
+                                                toChannel.position(toFile.length());
+                                            }
+
                                             sourceChannel.position(position);
-                                            toChannel.transferFrom(sourceChannel, position - chunk_size * i, current_chunk_size - (position - chunk_size * i));
+
+                                            toChannel.transferFrom(sourceChannel, toFile.length(), current_chunk_size - toFile.length());
                                         }
+                                    } else {
+                                        Logger.getLogger(Main.class.getName()).log(Level.WARNING, "FileSplitter PART " + String.valueOf(i + 1) + " EXISTS (SKIPPING)" + task[0]);
                                     }
 
                                 }
 
                             } else {
+
+                                Logger.getLogger(Main.class.getName()).log(Level.WARNING, "FileSplitter splitting file" + task[0]);
 
                                 for (int i = 0; i < tot_chunks; i++) {
 
@@ -347,22 +355,28 @@ public class Main extends javax.swing.JFrame {
 
                                         if (!(Files.exists(fileName) && Files.size(fileName) == current_chunk_size)) {
 
-                                            long position;
+                                            Logger.getLogger(Main.class.getName()).log(Level.WARNING, "FileSplitter PART " + String.valueOf(i + 1) + " " + task[0]);
+
+                                            long position = chunk_size * i;
 
                                             if (Files.exists(fileName)) {
 
-                                                position = Files.size(fileName);
-
-                                            } else {
-
-                                                position = chunk_size * i;
+                                                position += Files.size(fileName);
 
                                             }
 
                                             try (RandomAccessFile toFile = new RandomAccessFile(fileName.toFile(), "rw"); FileChannel toChannel = toFile.getChannel()) {
+
+                                                if (toFile.length() > 0) {
+                                                    toChannel.position(toFile.length());
+                                                }
+
                                                 sourceChannel.position(position);
-                                                toChannel.transferFrom(sourceChannel, position - chunk_size * i, current_chunk_size - (position - chunk_size * i));
+
+                                                toChannel.transferFrom(sourceChannel, toFile.length(), current_chunk_size - toFile.length());
                                             }
+                                        } else {
+                                            Logger.getLogger(Main.class.getName()).log(Level.WARNING, "FileSplitter PART " + String.valueOf(i + 1) + " EXISTS (SKIPPING)" + task[0]);
                                         }
 
                                     }
