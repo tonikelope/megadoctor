@@ -65,6 +65,10 @@ public final class Transference extends javax.swing.JPanel {
     private volatile boolean _split_finished;
     private volatile boolean _retry;
 
+    public Long getThread_id() {
+        return _thread_id;
+    }
+
     public boolean isRetry() {
         return _retry;
     }
@@ -540,52 +544,50 @@ public final class Transference extends javax.swing.JPanel {
 
     public void retry() {
 
-        Helpers.threadRun(() -> {
-            synchronized (TRANSFERENCES_LOCK) {
+        synchronized (TRANSFERENCES_LOCK) {
 
-                _thread_id = null;
+            _thread_id = null;
 
-                _tag = -1;
+            _tag = -1;
 
-                _prog = 0;
+            _prog = 0;
 
-                _prog_init = 0;
+            _prog_init = 0;
 
-                _starting = false;
+            _starting = false;
 
-                _splitting = false;
+            _splitting = false;
 
-                _split_finished = false;
+            _split_finished = false;
 
-                _finishing = false;
+            _finishing = false;
 
-                _running = false;
+            _running = false;
 
-                _finished = false;
+            _finished = false;
 
-                _canceled = false;
+            _canceled = false;
 
-                _error = false;
+            _error = false;
 
-                _error_msg = "";
+            _error_msg = "";
 
-                _retry = true;
+            _retry = true;
 
-                Helpers.GUIRunAndWait(() -> {
-                    Helpers.JTextFieldRegularPopupMenu.addTransferencePopupMenuTo(this);
-                    status_icon.setVisible(false);
-                    status_icon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/ok.png")));
-                    progress.setValue(progress.getMinimum());
-                    progress.setIndeterminate(true);
-                    folder_stats_scroll.setVisible(false);
-                    action.setText("RETRY (QUEUED)");
-                    Main.MAIN_WINDOW.getTransferences().revalidate();
-                    Main.MAIN_WINDOW.getTransferences().repaint();
-                });
+            Helpers.GUIRunAndWait(() -> {
+                Helpers.JTextFieldRegularPopupMenu.addTransferencePopupMenuTo(this);
+                status_icon.setVisible(false);
+                status_icon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/ok.png")));
+                progress.setValue(progress.getMinimum());
+                progress.setIndeterminate(true);
+                folder_stats_scroll.setVisible(false);
+                action.setText("RETRY (QUEUED)");
+                Main.MAIN_WINDOW.getTransferences().revalidate();
+                Main.MAIN_WINDOW.getTransferences().repaint();
+            });
 
-                TRANSFERENCES_LOCK.notifyAll();
-            }
-        });
+            TRANSFERENCES_LOCK.notifyAll();
+        }
 
     }
 

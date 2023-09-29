@@ -62,7 +62,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.62";
+    public final static String VERSION = "2.63";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -440,7 +440,7 @@ public class Main extends javax.swing.JFrame {
 
                                         Transference t = TRANSFERENCES_MAP.get(tr);
 
-                                        if (!t.isFinished() && !t.isFinishing() && !t.isCanceled()) {
+                                        if (t.getThread_id() == null && !t.isFinished() && !t.isFinishing() && !t.isCanceled()) {
 
                                             if (t.getSplit_file() != null) {
 
@@ -1724,6 +1724,8 @@ public class Main extends javax.swing.JFrame {
             }
 
             if (login(email)) {
+
+                Helpers.runProcess(new String[]{"mega-reload"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
                 String stats = getAccountStatistics(email);
 

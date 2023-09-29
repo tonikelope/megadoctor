@@ -1934,8 +1934,9 @@ public class Helpers {
             Action retryTransferenceLinkAction = new AbstractAction("RETRY TRANSFERENCE") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
-
-                    transference.retry();
+                    Helpers.threadRun(() -> {
+                        transference.retry();
+                    });
 
                 }
             };
