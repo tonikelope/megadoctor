@@ -720,7 +720,7 @@ public class Main extends javax.swing.JFrame {
             clear_log_button.setEnabled(enable);
             check_only_new_checkbox.setEnabled(enable);
             getVamos_button().setEnabled(enable || isRunning_global_check());
-            getUpload_button().setEnabled(enable && !MEGA_ACCOUNTS.isEmpty() && !isPausing_transference() && !isProvisioning_upload());
+            getUpload_button().setEnabled(enable && !isPausing_transference() && !isProvisioning_upload());
             getSave_button().setEnabled(enable);
         });
     }
@@ -2832,7 +2832,9 @@ public class Main extends javax.swing.JFrame {
     private void upload_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_upload_buttonActionPerformed
         // TODO add your handling code here:
 
-        if (!Main.MEGA_ACCOUNTS.isEmpty() && _firstAccountsTextareaClick) {
+        if (Main.MEGA_ACCOUNTS.isEmpty()) {
+            Helpers.mostrarMensajeError(Main.MAIN_WINDOW, "YOU MUST ADD AND CHECK SOME MEGA ACCOUNT BEFORE UPLOAD");
+        } else if (_firstAccountsTextareaClick) {
 
             _provisioning_upload = true;
 
