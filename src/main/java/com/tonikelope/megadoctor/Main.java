@@ -62,7 +62,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.63";
+    public final static String VERSION = "2.64";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -2151,12 +2151,17 @@ public class Main extends javax.swing.JFrame {
     private void initComponents() {
 
         logo_label = new javax.swing.JLabel();
-        cuentas_scrollpanel = new javax.swing.JScrollPane();
-        cuentas_textarea = new javax.swing.JTextArea();
         vamos_button = new javax.swing.JButton();
         status_label = new javax.swing.JLabel();
         progressbar = new javax.swing.JProgressBar();
         save_button = new javax.swing.JButton();
+        upload_button = new javax.swing.JButton();
+        clear_log_button = new javax.swing.JButton();
+        check_only_new_checkbox = new javax.swing.JCheckBox();
+        show_accounts = new javax.swing.JLabel();
+        mainSplitPanel = new javax.swing.JSplitPane();
+        cuentas_scrollpanel = new javax.swing.JScrollPane();
+        cuentas_textarea = new javax.swing.JTextArea();
         tabbed_panel = new javax.swing.JTabbedPane();
         jScrollPane1 = new javax.swing.JScrollPane();
         output_textarea = new javax.swing.JTextArea();
@@ -2168,10 +2173,6 @@ public class Main extends javax.swing.JFrame {
         pause_button = new javax.swing.JButton();
         copy_all_button = new javax.swing.JButton();
         transferences_panel = new javax.swing.JPanel();
-        upload_button = new javax.swing.JButton();
-        clear_log_button = new javax.swing.JButton();
-        check_only_new_checkbox = new javax.swing.JCheckBox();
-        show_accounts = new javax.swing.JLabel();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu2 = new javax.swing.JMenu();
         jMenuItem2 = new javax.swing.JMenuItem();
@@ -2196,23 +2197,6 @@ public class Main extends javax.swing.JFrame {
         logo_label.setBackground(new java.awt.Color(255, 255, 255));
         logo_label.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/megadoctor_frame.png"))); // NOI18N
         logo_label.setDoubleBuffered(true);
-
-        cuentas_textarea.setColumns(20);
-        cuentas_textarea.setFont(new java.awt.Font("Monospaced", 0, 16)); // NOI18N
-        cuentas_textarea.setForeground(new java.awt.Color(204, 204, 204));
-        cuentas_textarea.setRows(5);
-        cuentas_textarea.setText("xxxxxxxxxxxxxxxxxxxx1@lalalalala.com#password\nxxxxxxxxxxxxxxxxxxxx2@lalalalala.com#password\nxxxxxxxxxxxxxxxxxxxx3@lalalalala.com#password\nxxxxxxxxxxxxxxxxxxxx4@lalalalala.com#password");
-        cuentas_textarea.addFocusListener(new java.awt.event.FocusAdapter() {
-            public void focusGained(java.awt.event.FocusEvent evt) {
-                cuentas_textareaFocusGained(evt);
-            }
-        });
-        cuentas_textarea.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseReleased(java.awt.event.MouseEvent evt) {
-                cuentas_textareaMouseReleased(evt);
-            }
-        });
-        cuentas_scrollpanel.setViewportView(cuentas_textarea);
 
         vamos_button.setBackground(new java.awt.Color(0, 153, 0));
         vamos_button.setFont(new java.awt.Font("Noto Sans", 1, 48)); // NOI18N
@@ -2242,7 +2226,81 @@ public class Main extends javax.swing.JFrame {
             }
         });
 
+        upload_button.setBackground(new java.awt.Color(0, 0, 0));
+        upload_button.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
+        upload_button.setForeground(new java.awt.Color(255, 255, 255));
+        upload_button.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/new_upload.png"))); // NOI18N
+        upload_button.setText("NEW UPLOAD");
+        upload_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        upload_button.setDoubleBuffered(true);
+        upload_button.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                upload_buttonActionPerformed(evt);
+            }
+        });
+
+        clear_log_button.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
+        clear_log_button.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/trash.png"))); // NOI18N
+        clear_log_button.setText("CLEAR LOG");
+        clear_log_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        clear_log_button.setDoubleBuffered(true);
+        clear_log_button.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                clear_log_buttonActionPerformed(evt);
+            }
+        });
+
+        check_only_new_checkbox.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
+        check_only_new_checkbox.setSelected(true);
+        check_only_new_checkbox.setText("Check only new accounts");
+        check_only_new_checkbox.setToolTipText("Check only new accounts");
+        check_only_new_checkbox.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        check_only_new_checkbox.setDoubleBuffered(true);
+        check_only_new_checkbox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                check_only_new_checkboxActionPerformed(evt);
+            }
+        });
+
+        show_accounts.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/vertical_less.png"))); // NOI18N
+        show_accounts.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        show_accounts.setDoubleBuffered(true);
+        show_accounts.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                show_accountsMouseClicked(evt);
+            }
+        });
+
+        mainSplitPanel.setDividerSize(4);
+        mainSplitPanel.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
+        mainSplitPanel.setResizeWeight(0.2);
+        mainSplitPanel.setToolTipText("");
+        mainSplitPanel.setDoubleBuffered(true);
+
+        cuentas_scrollpanel.setDoubleBuffered(true);
+
+        cuentas_textarea.setColumns(20);
+        cuentas_textarea.setFont(new java.awt.Font("Monospaced", 0, 16)); // NOI18N
+        cuentas_textarea.setForeground(new java.awt.Color(204, 204, 204));
+        cuentas_textarea.setRows(5);
+        cuentas_textarea.setText("xxxxxxxxxxxxxxxxxxxx1@lalalalala.com#password\nxxxxxxxxxxxxxxxxxxxx2@lalalalala.com#password\nxxxxxxxxxxxxxxxxxxxx3@lalalalala.com#password\nxxxxxxxxxxxxxxxxxxxx4@lalalalala.com#password");
+        cuentas_textarea.setDoubleBuffered(true);
+        cuentas_textarea.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                cuentas_textareaFocusGained(evt);
+            }
+        });
+        cuentas_textarea.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseReleased(java.awt.event.MouseEvent evt) {
+                cuentas_textareaMouseReleased(evt);
+            }
+        });
+        cuentas_scrollpanel.setViewportView(cuentas_textarea);
+
+        mainSplitPanel.setLeftComponent(cuentas_scrollpanel);
+
         tabbed_panel.setToolTipText("Double click to show/hide accounts textbox");
+        tabbed_panel.setDoubleBuffered(true);
         tabbed_panel.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
         tabbed_panel.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -2250,12 +2308,15 @@ public class Main extends javax.swing.JFrame {
             }
         });
 
+        jScrollPane1.setDoubleBuffered(true);
+
         output_textarea.setEditable(false);
         output_textarea.setBackground(new java.awt.Color(102, 102, 102));
         output_textarea.setColumns(20);
         output_textarea.setFont(new java.awt.Font("Monospaced", 0, 16)); // NOI18N
         output_textarea.setForeground(new java.awt.Color(255, 255, 255));
         output_textarea.setRows(5);
+        output_textarea.setDoubleBuffered(true);
         jScrollPane1.setViewportView(output_textarea);
 
         tabbed_panel.addTab("Log", new javax.swing.ImageIcon(getClass().getResource("/images/log.png")), jScrollPane1); // NOI18N
@@ -2358,50 +2419,7 @@ public class Main extends javax.swing.JFrame {
 
         tabbed_panel.addTab("Transferences", new javax.swing.ImageIcon(getClass().getResource("/images/transfers.png")), transf_scroll); // NOI18N
 
-        upload_button.setBackground(new java.awt.Color(0, 0, 0));
-        upload_button.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
-        upload_button.setForeground(new java.awt.Color(255, 255, 255));
-        upload_button.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/new_upload.png"))); // NOI18N
-        upload_button.setText("NEW UPLOAD");
-        upload_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-        upload_button.setDoubleBuffered(true);
-        upload_button.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                upload_buttonActionPerformed(evt);
-            }
-        });
-
-        clear_log_button.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
-        clear_log_button.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/trash.png"))); // NOI18N
-        clear_log_button.setText("CLEAR LOG");
-        clear_log_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-        clear_log_button.setDoubleBuffered(true);
-        clear_log_button.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                clear_log_buttonActionPerformed(evt);
-            }
-        });
-
-        check_only_new_checkbox.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
-        check_only_new_checkbox.setSelected(true);
-        check_only_new_checkbox.setText("Check only new accounts");
-        check_only_new_checkbox.setToolTipText("Check only new accounts");
-        check_only_new_checkbox.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-        check_only_new_checkbox.setDoubleBuffered(true);
-        check_only_new_checkbox.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                check_only_new_checkboxActionPerformed(evt);
-            }
-        });
-
-        show_accounts.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/vertical_less.png"))); // NOI18N
-        show_accounts.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-        show_accounts.setDoubleBuffered(true);
-        show_accounts.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                show_accountsMouseClicked(evt);
-            }
-        });
+        mainSplitPanel.setRightComponent(tabbed_panel);
 
         jMenuBar1.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
 
@@ -2469,12 +2487,10 @@ public class Main extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(cuentas_scrollpanel)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(show_accounts)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(progressbar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addComponent(tabbed_panel, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(logo_label, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -2488,7 +2504,8 @@ public class Main extends javax.swing.JFrame {
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(clear_log_button))
                             .addComponent(vamos_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(status_label, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                            .addComponent(status_label, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                    .addComponent(mainSplitPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -2514,9 +2531,7 @@ public class Main extends javax.swing.JFrame {
                     .addComponent(progressbar, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(show_accounts))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(cuentas_scrollpanel, javax.swing.GroupLayout.PREFERRED_SIZE, 208, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(tabbed_panel, javax.swing.GroupLayout.DEFAULT_SIZE, 379, Short.MAX_VALUE)
+                .addComponent(mainSplitPanel)
                 .addContainerGap())
         );
 
@@ -3192,10 +3207,7 @@ public class Main extends javax.swing.JFrame {
     private void tabbed_panelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tabbed_panelMouseClicked
         // TODO add your handling code here:
         if (evt.getClickCount() == 2 && evt.getButton() == MouseEvent.BUTTON1) {
-            cuentas_scrollpanel.setVisible(!cuentas_scrollpanel.isVisible());
-            show_accounts.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/vertical_" + (cuentas_scrollpanel.isVisible() ? "less" : "more") + ".png")));
-            revalidate();
-            repaint();
+            show_accountsMouseClicked(evt);
         }
     }//GEN-LAST:event_tabbed_panelMouseClicked
 
@@ -3271,10 +3283,12 @@ public class Main extends javax.swing.JFrame {
 
     private void show_accountsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_show_accountsMouseClicked
         // TODO add your handling code here:
+
         cuentas_scrollpanel.setVisible(!cuentas_scrollpanel.isVisible());
         Main.MEGADOCTOR_MISC.put("hide_accounts", !cuentas_scrollpanel.isVisible());
         saveMISC();
         show_accounts.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/vertical_" + (cuentas_scrollpanel.isVisible() ? "less" : "more") + ".png")));
+        mainSplitPanel.resetToPreferredSizes();
         revalidate();
         repaint();
     }//GEN-LAST:event_show_accountsMouseClicked
@@ -3442,6 +3456,7 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JLabel logo_label;
+    private javax.swing.JSplitPane mainSplitPanel;
     private javax.swing.JCheckBoxMenuItem menu_https;
     private javax.swing.JTextArea output_textarea;
     private javax.swing.JButton pause_button;
