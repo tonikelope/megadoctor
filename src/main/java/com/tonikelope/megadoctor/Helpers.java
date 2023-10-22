@@ -475,6 +475,35 @@ public class Helpers {
         return matcher.find() ? matcher.group(group) : null;
     }
 
+    private static long fallbackCalculateAnonMEGAFolderSize(String link) {
+
+        Helpers.runProcess(new String[]{"mega-login", link}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+        String[] ls = Helpers.runProcess(new String[]{"mega-ls", "-lr"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+        Main.MAIN_WINDOW.logout(false);
+
+        long total = 0L;
+
+        if (Integer.parseInt(ls[2]) == 0) {
+
+            Pattern pattern = Pattern.compile("^\\-[^ ]+ *?\\d+ *?(\\d+)");
+
+            for (String line : ls[1].split("\n")) {
+
+                Matcher matcher = pattern.matcher(line);
+
+                if (matcher.find()) {
+                    total += Long.parseLong(matcher.group(1));
+                }
+
+            }
+
+        }
+
+        return total;
+    }
+
     public static long getMEGALinkSize(String link) {
 
         if (link.contains("#F!") || link.contains("/folder/")) {
@@ -485,7 +514,7 @@ public class Helpers {
 
             String[] du = Helpers.runProcess(new String[]{"mega-du"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
-            Helpers.runProcess(new String[]{"mega-logout"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+            Main.MAIN_WINDOW.logout(false);
 
             if (Integer.parseInt(du[2]) == 0) {
 
@@ -493,7 +522,15 @@ public class Helpers {
 
                 String[] size = lines[lines.length - 1].split(":");
 
-                return Long.parseLong(size[1].trim());
+                long total;
+
+                try {
+                    total = Long.parseLong(size[1].trim());
+                } catch (Exception ex) {
+                    total = fallbackCalculateAnonMEGAFolderSize(link);
+                }
+
+                return total;
             }
         } else {
 
@@ -881,8 +918,7 @@ public class Helpers {
 
             StringBuilder sb = new StringBuilder();
 
-            try {
-                BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
 
                 String line;
 
@@ -894,7 +930,6 @@ public class Helpers {
                         Matcher matcher = stop_regex.matcher(Pattern.quote(line));
 
                         if (matcher.find()) {
-                            //Logger.getLogger(Helpers.class.getName()).log(Level.INFO, "RunProcess stop regex found -> #" + stop_regex.pattern() + "# " + String.join(" ", Helpers.buildCommand(command)) + " " + line);
                             break;
                         }
                     }
@@ -905,10 +940,13 @@ public class Helpers {
 
             process.waitFor();
 
+            process.destroy();
+
             PROCESSES_QUEUE.remove(process);
 
             return new String[]{String.valueOf(pid), new String(sb.toString().getBytes(), StandardCharsets.UTF_8), String.valueOf(process.exitValue())};
         } catch (Exception ex) {
+            Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         PROCESSES_QUEUE.remove(process);
