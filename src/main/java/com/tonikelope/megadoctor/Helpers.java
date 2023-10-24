@@ -118,6 +118,7 @@ public class Helpers {
             Process p = PROCESSES_QUEUE.poll();
 
             p.destroyForcibly();
+
         }
     }
 
@@ -947,6 +948,10 @@ public class Helpers {
             return new String[]{String.valueOf(pid), new String(sb.toString().getBytes(), StandardCharsets.UTF_8), String.valueOf(process.exitValue())};
         } catch (Exception ex) {
             Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        if (process != null) {
+            process.destroyForcibly();
         }
 
         PROCESSES_QUEUE.remove(process);

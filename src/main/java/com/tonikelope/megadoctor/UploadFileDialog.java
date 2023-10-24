@@ -690,7 +690,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
         // TODO add your handling code here:
-        if (!progress.isVisible()) {
+        if (!progress.isVisible() && !local_folder_progress.isVisible()) {
             _terminate_walk_tree.set(true);
             dispose();
         } else if (!_closing) {
@@ -930,31 +930,54 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
         // TODO add your handling code here:
         boolean vamos_button_enabled = vamos_button.isEnabled();
 
+        mega_button.setEnabled(false);
+
         UploadMegaLinkDialog dialog = new UploadMegaLinkDialog(null, true);
+
         Helpers.setCenterOfParent(this, dialog);
+
         dialog.setVisible(true);
 
         if (dialog.getLink() != null) {
             auto_select_account.setSelected(false);
+
             auto_select_accountActionPerformed(evt);
+
             _link = dialog.getLink();
+
             local_path.setText(dialog.getLink());
 
-            _local_size = Helpers.getMEGALinkSize(_link);
+            local_folder_progress.setVisible(true);
 
-            if (_local_size > 0) {
-                local_size.setText(Helpers.formatBytes(_local_size));
-            } else {
-                local_size.setText("");
-                _local_size = 0;
-            }
+            setEnabled(false);
 
-            _lpath = dialog.getLink();
-            split_panel.setVisible(false);
-            vamos_button.setEnabled(true);
-            email_comboboxItemStateChanged(null);
-            Helpers.smartPack(this);
+            Helpers.threadRun(() -> {
+
+                _local_size = Helpers.getMEGALinkSize(_link);
+
+                Helpers.GUIRun(() -> {
+                    setEnabled(true);
+
+                    if (_local_size > 0) {
+                        local_size.setText(Helpers.formatBytes(_local_size));
+                    } else {
+                        local_size.setText("");
+                        _local_size = 0;
+                    }
+
+                    local_folder_progress.setVisible(false);
+                    _lpath = dialog.getLink();
+                    split_panel.setVisible(false);
+                    vamos_button.setEnabled(true);
+                    mega_button.setEnabled(true);
+                    email_comboboxItemStateChanged(null);
+                    Helpers.smartPack(this);
+                });
+
+            });
+
         } else {
+            mega_button.setEnabled(true);
             vamos_button.setEnabled(vamos_button_enabled);
         }
     }//GEN-LAST:event_mega_buttonActionPerformed
