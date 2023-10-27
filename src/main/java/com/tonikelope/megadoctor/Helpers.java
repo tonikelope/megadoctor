@@ -78,10 +78,14 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.sound.midi.InvalidMidiDataException;
+import javax.sound.midi.MidiEvent;
 import javax.sound.midi.MidiSystem;
 import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.Sequence;
 import javax.sound.midi.Sequencer;
+import javax.sound.midi.ShortMessage;
+import javax.sound.midi.Synthesizer;
+import javax.sound.midi.Track;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
@@ -696,23 +700,42 @@ public class Helpers {
         return df.format(currentDate);
     }
 
-    public static Sequencer midiLoopPlay(String midi) {
+    public static Sequencer midiLoopPlay(String midi, int volume) {
+
         try {
-            Sequencer sequencer = MidiSystem.getSequencer(); // Get the default Sequencer
+            Sequencer sequencer = MidiSystem.getSequencer();
+
             if (sequencer == null) {
-                System.err.println("Sequencer device not supported");
+                Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, "MIDI Sequencer device not supported");
                 return null;
             }
-            sequencer.open(); // Open device
-            // Create sequence, the File must contain MIDI file data.
+
+            Synthesizer synthesizer = MidiSystem.getSynthesizer();
+
             Sequence sequence = MidiSystem.getSequence(Helpers.class.getResource(midi));
-            sequencer.setSequence(sequence); // load it into sequencer
+
+            //VOLUME CHANGE THANKS TO -> https://stackoverflow.com/a/18999468
+            for (Track t : sequence.getTracks()) {
+
+                for (int k = 0; k < synthesizer.getChannels().length; k++) {
+                    t.add(new MidiEvent(new ShortMessage(ShortMessage.CONTROL_CHANGE, k, 7, volume), t.ticks()));
+                }
+            }
+
+            sequencer.open();
+
+            sequencer.setSequence(sequence);
+
             sequencer.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-            sequencer.start();  // start the playback
+
+            sequencer.start();
+
             return sequencer;
+
         } catch (MidiUnavailableException | InvalidMidiDataException | IOException ex) {
-            ex.printStackTrace();
+            Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
         }
+
         return null;
     }
 

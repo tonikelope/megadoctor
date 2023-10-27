@@ -167,7 +167,7 @@ public class About extends javax.swing.JDialog {
         Helpers.threadRun(() -> {
 
             if (_midi == null) {
-                _midi = Helpers.midiLoopPlay("/midis/a-team.mid");
+                _midi = Helpers.midiLoopPlay("/midis/a-team.mid", 70);
             } else {
                 _midi.start();
             }

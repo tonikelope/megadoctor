@@ -600,7 +600,7 @@ public final class Transference extends javax.swing.JPanel {
 
         _retry = false;
 
-        Logger.getLogger(Main.class.getName()).log(Level.INFO, "STARTING " + (_action == 0 ? "DOWNLOAD " : "UPLOAD ") + _lpath);
+        Logger.getLogger(Main.class.getName()).log(Level.INFO, "STARTING {0}{1}", new Object[]{_action == 0 ? "DOWNLOAD " : "UPLOAD ", _lpath});
 
         if (_split_file != null) {
             _splitting = true;
@@ -652,6 +652,7 @@ public final class Transference extends javax.swing.JPanel {
 
                         synchronized (_split_lock) {
                             try {
+                                Logger.getLogger(Main.class.getName()).log(Level.INFO, "FILE ALREADY SPLIT (WAITING QUEUED){0}", _lpath);
                                 _split_lock.wait(1000);
                             } catch (InterruptedException ex) {
                                 Logger.getLogger(Transference.class.getName()).log(Level.SEVERE, null, ex);
