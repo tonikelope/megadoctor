@@ -62,7 +62,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.67";
+    public final static String VERSION = "2.68";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -553,7 +553,6 @@ public class Main extends javax.swing.JFrame {
                     status_label.setForeground(Color.MAGENTA);
                 });
 
-                Helpers.runProcess(new String[]{"mega-reload"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
                 Helpers.runProcess(new String[]{"mega-confirm", "--security"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
             }
 
@@ -571,7 +570,6 @@ public class Main extends javax.swing.JFrame {
                         status_label.setForeground(Color.MAGENTA);
                     });
 
-                    Helpers.runProcess(new String[]{"mega-reload"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
                     Helpers.runProcess(new String[]{"mega-confirm", "--security"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
                 }
 
@@ -598,7 +596,6 @@ public class Main extends javax.swing.JFrame {
                     status_label.setForeground(Color.MAGENTA);
                 });
 
-                Helpers.runProcess(new String[]{"mega-reload"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
                 Helpers.runProcess(new String[]{"mega-confirm", "--security"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
             }
 
@@ -1724,8 +1721,6 @@ public class Main extends javax.swing.JFrame {
             }
 
             if (login(email)) {
-
-                Helpers.runProcess(new String[]{"mega-reload"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
                 String stats = getAccountStatistics(email);
 

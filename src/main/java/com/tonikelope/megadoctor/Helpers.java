@@ -432,7 +432,7 @@ public class Helpers {
             Helpers.GUIRun(() -> {
                 Main.MAIN_WINDOW.getStatus_label().setForeground(Color.MAGENTA);
             });
-            Helpers.runProcess(new String[]{"mega-reload"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
             Helpers.runProcess(new String[]{"mega-confirm", "--security"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
         }
         if (Integer.parseInt(whoami[2]) == 0) {
