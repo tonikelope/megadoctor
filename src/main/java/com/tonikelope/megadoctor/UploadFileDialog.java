@@ -198,12 +198,18 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
     private boolean checkFreeSpace() {
 
+        Helpers.GUIRun(() -> {
+            free_space.setForeground(null);
+            local_size.setForeground(null);
+        });
+
         if (_local_size > 0 && _free_space > 0) {
 
             if (auto_select_account.isSelected()) {
                 if (_local_size > 0) {
                     Helpers.GUIRun(() -> {
                         free_space.setForeground(new Color(0, 153, 0));
+                        local_size.setForeground(new Color(0, 153, 0));
                         vamos_button.setEnabled(true);
                     });
                     return true;
@@ -215,6 +221,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                     if (_local_size > _free_space) {
                         Helpers.GUIRun(() -> {
                             free_space.setForeground(Color.red);
+                            local_size.setForeground(Color.red);
                             vamos_button.setEnabled(false);
                         });
                         return false;
@@ -222,6 +229,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                 } else if (Long.parseLong(split_textbox.getText()) * 1024 * 1024 > _free_space || Long.parseLong(split_textbox.getText()) * 1024 * 1024 > _free_space) {
                     Helpers.GUIRun(() -> {
                         free_space.setForeground(Color.red);
+                        local_size.setForeground(Color.red);
                         vamos_button.setEnabled(false);
                     });
                     return false;
@@ -229,6 +237,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
                 } else {
                     Helpers.GUIRun(() -> {
                         free_space.setForeground(new Color(0, 153, 0));
+                        local_size.setForeground(new Color(0, 153, 0));
                         vamos_button.setEnabled(true);
                     });
                     return true;
@@ -237,22 +246,19 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
             } else if (_local_size > _free_space) {
                 Helpers.GUIRun(() -> {
                     free_space.setForeground(Color.red);
+                    local_size.setForeground(Color.red);
                     vamos_button.setEnabled(false);
                 });
                 return false;
             } else {
                 Helpers.GUIRun(() -> {
                     free_space.setForeground(new Color(0, 153, 0));
+                    local_size.setForeground(new Color(0, 153, 0));
                     vamos_button.setEnabled(true);
                 });
                 return true;
             }
         }
-
-        Helpers.GUIRun(() -> {
-            free_space.setForeground(Color.red);
-            vamos_button.setEnabled(false);
-        });
 
         return false;
     }
