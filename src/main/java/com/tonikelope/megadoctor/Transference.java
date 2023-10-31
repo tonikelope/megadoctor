@@ -64,6 +64,11 @@ public final class Transference extends javax.swing.JPanel {
     private volatile Long _thread_id = null;
     private volatile boolean _split_finished;
     private volatile boolean _retry;
+    private volatile String _remote_handle = null;
+
+    public String getRemote_handle() {
+        return _remote_handle;
+    }
 
     public Long getThread_id() {
         return _thread_id;
@@ -778,6 +783,11 @@ public final class Transference extends javax.swing.JPanel {
 
                                             c_error = (waitRemoteExists() && waitCompletedTAG() && waitUsedSpaceChange(used_space));
                                         }
+
+                                        if (!c_error) {
+
+                                            _remote_handle = isDirectory() ? getRemoteFolderHandle(_rpath) : getRemoteFileHandle(_rpath);
+                                        }
                                     }
 
                                     if (c_error) {
@@ -921,6 +931,18 @@ public final class Transference extends javax.swing.JPanel {
         }
 
         return -1;
+    }
+
+    private String getRemoteFileHandle(String rpath) {
+        String[] find = Helpers.runProcess(new String[]{"mega-find", "--print-only-handles", "--type=f", rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+        return (Integer.parseInt(find[2]) == 0 ? find[1].split("\n")[0] : null);
+    }
+
+    private String getRemoteFolderHandle(String rpath) {
+        String[] find = Helpers.runProcess(new String[]{"mega-find", "--print-only-handles", "--type=d", rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+        return (Integer.parseInt(find[2]) == 0 ? find[1].split("\n")[0] : null);
     }
 
     private boolean remoteFileExists(String rpath) {

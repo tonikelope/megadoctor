@@ -18,11 +18,6 @@ import java.awt.SystemTray;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.util.ArrayList;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -36,6 +31,7 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -43,9 +39,13 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -62,7 +62,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.69";
+    public final static String VERSION = "2.70";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -889,7 +889,8 @@ public class Main extends javax.swing.JFrame {
 
                                 if (t.isFinished() && t.getPublic_link() != null) {
                                     String filename = new File(t.getLpath()).getName();
-                                    links.add(filename + "   [" + t.getEmail() + "]   " + t.getPublic_link());
+                                    links.add(filename + (t.getRemote_handle() != null ? " <" + t.getRemote_handle() + ">" : "") + "   [" + t.getEmail() + "]   " + t.getPublic_link());
+
                                 }
                             }
 
@@ -3121,12 +3122,11 @@ public class Main extends javax.swing.JFrame {
 
                             Transference t = TRANSFERENCES_MAP.get(c);
 
-                            if (t.isFinished() && t.getPublic_link() != null) {
-                                String filename = new File(t.getLpath()).getName();
-                                links.add(filename + "   [" + t.getEmail() + "]   " + t.getPublic_link());
-                            }
-
                             if (t.isFinished() && !t.isCanceled() && !t.isError()) {
+                                if (t.getPublic_link() != null) {
+                                    String filename = new File(t.getLpath()).getName();
+                                    links.add(filename + (t.getRemote_handle() != null ? " <" + t.getRemote_handle() + ">" : "") + "   [" + t.getEmail() + "]   " + t.getPublic_link());
+                                }
                                 TRANSFERENCES_MAP.remove(c);
                                 transferences.remove(c);
                             }
