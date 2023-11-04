@@ -783,11 +783,6 @@ public final class Transference extends javax.swing.JPanel {
 
                                             c_error = (waitRemoteExists() && waitCompletedTAG() && waitUsedSpaceChange(used_space));
                                         }
-
-                                        if (!c_error) {
-
-                                            _remote_handle = isDirectory() ? getRemoteFolderHandle(_rpath) : getRemoteFileHandle(_rpath);
-                                        }
                                     }
 
                                     if (c_error) {
@@ -808,6 +803,8 @@ public final class Transference extends javax.swing.JPanel {
                                             _error = true;
                                             _error_msg = _error_msg + "#PUBLIC LINK GENERATION FAILED";
                                         }
+
+                                        readUploadRemoteHandle();
                                     }
 
                                     long speed = calculateSpeed(_size, _prog_init < 0 ? 0 : _prog_init, 10000, start_timestamp, finish_timestamp);
@@ -933,10 +930,35 @@ public final class Transference extends javax.swing.JPanel {
         return -1;
     }
 
-    private String getRemoteFileHandle(String rpath) {
-        String[] find = Helpers.runProcess(new String[]{"mega-find", "--print-only-handles", "--type=f", rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+    private void readUploadRemoteHandle() {
 
-        return (Integer.parseInt(find[2]) == 0 ? find[1].split("\n")[0] : null);
+        if (_public_link != null) {
+
+            String[] ls = Helpers.runProcess(new String[]{"mega-ls", "-aa", "--show-handles", _rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+            if (Integer.parseInt(ls[2]) == 0) {
+
+                for (String line : ls[1].split("\n")) {
+
+                    String match = Helpers.findFirstRegex("(H:[^>]+).*?" + Pattern.quote(_public_link), line, 1);
+
+                    if (match != null) {
+
+                        _remote_handle = match;
+
+                        break;
+                    }
+                }
+            }
+
+        } else {
+
+            //Fallback (puede haber colisión de remote path aunque es raro)
+            String[] find = Helpers.runProcess(new String[]{"mega-find", "--print-only-handles", isDirectory() ? "--type=d" : "--type=f", _rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+
+            _remote_handle = (Integer.parseInt(find[2]) == 0 ? find[1].split("\n")[0] : null);
+        }
+
     }
 
     private String getRemoteFolderHandle(String rpath) {
