@@ -311,9 +311,11 @@ public class Helpers {
 
         Collections.sort(emails);
 
+        final String space_required = Helpers.formatBytes(required);
+
         for (String email : emails) {
             Helpers.GUIRunAndWait(() -> {
-                Main.MAIN_WINDOW.getStatus_label().setText("AUTO-ALLOCATION: [" + Helpers.formatBytes(required) + "] " + filename + " -> " + email);
+                Main.MAIN_WINDOW.getStatus_label().setText("AUTO-ALLOCATION: [" + space_required + "] " + filename + " -> " + email);
             });
             Long r = reserved.get(email);
             Long s = Main.FREE_SPACE_CACHE.get(email);

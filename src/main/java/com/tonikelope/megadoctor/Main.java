@@ -62,7 +62,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.71";
+    public final static String VERSION = "2.72";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -889,7 +889,7 @@ public class Main extends javax.swing.JFrame {
 
                                 if (t.isFinished() && t.getPublic_link() != null) {
                                     String filename = new File(t.getLpath()).getName();
-                                    links.add(filename + (t.getRemote_handle() != null ? " <" + t.getRemote_handle() + ">" : "") + "   [" + t.getEmail() + "]   " + t.getPublic_link());
+                                    links.add(filename + " (" + Helpers.formatBytes(t.getFileSize()) + ") " + (t.getRemote_handle() != null ? " <" + t.getRemote_handle() + ">" : "") + "   [" + t.getEmail() + "]   " + t.getPublic_link());
 
                                 }
                             }
@@ -2246,7 +2246,7 @@ public class Main extends javax.swing.JFrame {
             }
         });
 
-        check_only_new_checkbox.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
+        check_only_new_checkbox.setFont(new java.awt.Font("Noto Sans", 1, 16)); // NOI18N
         check_only_new_checkbox.setSelected(true);
         check_only_new_checkbox.setText("Check only new accounts");
         check_only_new_checkbox.setToolTipText("Check only new accounts");
@@ -2293,7 +2293,7 @@ public class Main extends javax.swing.JFrame {
         });
         cuentas_scrollpanel.setViewportView(cuentas_textarea);
 
-        mainSplitPanel.setLeftComponent(cuentas_scrollpanel);
+        mainSplitPanel.setTopComponent(cuentas_scrollpanel);
 
         tabbed_panel.setToolTipText("Double click to show/hide accounts textbox");
         tabbed_panel.setDoubleBuffered(true);
@@ -2415,7 +2415,7 @@ public class Main extends javax.swing.JFrame {
 
         tabbed_panel.addTab("Transferences", new javax.swing.ImageIcon(getClass().getResource("/images/transfers.png")), transf_scroll); // NOI18N
 
-        mainSplitPanel.setRightComponent(tabbed_panel);
+        mainSplitPanel.setBottomComponent(tabbed_panel);
 
         jMenuBar1.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
 
@@ -2488,9 +2488,7 @@ public class Main extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(progressbar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(logo_label, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(check_only_new_checkbox, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addComponent(logo_label)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
@@ -2499,9 +2497,12 @@ public class Main extends javax.swing.JFrame {
                                 .addComponent(save_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(clear_log_button))
-                            .addComponent(vamos_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(status_label, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                    .addComponent(mainSplitPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
+                            .addComponent(vamos_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                    .addComponent(mainSplitPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(check_only_new_checkbox)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(status_label, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -2883,8 +2884,9 @@ public class Main extends javax.swing.JFrame {
                         if (Helpers.checkMEGALInk(dialog.getLocal_path())) {
 
                             Helpers.threadRun(() -> {
+                                String filename = new File(dialog.getLocal_path()).getName();
 
-                                String email = dialog.getEmail() != null ? dialog.getEmail() : Helpers.findFirstAccountWithSpace(dialog.getLocal_size(), dialog.getLocal_path());
+                                String email = dialog.getEmail() != null ? dialog.getEmail() : Helpers.findFirstAccountWithSpace(dialog.getLocal_size(), filename);
 
                                 importLink(email, dialog.getLocal_path(), dialog.getRemote_path());
 
@@ -3125,7 +3127,7 @@ public class Main extends javax.swing.JFrame {
                             if (t.isFinished() && !t.isCanceled() && !t.isError()) {
                                 if (t.getPublic_link() != null) {
                                     String filename = new File(t.getLpath()).getName();
-                                    links.add(filename + (t.getRemote_handle() != null ? " <" + t.getRemote_handle() + ">" : "") + "   [" + t.getEmail() + "]   " + t.getPublic_link());
+                                    links.add(filename + " (" + Helpers.formatBytes(t.getFileSize()) + ") " + (t.getRemote_handle() != null ? " <" + t.getRemote_handle() + ">" : "") + "   [" + t.getEmail() + "]   " + t.getPublic_link());
                                 }
                                 TRANSFERENCES_MAP.remove(c);
                                 transferences.remove(c);
@@ -3304,7 +3306,7 @@ public class Main extends javax.swing.JFrame {
 
                         if (t.isFinished() && t.getPublic_link() != null) {
                             String filename = new File(t.getLpath()).getName();
-                            links.add(filename + "   [" + t.getEmail() + "]   " + t.getPublic_link());
+                            links.add(filename + " (" + Helpers.formatBytes(t.getFileSize()) + ")" + "   [" + t.getEmail() + "]   " + t.getPublic_link());
                         }
                     }
 

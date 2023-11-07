@@ -133,10 +133,7 @@
                       <Component id="progressbar" max="32767" attributes="0"/>
                   </Group>
                   <Group type="102" alignment="0" attributes="0">
-                      <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                          <Component id="logo_label" max="32767" attributes="0"/>
-                          <Component id="check_only_new_checkbox" max="32767" attributes="0"/>
-                      </Group>
+                      <Component id="logo_label" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Group type="102" attributes="0">
@@ -147,10 +144,14 @@
                               <Component id="clear_log_button" min="-2" max="-2" attributes="0"/>
                           </Group>
                           <Component id="vamos_button" max="32767" attributes="0"/>
-                          <Component id="status_label" max="32767" attributes="0"/>
                       </Group>
                   </Group>
                   <Component id="mainSplitPanel" alignment="0" pref="0" max="32767" attributes="0"/>
+                  <Group type="102" attributes="0">
+                      <Component id="check_only_new_checkbox" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="status_label" max="32767" attributes="0"/>
+                  </Group>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
           </Group>
@@ -302,7 +303,7 @@
     <Component class="javax.swing.JCheckBox" name="check_only_new_checkbox">
       <Properties>
         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-          <Font name="Noto Sans" size="18" style="1"/>
+          <Font name="Noto Sans" size="16" style="1"/>
         </Property>
         <Property name="selected" type="boolean" value="true"/>
         <Property name="text" type="java.lang.String" value="Check only new accounts"/>

@@ -47,7 +47,7 @@ public class About extends javax.swing.JDialog {
 
             if (!_exit) {
                 Helpers.GUIRun(() -> {
-                    cmd_version.setText("Powered by the (super cool) " + Main.MEGA_CMD_VERSION);
+                    cmd_version.setText("Powered by (super cool) " + Main.MEGA_CMD_VERSION);
                     pack();
                 });
             }
@@ -68,6 +68,7 @@ public class About extends javax.swing.JDialog {
         jLabel2 = new javax.swing.JLabel();
         cmd_version = new javax.swing.JLabel();
         eso = new javax.swing.JLabel();
+        java_version = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle("About MegaDoctor");
@@ -119,6 +120,11 @@ public class About extends javax.swing.JDialog {
         eso.setText(" Jn 8:32");
         eso.setDoubleBuffered(true);
 
+        java_version.setFont(new java.awt.Font("Noto Sans", 0, 15)); // NOI18N
+        java_version.setText(System.getProperty("java.vm.name")+" "+System.getProperty("java.version")
+        );
+        java_version.setDoubleBuffered(true);
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -130,8 +136,10 @@ public class About extends javax.swing.JDialog {
                     .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                         .addComponent(eso)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(cmd_version)))
+                        .addGap(18, 18, Short.MAX_VALUE)
+                        .addComponent(cmd_version)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(java_version)))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
@@ -144,7 +152,8 @@ public class About extends javax.swing.JDialog {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(cmd_version)
-                    .addComponent(eso))
+                    .addComponent(eso)
+                    .addComponent(java_version))
                 .addContainerGap())
         );
 
@@ -204,5 +213,6 @@ public class About extends javax.swing.JDialog {
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JLabel java_version;
     // End of variables declaration//GEN-END:variables
 }
