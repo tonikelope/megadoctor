@@ -12,6 +12,7 @@ package com.tonikelope.megadoctor;
 
 import static com.tonikelope.megadoctor.Main.MEGA_CMD_WINDOWS_PATH;
 import static com.tonikelope.megadoctor.Main.TRANSFERENCES_LOCK;
+import static com.tonikelope.megadoctor.Main.TRANSFERENCES_MAP;
 import java.awt.Color;
 import java.awt.Component;
 import java.io.File;
@@ -288,13 +289,28 @@ public final class Transference extends javax.swing.JPanel {
             synchronized (TRANSFERENCES_LOCK) {
 
                 Helpers.GUIRunAndWait(() -> {
+                    String cleared_file = null;
+
                     for (Component c : Main.TRANSFERENCES_MAP.keySet()) {
 
-                        if (Main.TRANSFERENCES_MAP.get(c) == this) {
+                        Transference t = TRANSFERENCES_MAP.get(c);
+
+                        if (t == this) {
+
+                            String filename = new File(t.getLpath()).getName();
+                            cleared_file = filename + (t.getRemote_handle() != null ? " <" + t.getRemote_handle() + ">" : "") + " (" + Helpers.formatBytes(t.getFileSize()) + ")" + "   [" + t.getEmail() + "]   " + (t.getPublic_link() != null ? t.getPublic_link() : "");
+
                             Main.TRANSFERENCES_MAP.remove(c);
+
                             Main.MAIN_WINDOW.getTransferences().remove(c);
+
                             break;
                         }
+                    }
+
+                    if (cleared_file != null) {
+
+                        Main.MAIN_WINDOW.getOutput_textarea().append("\n" + cleared_file + "\n");
                     }
 
                     Main.MAIN_WINDOW.getTransferences().revalidate();
