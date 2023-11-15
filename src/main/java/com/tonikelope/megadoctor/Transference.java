@@ -1,10 +1,10 @@
 /*
- __  __ _____ ____    _    ____   ___   ____ _____ ___  ____  
-|  \/  | ____/ ___|  / \  |  _ \ / _ \ / ___|_   _/ _ \|  _ \ 
+ __  __ _____ ____    _    ____   ___   ____ _____ ___  ____
+|  \/  | ____/ ___|  / \  |  _ \ / _ \ / ___|_   _/ _ \|  _ \
 | |\/| |  _|| |  _  / _ \ | | | | | | | |     | || | | | |_) |
-| |  | | |__| |_| |/ ___ \| |_| | |_| | |___  | || |_| |  _ < 
+| |  | | |__| |_| |/ ___ \| |_| | |_| | |___  | || |_| |  _ <
 |_|  |_|_____\____/_/   \_\____/ \___/ \____| |_| \___/|_| \_\
-                                                              
+
 by tonikelope
 
  */
@@ -297,14 +297,20 @@ public final class Transference extends javax.swing.JPanel {
 
                         if (t == this) {
 
-                            String filename = new File(t.getLpath()).getName();
-                            cleared_file = filename + (t.getRemote_handle() != null ? " <" + t.getRemote_handle() + ">" : "") + " (" + Helpers.formatBytes(t.getFileSize()) + ")" + "   [" + t.getEmail() + "]   " + (t.getPublic_link() != null ? t.getPublic_link() : "");
+                            if (t.isFinished() && !t.isCanceled() && !t.isError()) {
 
-                            Main.TRANSFERENCES_MAP.remove(c);
+                                String filename = new File(t.getLpath()).getName();
 
-                            Main.MAIN_WINDOW.getTransferences().remove(c);
+                                cleared_file = filename + (t.getRemote_handle() != null ? " <" + t.getRemote_handle() + ">" : "") + " (" + Helpers.formatBytes(t.getFileSize()) + ")" + "   [" + t.getEmail() + "]   " + (t.getPublic_link() != null ? t.getPublic_link() : "");
+
+                                Main.TRANSFERENCES_MAP.remove(c);
+
+                                Main.MAIN_WINDOW.getTransferences().remove(c);
+
+                            }
 
                             break;
+
                         }
                     }
 
