@@ -284,50 +284,53 @@ public final class Transference extends javax.swing.JPanel {
     }
 
     public void clearTransference() {
-        Helpers.threadRun(() -> {
+        if (isFinished()) {
+            Helpers.threadRun(() -> {
 
-            synchronized (TRANSFERENCES_LOCK) {
+                synchronized (TRANSFERENCES_LOCK) {
 
-                Helpers.GUIRunAndWait(() -> {
-                    String cleared_file = null;
+                    Helpers.GUIRunAndWait(() -> {
+                        String cleared_file = null;
 
-                    for (Component c : Main.TRANSFERENCES_MAP.keySet()) {
+                        for (Component c : Main.TRANSFERENCES_MAP.keySet()) {
 
-                        Transference t = TRANSFERENCES_MAP.get(c);
+                            Transference t = TRANSFERENCES_MAP.get(c);
 
-                        if (t == this) {
-
-                            if (t.isFinished() && !t.isCanceled() && !t.isError()) {
-
+                            if (t == this) {
                                 String filename = new File(t.getLpath()).getName();
+                                if (!t.isCanceled() && !t.isError()) {
 
-                                cleared_file = filename + (t.getRemote_handle() != null ? " <" + t.getRemote_handle() + ">" : "") + " (" + Helpers.formatBytes(t.getFileSize()) + ")" + "   [" + t.getEmail() + "]   " + (t.getPublic_link() != null ? t.getPublic_link() : "");
+                                    cleared_file = filename + (t.getRemote_handle() != null ? " <" + t.getRemote_handle() + ">" : "") + " (" + Helpers.formatBytes(t.getFileSize()) + ")" + "   [" + t.getEmail() + "]   " + (t.getPublic_link() != null ? t.getPublic_link() : "");
+
+                                } else {
+                                    cleared_file = "[ERROR/CANCELED] " + filename + " (" + Helpers.formatBytes(t.getFileSize()) + ")" + "   [" + t.getEmail() + "]   ";
+
+                                }
 
                                 Main.TRANSFERENCES_MAP.remove(c);
 
                                 Main.MAIN_WINDOW.getTransferences().remove(c);
 
+                                break;
+
                             }
-
-                            break;
-
                         }
-                    }
 
-                    if (cleared_file != null) {
+                        if (cleared_file != null) {
 
-                        Main.MAIN_WINDOW.getOutput_textarea().append("\n" + cleared_file + "\n");
-                    }
+                            Main.MAIN_WINDOW.getOutput_textarea().append("\n" + cleared_file + "\n");
+                        }
 
-                    Main.MAIN_WINDOW.getTransferences().revalidate();
-                    Main.MAIN_WINDOW.getTransferences().repaint();
+                        Main.MAIN_WINDOW.getTransferences().revalidate();
+                        Main.MAIN_WINDOW.getTransferences().repaint();
 
-                });
+                    });
 
-                TRANSFERENCES_LOCK.notifyAll();
+                    TRANSFERENCES_LOCK.notifyAll();
 
-            }
-        });
+                }
+            });
+        }
     }
 
     public void stopAndRetry() {
@@ -956,7 +959,7 @@ public final class Transference extends javax.swing.JPanel {
 
         if (_public_link != null) {
 
-            String[] ls = Helpers.runProcess(new String[]{"mega-ls", "-aa", "--show-handles", _rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+            String[] ls = Helpers.runProcess(new String[]{"mega-ls", "-aar", "--show-handles"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
             if (Integer.parseInt(ls[2]) == 0) {
 
@@ -972,8 +975,9 @@ public final class Transference extends javax.swing.JPanel {
                     }
                 }
             }
+        }
 
-        } else {
+        if (_remote_handle == null) {
 
             //Fallback (puede haber colisión de remote path aunque es raro)
             String[] find = Helpers.runProcess(new String[]{"mega-find", "--print-only-handles", isDirectory() ? "--type=d" : "--type=f", _rpath}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);

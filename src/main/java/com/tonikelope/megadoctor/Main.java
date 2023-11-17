@@ -62,7 +62,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.74";
+    public final static String VERSION = "2.75";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -887,9 +887,14 @@ public class Main extends javax.swing.JFrame {
 
                                 Transference t = TRANSFERENCES_MAP.get(c);
 
-                                if (t.isFinished() && !t.isCanceled() && !t.isError()) {
-                                    String filename = new File(t.getLpath()).getName();
+                                String filename = new File(t.getLpath()).getName();
+                                if (!t.isCanceled() && !t.isError()) {
+
                                     links.add(filename + (t.getRemote_handle() != null ? " <" + t.getRemote_handle() + ">" : "") + " (" + Helpers.formatBytes(t.getFileSize()) + ")" + "   [" + t.getEmail() + "]   " + (t.getPublic_link() != null ? t.getPublic_link() : ""));
+
+                                } else {
+
+                                    links.add("[ERROR/CANCELED] " + filename + " (" + Helpers.formatBytes(t.getFileSize()) + ")" + "   [" + t.getEmail() + "]   ");
 
                                 }
                             }
@@ -3124,14 +3129,19 @@ public class Main extends javax.swing.JFrame {
 
                             Transference t = TRANSFERENCES_MAP.get(c);
 
-                            if (t.isFinished() && !t.isCanceled() && !t.isError()) {
+                            String filename = new File(t.getLpath()).getName();
+                            if (!t.isCanceled() && !t.isError()) {
 
-                                String filename = new File(t.getLpath()).getName();
                                 links.add(filename + (t.getRemote_handle() != null ? " <" + t.getRemote_handle() + ">" : "") + " (" + Helpers.formatBytes(t.getFileSize()) + ")" + "   [" + t.getEmail() + "]   " + (t.getPublic_link() != null ? t.getPublic_link() : ""));
 
-                                TRANSFERENCES_MAP.remove(c);
-                                transferences.remove(c);
+                            } else {
+                                links.add("[ERROR/CANCELED] " + filename + " (" + Helpers.formatBytes(t.getFileSize()) + ")" + "   [" + t.getEmail() + "]   ");
+
                             }
+
+                            TRANSFERENCES_MAP.remove(c);
+                            transferences.remove(c);
+
                         }
 
                         if (!links.isEmpty()) {
