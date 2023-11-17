@@ -11,6 +11,7 @@ by tonikelope
 package com.tonikelope.megadoctor;
 
 import static com.tonikelope.megadoctor.Main.MAIN_WINDOW;
+import static com.tonikelope.megadoctor.Main.MEGA_ACCOUNTS;
 import static com.tonikelope.megadoctor.Main.MEGA_CMD_WINDOWS_PATH;
 import static com.tonikelope.megadoctor.Main.MEGA_NODES;
 import static com.tonikelope.megadoctor.Main.THREAD_POOL;
@@ -1614,6 +1615,24 @@ public class Helpers {
                     }
                 }
             };
+            Action enableAllExportMEGANodesAllAccountsAction = new AbstractAction("ENABLE ALL PUBLIC LINKS ON EVERY ACCOUNT") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+
+                    if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled()) {
+                        Helpers.threadRun(() -> {
+
+                            if (Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "WARNING: THIS COULD TAKE A VERY VERY LONG TIME.\n\n<span color='red'><b>CONTINUE?</b></span>") == 0) {
+
+                                for (String email : MEGA_ACCOUNTS.keySet()) {
+
+                                    Main.MAIN_WINDOW.exportAllNodesInAccount(email, true);
+                                }
+                            }
+                        });
+                    }
+                }
+            };
             Action forceRefreshAccountAction = new AbstractAction("REFRESH SELECTED ACCOUNT") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
@@ -1768,6 +1787,39 @@ public class Helpers {
             publicOFFNodesAll.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/export_off.png")));
 
             popup.add(publicOFFNodesAll);
+
+            popup.addSeparator();
+
+            JMenuItem publicONNodesAllEvery = new JMenuItem();
+
+            publicONNodesAllEvery.setAction(new AbstractAction("ENABLE ALL PUBLIC LINKS ON EVERY ACCOUNT") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+
+                    publicONNodesAllEvery.setEnabled(false);
+
+                    if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled()) {
+
+                        Helpers.threadRun(() -> {
+
+                            if (Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "WARNING: THIS COULD TAKE A VERY VERY LONG TIME.\n\n<span color='red'><b>CONTINUE?</b></span>") == 0) {
+
+                                for (String email : MEGA_ACCOUNTS.keySet()) {
+                                    Main.MAIN_WINDOW.exportAllNodesInAccount(email, true);
+                                }
+                            }
+
+                            Helpers.GUIRun(() -> {
+                                publicONNodesAllEvery.setEnabled(true);
+                            });
+                        });
+                    }
+                }
+            });
+
+            publicONNodesAllEvery.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/export_on.png")));
+
+            popup.add(publicONNodesAllEvery);
 
             popup.addSeparator();
 
