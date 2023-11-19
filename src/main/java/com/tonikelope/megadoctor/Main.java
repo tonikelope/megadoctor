@@ -62,7 +62,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.76";
+    public final static String VERSION = "2.77";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -260,18 +260,21 @@ public class Main extends javax.swing.JFrame {
 
     }
 
-    private boolean existsAnySplitTransference(String path) {
+    private Transference findSplitTransference(String path) {
 
         synchronized (TRANSFERENCES_LOCK) {
 
             for (Map.Entry<Component, Transference> entry : TRANSFERENCES_MAP.entrySet()) {
-                if (entry.getValue().getLpath().replaceAll("\\.part[0-9]+-[0-9]+$", "").equals(path)) {
-                    return true;
+
+                Transference t = entry.getValue();
+
+                if (t.getLpath().replaceAll("\\.part[0-9]+-[0-9]+$", "").equals(path) && !t.isFinished()) {
+                    return t;
                 }
             }
         }
 
-        return false;
+        return null;
     }
 
     private void runFileSplitter() {
@@ -289,7 +292,9 @@ public class Main extends javax.swing.JFrame {
                     try {
                         Object[] task = (Object[]) FILE_SPLITTER_TASKS.peek();
 
-                        if (existsAnySplitTransference((String) task[0])) {
+                        Transference t = findSplitTransference((String) task[0]);
+
+                        if (t != null) {
 
                             boolean delete_after_split = (boolean) task[2];
 
@@ -345,7 +350,7 @@ public class Main extends javax.swing.JFrame {
 
                                 Logger.getLogger(Main.class.getName()).log(Level.WARNING, "FileSplitter splitting file" + task[0]);
 
-                                for (int i = 0; i < tot_chunks; i++) {
+                                for (int i = 0; i < tot_chunks && !t.isFinished(); i++) {
 
                                     long current_chunk_size = Math.min(chunk_size, file_size - chunk_size * i);
 
@@ -886,16 +891,18 @@ public class Main extends javax.swing.JFrame {
                             for (Component c : transferences.getComponents()) {
 
                                 Transference t = TRANSFERENCES_MAP.get(c);
+                                if (t.isFinished()) {
 
-                                String filename = new File(t.getLpath()).getName();
-                                if (!t.isCanceled() && !t.isError()) {
+                                    String filename = new File(t.getLpath()).getName();
+                                    if (!t.isCanceled() && !t.isError()) {
 
-                                    links.add(filename + (t.getRemote_handle() != null ? " <" + t.getRemote_handle() + ">" : "") + " (" + Helpers.formatBytes(t.getFileSize()) + ")" + "   [" + t.getEmail() + "]   " + (t.getPublic_link() != null ? t.getPublic_link() : ""));
+                                        links.add(filename + (t.getRemote_handle() != null ? " <" + t.getRemote_handle() + ">" : "") + " (" + Helpers.formatBytes(t.getFileSize()) + ")" + "   [" + t.getEmail() + "]   " + (t.getPublic_link() != null ? t.getPublic_link() : ""));
 
-                                } else {
+                                    } else {
 
-                                    links.add("[ERROR/CANCELED] " + filename + " (" + Helpers.formatBytes(t.getFileSize()) + ")" + "   [" + t.getEmail() + "]   ");
+                                        links.add("[ERROR/CANCELED] " + filename + " (" + Helpers.formatBytes(t.getFileSize()) + ")" + "   [" + t.getEmail() + "]   ");
 
+                                    }
                                 }
                             }
 
@@ -3129,19 +3136,21 @@ public class Main extends javax.swing.JFrame {
 
                             Transference t = TRANSFERENCES_MAP.get(c);
 
-                            String filename = new File(t.getLpath()).getName();
-                            if (!t.isCanceled() && !t.isError()) {
+                            if (t.isFinished()) {
+                                String filename = new File(t.getLpath()).getName();
 
-                                links.add(filename + (t.getRemote_handle() != null ? " <" + t.getRemote_handle() + ">" : "") + " (" + Helpers.formatBytes(t.getFileSize()) + ")" + "   [" + t.getEmail() + "]   " + (t.getPublic_link() != null ? t.getPublic_link() : ""));
+                                if (!t.isCanceled() && !t.isError()) {
 
-                            } else {
-                                links.add("[ERROR/CANCELED] " + filename + " (" + Helpers.formatBytes(t.getFileSize()) + ")" + "   [" + t.getEmail() + "]   ");
+                                    links.add(filename + (t.getRemote_handle() != null ? " <" + t.getRemote_handle() + ">" : "") + " (" + Helpers.formatBytes(t.getFileSize()) + ")" + "   [" + t.getEmail() + "]   " + (t.getPublic_link() != null ? t.getPublic_link() : ""));
 
+                                } else {
+                                    links.add("[ERROR/CANCELED] " + filename + " (" + Helpers.formatBytes(t.getFileSize()) + ")" + "   [" + t.getEmail() + "]   ");
+
+                                }
+
+                                TRANSFERENCES_MAP.remove(c);
+                                transferences.remove(c);
                             }
-
-                            TRANSFERENCES_MAP.remove(c);
-                            transferences.remove(c);
-
                         }
 
                         if (!links.isEmpty()) {

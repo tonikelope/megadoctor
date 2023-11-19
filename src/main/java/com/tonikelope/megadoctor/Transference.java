@@ -296,7 +296,7 @@ public final class Transference extends javax.swing.JPanel {
 
                             Transference t = TRANSFERENCES_MAP.get(c);
 
-                            if (t == this) {
+                            if (t == this && t.isFinished()) {
                                 String filename = new File(t.getLpath()).getName();
                                 if (!t.isCanceled() && !t.isError()) {
 
@@ -308,9 +308,7 @@ public final class Transference extends javax.swing.JPanel {
                                 }
 
                                 Main.TRANSFERENCES_MAP.remove(c);
-
                                 Main.MAIN_WINDOW.getTransferences().remove(c);
-
                                 break;
 
                             }
