@@ -62,7 +62,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.78";
+    public final static String VERSION = "2.79";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -2054,7 +2054,7 @@ public class Main extends javax.swing.JFrame {
 
     }
 
-    public void exportAllNodesInAccount(String email, boolean enable) {
+    public void exportAllNodesInAccount(String email, boolean enable, boolean notify) {
 
         _running_main_action = true;
 
@@ -2102,7 +2102,9 @@ public class Main extends javax.swing.JFrame {
 
         logout(true);
 
-        Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL <b>" + email + "</b> " + (enable ? "PUBLIC LINKS GENERATED" : "PUBLIC LINKS REMOVED"));
+        if (notify) {
+            Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL <b>" + email + "</b> " + (enable ? "PUBLIC LINKS GENERATED" : "PUBLIC LINKS REMOVED"));
+        }
 
         Helpers.GUIRunAndWait(() -> {
 
