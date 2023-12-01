@@ -1812,9 +1812,9 @@ public class Helpers {
                                 for (String email : MEGA_ACCOUNTS.keySet()) {
                                     Main.MAIN_WINDOW.exportAllNodesInAccount(email, true, false);
                                 }
-                            }
 
-                            Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL PUBLIC LINKS ON EVERY ACCOUNT ENABLED");
+                                Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL PUBLIC LINKS ON EVERY ACCOUNT ENABLED");
+                            }
 
                             Helpers.GUIRun(() -> {
                                 publicONNodesAllEvery.setEnabled(true);
