@@ -62,21 +62,22 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.77";
+    public final static String VERSION = "2.78";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
     public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
-    public final static String MEGADOCTOR_MISC_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_misc";
-    public final static String SESSIONS_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_sessions";
-    public final static String ACCOUNTS_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_accounts";
-    public final static String FILE_SPLITTER_TASKS_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_file_splitter";
-    public final static String EXCLUDED_ACCOUNTS_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_excluded_accounts";
-    public final static String TRANSFERS_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_transfers";
-    public final static String NODES_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_nodes";
-    public final static String FREE_SPACE_CACHE_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_free_space_cache";
-    public final static String LOG_FILE = System.getProperty("user.home") + File.separator + ".megadoctor_log";
+    public final static String MEGADOCTOR_DIR = System.getProperty("user.home") + File.separator + ".megadoctor";
+    public final static String MEGADOCTOR_MISC_FILE = MEGADOCTOR_DIR + File.separator + "megadoctor_misc";
+    public final static String SESSIONS_FILE = MEGADOCTOR_DIR + File.separator + "megadoctor_sessions";
+    public final static String ACCOUNTS_FILE = MEGADOCTOR_DIR + File.separator + "megadoctor_accounts";
+    public final static String FILE_SPLITTER_TASKS_FILE = MEGADOCTOR_DIR + File.separator + "megadoctor_file_splitter";
+    public final static String EXCLUDED_ACCOUNTS_FILE = MEGADOCTOR_DIR + File.separator + "megadoctor_excluded_accounts";
+    public final static String TRANSFERS_FILE = MEGADOCTOR_DIR + File.separator + "megadoctor_transfers";
+    public final static String NODES_FILE = MEGADOCTOR_DIR + File.separator + "megadoctor_nodes";
+    public final static String FREE_SPACE_CACHE_FILE = MEGADOCTOR_DIR + File.separator + "megadoctor_free_space_cache";
+    public final static String LOG_FILE = MEGADOCTOR_DIR + File.separator + "megadoctor_log";
     public final static Object TRANSFERENCES_LOCK = new Object();
     public volatile static ServerSocket ONE_INSTANCE_SOCKET = null;
     public volatile static boolean EXIT = false;
@@ -3427,6 +3428,8 @@ public class Main extends javax.swing.JFrame {
             ONE_INSTANCE_SOCKET = new ServerSocket(MEGADOCTOR_ONE_INSTANCE_PORT);
 
             Helpers.createTrayIcon();
+
+            Helpers.createMegaDoctorDir();
 
             /* Create and display the form */
             java.awt.EventQueue.invokeLater(new Runnable() {
