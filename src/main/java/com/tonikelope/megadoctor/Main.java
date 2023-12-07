@@ -62,7 +62,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.80";
+    public final static String VERSION = "2.81";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -315,9 +315,9 @@ public class Main extends javax.swing.JFrame {
 
                                 long current_chunk_size = Math.min(chunk_size, file_size - chunk_size * i);
 
-                                try (RandomAccessFile sourceFile = new RandomAccessFile(file_path, "r"); FileChannel sourceChannel = sourceFile.getChannel()) {
+                                Path fileName = Paths.get(file_path + ".part" + String.valueOf(i + 1) + "-" + String.valueOf(tot_chunks));
 
-                                    Path fileName = Paths.get(file_path + ".part" + String.valueOf(i + 1) + "-" + String.valueOf(tot_chunks));
+                                try (RandomAccessFile sourceFile = new RandomAccessFile(file_path, "r"); FileChannel sourceChannel = sourceFile.getChannel()) {
 
                                     if (!(Files.exists(fileName) && Files.size(fileName) == current_chunk_size)) {
 
@@ -345,6 +345,10 @@ public class Main extends javax.swing.JFrame {
                                         Logger.getLogger(Main.class.getName()).log(Level.WARNING, "FileSplitter PART " + String.valueOf(i + 1) + " EXISTS (SKIPPING)" + task[0]);
                                     }
 
+                                }
+
+                                if (Files.size(fileName) != current_chunk_size) {
+                                    throw new Exception("FILE SPLITTER BAD CHUNK SIZE ERROR! " + fileName.toString());
                                 }
 
                             } else {
@@ -381,6 +385,10 @@ public class Main extends javax.swing.JFrame {
 
                                                 toChannel.transferFrom(sourceChannel, toFile.length(), current_chunk_size - toFile.length());
                                             }
+
+                                            if (Files.size(fileName) != current_chunk_size) {
+                                                throw new Exception("FILE SPLITTER BAD CHUNK SIZE ERROR! " + fileName.toString());
+                                            }
                                         } else {
                                             Logger.getLogger(Main.class.getName()).log(Level.WARNING, "FileSplitter PART " + String.valueOf(i + 1) + " EXISTS (SKIPPING)" + task[0]);
                                         }
@@ -388,6 +396,7 @@ public class Main extends javax.swing.JFrame {
                                     }
 
                                 }
+
                             }
 
                             if (delete_after_split) {
@@ -398,6 +407,8 @@ public class Main extends javax.swing.JFrame {
                             Logger.getLogger(Main.class.getName()).log(Level.WARNING, "FileSplitter transference not found: " + task[0]);
                         }
                     } catch (IOException ex) {
+                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (Exception ex) {
                         Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
                     }
 
@@ -445,6 +456,10 @@ public class Main extends javax.swing.JFrame {
                                     for (Component tr : transferences.getComponents()) {
 
                                         Transference t = TRANSFERENCES_MAP.get(tr);
+
+                                        if (isSomeTransference_running()) {
+                                            break;
+                                        }
 
                                         if (!t.isRunning() && !t.isFinished() && !t.isFinishing() && !t.isCanceled()) {
 
@@ -881,6 +896,41 @@ public class Main extends javax.swing.JFrame {
                 Helpers.runProcess(new String[]{"mega-transfers", "-ca"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
             }
 
+            String cuentas_text = cuentas_textarea.getText();
+
+            final String regex = "(.*?)#(.+)";
+            final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+            final Matcher matcher = pattern.matcher(cuentas_text);
+
+            LinkedHashMap<String, String> new_accounts = new LinkedHashMap<>();
+
+            while (matcher.find()) {
+                if (!MEGA_ACCOUNTS.containsKey(matcher.group(1))) {
+                    new_accounts.put(matcher.group(1), matcher.group(2));
+                }
+            }
+
+            ArrayList<String> remove = new ArrayList<>();
+
+            for (String email : MEGA_ACCOUNTS.keySet()) {
+
+                if (!cuentas_text.contains(email)) {
+                    remove.add(email);
+                }
+            }
+
+            if (_firstAccountsTextareaClick && (!new_accounts.isEmpty() || !remove.isEmpty()) && Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "Changes detected in accounts list, do you want to save?") == 0) {
+
+                for (String email : new_accounts.keySet()) {
+                    MEGA_ACCOUNTS.put(email, new_accounts.get(email));
+                }
+
+                for (String email : remove) {
+                    MEGA_ACCOUNTS.remove(email);
+                    MEGA_SESSIONS.remove(email);
+                }
+            }
+
             if (_firstAccountsTextareaClick && !MEGA_ACCOUNTS.isEmpty() && (session_menu.isSelected() || Helpers.mostrarMensajeInformativoSINO(this, "Do you want to save your MEGA accounts/sessions/transfers to disk to speed up next time?\n\n(If you are using a public computer it is NOT recommended to do so for security reasons).") == 0)) {
                 synchronized (TRANSFERENCES_LOCK) {
                     Helpers.GUIRunAndWait(() -> {
@@ -914,41 +964,6 @@ public class Main extends javax.swing.JFrame {
                         }
 
                     });
-                }
-
-                String cuentas_text = cuentas_textarea.getText();
-
-                final String regex = "(.*?)#(.+)";
-                final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
-                final Matcher matcher = pattern.matcher(cuentas_text);
-
-                LinkedHashMap<String, String> new_accounts = new LinkedHashMap<>();
-
-                while (matcher.find()) {
-                    if (!MEGA_ACCOUNTS.containsKey(matcher.group(1))) {
-                        new_accounts.put(matcher.group(1), matcher.group(2));
-                    }
-                }
-
-                ArrayList<String> remove = new ArrayList<>();
-
-                for (String email : MEGA_ACCOUNTS.keySet()) {
-
-                    if (!cuentas_text.contains(email)) {
-                        remove.add(email);
-                    }
-                }
-
-                if (_firstAccountsTextareaClick && (!new_accounts.isEmpty() || !remove.isEmpty()) && Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "Changes detected in accounts list, do you want to save?") == 0) {
-
-                    for (String email : new_accounts.keySet()) {
-                        MEGA_ACCOUNTS.put(email, new_accounts.get(email));
-                    }
-
-                    for (String email : remove) {
-                        MEGA_ACCOUNTS.remove(email);
-                        MEGA_SESSIONS.remove(email);
-                    }
                 }
 
                 saveMISC();
@@ -2553,7 +2568,7 @@ public class Main extends javax.swing.JFrame {
     private void vamos_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_vamos_buttonActionPerformed
         // TODO add your handling code here:
 
-        if (MEGA_CMD_VERSION != null && Helpers.mostrarMensajeInformativoSINO(this, "This will run through all your accounts to generate a report on their status.\n<b>It may take a long time</b> and while the report is being generated\nyou will not be able to make transfers in MegaDoctor.\n\n<b>CONTINUE?</b>") == 0) {
+        if (MEGA_CMD_VERSION != null && (_running_global_check || Helpers.mostrarMensajeInformativoSINO(this, "This will run through all your accounts to generate a report on their status.\n<b>It may take a long time</b> and while the report is being generated\nyou will not be able to make transfers in MegaDoctor.\n\n<b>CONTINUE?</b>") == 0)) {
 
             if (!isRunning_global_check()) {
 
