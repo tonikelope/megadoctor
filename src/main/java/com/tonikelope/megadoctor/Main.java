@@ -54,7 +54,11 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JTextArea;
+import javax.swing.JTextPane;
+import javax.swing.UIDefaults;
 import javax.swing.UIManager;
+import javax.swing.plaf.ColorUIResource;
+import javax.swing.text.BadLocationException;
 
 /**
  *
@@ -62,7 +66,7 @@ import javax.swing.UIManager;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.82";
+    public final static String VERSION = "2.83";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -110,6 +114,14 @@ public class Main extends javax.swing.JFrame {
     private volatile boolean _pausing_transference = false;
     private volatile boolean _transferences_paused = false;
     private volatile boolean _provisioning_upload = false;
+
+    public void output_textarea_append(String msg) {
+        try {
+            output_textarea.getStyledDocument().insertString(output_textarea.getStyledDocument().getLength(), msg, null);
+        } catch (BadLocationException ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 
     public boolean isProvisioning_upload() {
         return _provisioning_upload;
@@ -169,7 +181,7 @@ public class Main extends javax.swing.JFrame {
         return cuentas_textarea;
     }
 
-    public JTextArea getOutput_textarea() {
+    public JTextPane getOutput_textarea() {
         return output_textarea;
     }
 
@@ -211,52 +223,60 @@ public class Main extends javax.swing.JFrame {
         transf_scroll.getVerticalScrollBar().setUnitIncrement(20);
         setTitle("MegaDoctor " + VERSION + " - MEGAcmd's best friend");
         progressbar.setIndeterminate(true);
-        status_label.setText("Checking if MEGACMD is present...");
+        status_label.setText("Loading data (be patient)...");
+        Color bgColor = new Color(102, 102, 102);
+        Color fgColor = Color.WHITE;
+        UIDefaults defaults = new UIDefaults();
+        defaults.put("TextPane.background", new ColorUIResource(bgColor));
+        defaults.put("TextPane[Enabled].backgroundPainter", bgColor);
+        defaults.put("TextPane.foreground", new ColorUIResource(fgColor));
+        output_textarea.putClientProperty("Nimbus.Overrides", defaults);
+        output_textarea.putClientProperty("Nimbus.Overrides.InheritDefaults", true);
+        output_textarea.setBackground(bgColor);
         pack();
         setEnabled(false);
-
     }
 
     private void runMEGACMDCHecker() {
 
-        Helpers.threadRun(() -> {
+        Helpers.GUIRun(() -> {
+            status_label.setText("Checking MEGA-CMD...");
+        });
 
-            MEGA_CMD_VERSION = Helpers.runProcess(new String[]{"mega-version"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null, false, Pattern.compile("MEGAcmd version:"))[1];
+        MEGA_CMD_VERSION = Helpers.runProcess(new String[]{"mega-version"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null, false, Pattern.compile("MEGAcmd version:"))[1];
 
-            if (MEGA_CMD_VERSION == null || "".equals(MEGA_CMD_VERSION)) {
-                Helpers.mostrarMensajeError(this, "MEGA CMD IS REQUIRED");
-                Helpers.openBrowserURLAndWait(MEGA_CMD_URL);
-                if (ONE_INSTANCE_SOCKET != null) {
-                    try {
-                        ONE_INSTANCE_SOCKET.close();
-                    } catch (IOException ex) {
-                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-                    }
+        if (MEGA_CMD_VERSION == null || "".equals(MEGA_CMD_VERSION)) {
+            Helpers.mostrarMensajeError(this, "MEGA CMD IS REQUIRED");
+            Helpers.openBrowserURLAndWait(MEGA_CMD_URL);
+            if (ONE_INSTANCE_SOCKET != null) {
+                try {
+                    ONE_INSTANCE_SOCKET.close();
+                } catch (IOException ex) {
+                    Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
                 }
-
-                Main.EXIT = true;
-
-                Helpers.destroyAllExternalProcesses();
-
-                System.exit(1);
             }
 
-            if (!MEGADOCTOR_MISC.containsKey("mega_cmd_installed")) {
+            Main.EXIT = true;
 
-                Helpers.mostrarMensajeInformativo(this, "MEGAcmd IS CORRECTLY INSTALLED 😃\n\nRemember that to avoid possible failures, <b>YOU MUST NOT USE MEGAcmd WHILE USING MegaDoctor.</b>");
+            Helpers.destroyAllExternalProcesses();
 
-                MEGADOCTOR_MISC.put("mega_cmd_installed", true);
+            System.exit(1);
+        }
 
-                saveMISC();
-            }
+        if (!MEGADOCTOR_MISC.containsKey("mega_cmd_installed")) {
 
-            Helpers.GUIRunAndWait(() -> {
-                setEnabled(true);
-                progressbar.setIndeterminate(false);
-                status_label.setText("");
-                enableTOPControls(true);
-            });
+            Helpers.mostrarMensajeInformativo(this, "MEGAcmd IS CORRECTLY INSTALLED 😃\n\nRemember that to avoid possible failures, <b>YOU MUST NOT USE MEGAcmd WHILE USING MegaDoctor.</b>");
 
+            MEGADOCTOR_MISC.put("mega_cmd_installed", true);
+
+            saveMISC();
+        }
+
+        Helpers.GUIRunAndWait(() -> {
+            setEnabled(true);
+            progressbar.setIndeterminate(false);
+            status_label.setText("");
+            enableTOPControls(true);
         });
 
     }
@@ -541,11 +561,13 @@ public class Main extends javax.swing.JFrame {
     }
 
     public void init() {
-        loadMISC();
-        runMEGACMDCHecker();
-        runTransferenceWatchdog();
-        loadAccountsAndTransfers();
-        loadLog();
+        Helpers.threadRun(() -> {
+            loadMISC();
+            loadLog();
+            runMEGACMDCHecker();
+            loadAccountsAndTransfers();
+            runTransferenceWatchdog();
+        });
     }
 
     public boolean login(String email) {
@@ -959,7 +981,7 @@ public class Main extends javax.swing.JFrame {
 
                             if (!links.isEmpty()) {
                                 Collections.sort(links);
-                                output_textarea.append("\n\nTRANSFERENCES CLEARED (on exit):\n\n" + String.join("\n", links) + "\n\n");
+                                output_textarea_append("\n\nTRANSFERENCES CLEARED (on exit):\n\n" + String.join("\n", links) + "\n\n");
                             }
                         }
 
@@ -1311,7 +1333,7 @@ public class Main extends javax.swing.JFrame {
 
                     Helpers.GUIRun(() -> {
 
-                        output_textarea.append("\n[" + email + "] (Refreshed after moving)\n\n" + stats + "\n\n");
+                        output_textarea_append("\n[" + email + "] (Refreshed after moving)\n\n" + stats + "\n\n");
 
                     });
 
@@ -1759,7 +1781,7 @@ public class Main extends javax.swing.JFrame {
 
                 Helpers.GUIRun(() -> {
 
-                    output_textarea.append("\n[" + email + "] (" + reason + ")\n\n" + stats + "\n\n");
+                    output_textarea_append("\n[" + email + "] (" + reason + ")\n\n" + stats + "\n\n");
                     Helpers.JTextFieldRegularPopupMenu.addMainMEGAPopupMenuTo(output_textarea);
                     Helpers.JTextFieldRegularPopupMenu.addAccountsMEGAPopupMenuTo(cuentas_textarea);
                 });
@@ -1768,7 +1790,7 @@ public class Main extends javax.swing.JFrame {
                     Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "<b>" + email + "</b>\nREFRESHED");
                 }
             } else {
-                output_textarea.append("\n[" + email + "] LOGIN ERROR\n\n");
+                output_textarea_append("\n[" + email + "] LOGIN ERROR\n\n");
                 Helpers.mostrarMensajeError(MAIN_WINDOW, "LOGIN ERROR WITH <b>" + email + "</b>");
             }
 
@@ -1873,134 +1895,140 @@ public class Main extends javax.swing.JFrame {
     private void loadLog() {
 
         if (Files.exists(Paths.get(LOG_FILE))) {
-            Helpers.GUIRunAndWait(() -> {
 
-                try {
-                    output_textarea.setText(Files.readString(Paths.get(LOG_FILE)));
-                } catch (IOException ex) {
-                    Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+            try {
+
+                StringBuilder sb = new StringBuilder(Files.readString(Paths.get(LOG_FILE)));
+
+                Helpers.GUIRun(() -> {
+
+                    try {
+                        output_textarea.getStyledDocument().insertString(0, sb.toString(), null);
+                    } catch (BadLocationException ex) {
+                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+
                 }
+                );
 
-            });
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
+
     }
 
     private void loadAccountsAndTransfers() {
 
-        Helpers.threadRun(() -> {
+        if (Files.exists(Paths.get(ACCOUNTS_FILE))) {
+            try (FileInputStream fis = new FileInputStream(ACCOUNTS_FILE); ObjectInputStream ois = new ObjectInputStream(fis)) {
 
-            if (Files.exists(Paths.get(ACCOUNTS_FILE))) {
-                try (FileInputStream fis = new FileInputStream(ACCOUNTS_FILE); ObjectInputStream ois = new ObjectInputStream(fis)) {
+                MEGA_ACCOUNTS = (LinkedHashMap<String, String>) ois.readObject();
 
-                    MEGA_ACCOUNTS = (LinkedHashMap<String, String>) ois.readObject();
+                if (!MEGA_ACCOUNTS.isEmpty()) {
 
-                    if (!MEGA_ACCOUNTS.isEmpty()) {
+                    ArrayList<String> accounts = new ArrayList<>();
 
-                        ArrayList<String> accounts = new ArrayList<>();
+                    for (String k : MEGA_ACCOUNTS.keySet()) {
+                        accounts.add(k + "#" + MEGA_ACCOUNTS.get(k));
+                    }
 
-                        for (String k : MEGA_ACCOUNTS.keySet()) {
-                            accounts.add(k + "#" + MEGA_ACCOUNTS.get(k));
+                    Collections.sort(accounts);
+
+                    Helpers.GUIRun(() -> {
+
+                        if (!_firstAccountsTextareaClick) {
+                            _firstAccountsTextareaClick = true;
+                            cuentas_textarea.setText("");
+                            cuentas_textarea.setForeground(null);
                         }
 
-                        Collections.sort(accounts);
+                        cuentas_textarea.append(String.join("\n", accounts));
 
-                        Helpers.GUIRun(() -> {
+                        cuentas_textarea.setCaretPosition(0);
 
-                            if (!_firstAccountsTextareaClick) {
-                                _firstAccountsTextareaClick = true;
-                                cuentas_textarea.setText("");
-                                cuentas_textarea.setForeground(null);
-                            }
+                        session_menu.setSelected(true);
 
-                            for (String account : accounts) {
-                                cuentas_textarea.append(account + "\n");
-                            }
+                        getUpload_button().setEnabled(true);
 
-                            cuentas_textarea.setCaretPosition(0);
+                    });
+                } else {
+                    Helpers.GUIRun(() -> {
+                        session_menu.setSelected(false);
+                    });
+                }
 
-                            session_menu.setSelected(true);
+            } catch (Exception ex) {
+                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+            }
 
-                            getUpload_button().setEnabled(true);
+            if (Files.exists(Paths.get(EXCLUDED_ACCOUNTS_FILE))) {
+                try (FileInputStream fis = new FileInputStream(EXCLUDED_ACCOUNTS_FILE); ObjectInputStream ois = new ObjectInputStream(fis)) {
+                    MEGA_EXCLUDED_ACCOUNTS = (ConcurrentLinkedQueue<String>) ois.readObject();
+                } catch (Exception ex) {
+                    Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
 
-                        });
-                    } else {
-                        Helpers.GUIRun(() -> {
-                            session_menu.setSelected(false);
-                        });
+            if (Files.exists(Paths.get(NODES_FILE))) {
+                try (FileInputStream fis = new FileInputStream(NODES_FILE); ObjectInputStream ois = new ObjectInputStream(fis)) {
+                    MEGA_NODES = (ConcurrentHashMap<String, Object[]>) ois.readObject();
+
+                    if (MEGA_NODES.values().toArray().length > 0) {
+                        Object[] test = (Object[]) MEGA_NODES.values().toArray()[0];
+
+                        if (test.length != 4) {
+                            MEGA_NODES.clear();
+                            Files.deleteIfExists(Paths.get(NODES_FILE));
+                            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "WRONG NODES FILE (DELETING...)");
+                        }
                     }
 
                 } catch (Exception ex) {
                     Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
                 }
-
-                if (Files.exists(Paths.get(EXCLUDED_ACCOUNTS_FILE))) {
-                    try (FileInputStream fis = new FileInputStream(EXCLUDED_ACCOUNTS_FILE); ObjectInputStream ois = new ObjectInputStream(fis)) {
-                        MEGA_EXCLUDED_ACCOUNTS = (ConcurrentLinkedQueue<String>) ois.readObject();
-                    } catch (Exception ex) {
-                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-
-                if (Files.exists(Paths.get(NODES_FILE))) {
-                    try (FileInputStream fis = new FileInputStream(NODES_FILE); ObjectInputStream ois = new ObjectInputStream(fis)) {
-                        MEGA_NODES = (ConcurrentHashMap<String, Object[]>) ois.readObject();
-
-                        if (MEGA_NODES.values().toArray().length > 0) {
-                            Object[] test = (Object[]) MEGA_NODES.values().toArray()[0];
-
-                            if (test.length != 4) {
-                                MEGA_NODES.clear();
-                                Files.deleteIfExists(Paths.get(NODES_FILE));
-                                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "WRONG NODES FILE (DELETING...)");
-                            }
-                        }
-
-                    } catch (Exception ex) {
-                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-
-                if (Files.exists(Paths.get(SESSIONS_FILE))) {
-                    try (FileInputStream fis = new FileInputStream(SESSIONS_FILE); ObjectInputStream ois = new ObjectInputStream(fis)) {
-                        MEGA_SESSIONS = (HashMap<String, String>) ois.readObject();
-
-                        if (!MEGA_SESSIONS.isEmpty()) {
-                            loadTransfers();
-                        }
-
-                    } catch (Exception ex) {
-                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-                        try {
-                            Files.deleteIfExists(Paths.get(SESSIONS_FILE));
-                        } catch (IOException ex1) {
-                            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex1);
-                        }
-                    }
-                }
-
-                if (Files.exists(Paths.get(FREE_SPACE_CACHE_FILE))) {
-                    try (FileInputStream fis = new FileInputStream(FREE_SPACE_CACHE_FILE); ObjectInputStream ois = new ObjectInputStream(fis)) {
-                        FREE_SPACE_CACHE = (ConcurrentHashMap<String, Long>) ois.readObject();
-
-                    } catch (Exception ex) {
-                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-                        try {
-                            Files.deleteIfExists(Paths.get(FREE_SPACE_CACHE_FILE));
-                        } catch (IOException ex1) {
-                            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex1);
-                        }
-                    }
-                }
-
-            } else {
-                Helpers.GUIRun(() -> {
-                    session_menu.setSelected(false);
-                });
             }
 
-            runFileSplitter();
+            if (Files.exists(Paths.get(SESSIONS_FILE))) {
+                try (FileInputStream fis = new FileInputStream(SESSIONS_FILE); ObjectInputStream ois = new ObjectInputStream(fis)) {
+                    MEGA_SESSIONS = (HashMap<String, String>) ois.readObject();
 
-        });
+                    if (!MEGA_SESSIONS.isEmpty()) {
+                        loadTransfers();
+                    }
+
+                } catch (Exception ex) {
+                    Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                    try {
+                        Files.deleteIfExists(Paths.get(SESSIONS_FILE));
+                    } catch (IOException ex1) {
+                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex1);
+                    }
+                }
+            }
+
+            if (Files.exists(Paths.get(FREE_SPACE_CACHE_FILE))) {
+                try (FileInputStream fis = new FileInputStream(FREE_SPACE_CACHE_FILE); ObjectInputStream ois = new ObjectInputStream(fis)) {
+                    FREE_SPACE_CACHE = (ConcurrentHashMap<String, Long>) ois.readObject();
+
+                } catch (Exception ex) {
+                    Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                    try {
+                        Files.deleteIfExists(Paths.get(FREE_SPACE_CACHE_FILE));
+                    } catch (IOException ex1) {
+                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex1);
+                    }
+                }
+            }
+
+        } else {
+            Helpers.GUIRun(() -> {
+                session_menu.setSelected(false);
+            });
+        }
+
+        runFileSplitter();
+
     }
 
     public void parseAccountNodes(String email) {
@@ -2189,8 +2217,8 @@ public class Main extends javax.swing.JFrame {
         cuentas_scrollpanel = new javax.swing.JScrollPane();
         cuentas_textarea = new javax.swing.JTextArea();
         tabbed_panel = new javax.swing.JTabbedPane();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        output_textarea = new javax.swing.JTextArea();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        output_textarea = new javax.swing.JTextPane();
         transf_scroll = new javax.swing.JScrollPane();
         jPanel1 = new javax.swing.JPanel();
         transferences_control_panel = new javax.swing.JPanel();
@@ -2334,18 +2362,14 @@ public class Main extends javax.swing.JFrame {
             }
         });
 
-        jScrollPane1.setDoubleBuffered(true);
-
         output_textarea.setEditable(false);
         output_textarea.setBackground(new java.awt.Color(102, 102, 102));
-        output_textarea.setColumns(20);
         output_textarea.setFont(new java.awt.Font("Monospaced", 0, 16)); // NOI18N
         output_textarea.setForeground(new java.awt.Color(255, 255, 255));
-        output_textarea.setRows(5);
         output_textarea.setDoubleBuffered(true);
-        jScrollPane1.setViewportView(output_textarea);
+        jScrollPane2.setViewportView(output_textarea);
 
-        tabbed_panel.addTab("Log", new javax.swing.ImageIcon(getClass().getResource("/images/log.png")), jScrollPane1); // NOI18N
+        tabbed_panel.addTab("Log", new javax.swing.ImageIcon(getClass().getResource("/images/log.png")), jScrollPane2); // NOI18N
 
         transf_scroll.setBorder(null);
         transf_scroll.setDoubleBuffered(true);
@@ -2558,7 +2582,7 @@ public class Main extends javax.swing.JFrame {
                     .addComponent(progressbar, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(show_accounts))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(mainSplitPanel)
+                .addComponent(mainSplitPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 394, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -2614,7 +2638,7 @@ public class Main extends javax.swing.JFrame {
                     if (!mega_accounts.isEmpty()) {
                         Helpers.GUIRun(() -> {
                             progressbar.setMaximum(mega_accounts.size());
-                            output_textarea.append(" __  __                  ____             _             \n"
+                            output_textarea_append(" __  __                  ____             _             \n"
                                     + "|  \\/  | ___  __ _  __ _|  _ \\  ___   ___| |_ ___  _ __ \n"
                                     + "| |\\/| |/ _ \\/ _` |/ _` | | | |/ _ \\ / __| __/ _ \\| '__|\n"
                                     + "| |  | |  __/ (_| | (_| | |_| | (_) | (__| || (_) | |   \n"
@@ -2634,7 +2658,7 @@ public class Main extends javax.swing.JFrame {
                             if (!login_ok) {
                                 login_error_accounts.add(email + "#" + mega_accounts.get(email));
                                 Helpers.GUIRun(() -> {
-                                    output_textarea.append("\n[" + email + "] LOGIN ERROR\n\n");
+                                    output_textarea_append("\n[" + email + "] LOGIN ERROR\n\n");
                                 });
                             } else {
 
@@ -2646,7 +2670,7 @@ public class Main extends javax.swing.JFrame {
 
                                 Helpers.GUIRun(() -> {
 
-                                    output_textarea.append("\n[" + email + "]\n\n" + stats + "\n\n");
+                                    output_textarea_append("\n[" + email + "]\n\n" + stats + "\n\n");
 
                                 });
 
@@ -2685,34 +2709,34 @@ public class Main extends javax.swing.JFrame {
                         });
 
                         Helpers.GUIRun(() -> {
-                            output_textarea.append("--------------------------------------\n");
-                            output_textarea.append("ACCOUNTS ORDERED BY FREE SPACE (DESC):\n");
-                            output_textarea.append("--------------------------------------\n\n");
+                            output_textarea_append("--------------------------------------\n");
+                            output_textarea_append("ACCOUNTS ORDERED BY FREE SPACE (DESC):\n");
+                            output_textarea_append("--------------------------------------\n\n");
                             long total_space = 0;
                             long total_space_used = 0;
                             for (String[] account : accounts_space_info) {
                                 total_space_used += Long.parseLong(account[1]);
                                 total_space += Long.parseLong(account[2]);
-                                output_textarea.append(account[0] + " [" + Helpers.formatBytes(Long.parseLong(account[2]) - Long.parseLong(account[1])) + " FREE] (of " + Helpers.formatBytes(Long.parseLong(account[2])) + ")\n\n");
+                                output_textarea_append(account[0] + " [" + Helpers.formatBytes(Long.parseLong(account[2]) - Long.parseLong(account[1])) + " FREE] (of " + Helpers.formatBytes(Long.parseLong(account[2])) + ")\n\n");
                             }
 
-                            output_textarea.append("TOTAL FREE SPACE: " + Helpers.formatBytes(total_space - total_space_used) + " (of " + Helpers.formatBytes(total_space) + ")\n\n");
+                            output_textarea_append("TOTAL FREE SPACE: " + Helpers.formatBytes(total_space - total_space_used) + " (of " + Helpers.formatBytes(total_space) + ")\n\n");
 
                             String cuentas_text = cuentas_textarea.getText();
 
                             if (!login_error_accounts.isEmpty()) {
 
-                                output_textarea.append("(WARNING) LOGIN ERRORS: " + String.valueOf(login_error_accounts.size()) + "\n");
+                                output_textarea_append("(WARNING) LOGIN ERRORS: " + String.valueOf(login_error_accounts.size()) + "\n");
 
                                 for (String error_account : login_error_accounts) {
-                                    output_textarea.append("    ERROR: " + error_account + "\n");
+                                    output_textarea_append("    ERROR: " + error_account + "\n");
                                     cuentas_text.replace(error_account, "");
                                 }
 
                                 cuentas_textarea.setText(cuentas_text);
                             }
 
-                            output_textarea.append("\nCHECKING END -> " + Helpers.getFechaHoraActual() + "\n");
+                            output_textarea_append("\nCHECKING END -> " + Helpers.getFechaHoraActual() + "\n");
 
                             Notification notification = new Notification(new javax.swing.JFrame(), false, "ALL ACCOUNTS CHECKED", (Main.MAIN_WINDOW.getExtendedState() & JFrame.ICONIFIED) == 0 ? 3000 : 0, "finish.wav");
                             Helpers.setWindowLowRightCorner(notification);
@@ -3174,7 +3198,7 @@ public class Main extends javax.swing.JFrame {
                         if (!links.isEmpty()) {
 
                             Collections.sort(links);
-                            output_textarea.append("\n\nTRANSFERENCES CLEARED:\n\n" + String.join("\n", links) + "\n\n");
+                            output_textarea_append("\n\nTRANSFERENCES CLEARED:\n\n" + String.join("\n", links) + "\n\n");
                         }
 
                         transferences.revalidate();
@@ -3492,11 +3516,11 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JMenuItem jMenuItem2;
     private javax.swing.JPanel jPanel1;
-    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JLabel logo_label;
     private javax.swing.JSplitPane mainSplitPanel;
     private javax.swing.JCheckBoxMenuItem menu_https;
-    private javax.swing.JTextArea output_textarea;
+    private javax.swing.JTextPane output_textarea;
     private javax.swing.JButton pause_button;
     private javax.swing.JProgressBar progressbar;
     private javax.swing.JMenuItem purge_cache_menu;

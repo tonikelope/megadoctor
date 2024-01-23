@@ -105,6 +105,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.JTextPane;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.undo.UndoManager;
@@ -1479,7 +1480,7 @@ public class Helpers {
             txtArea.setComponentPopupMenu(popup);
         }
 
-        public static void addMainMEGAPopupMenuTo(JTextArea txtArea) {
+        public static void addMainMEGAPopupMenuTo(JTextPane txtArea) {
             JPopupMenu popup = new JPopupMenu();
 
             UndoManager undoManager = new UndoManager();
