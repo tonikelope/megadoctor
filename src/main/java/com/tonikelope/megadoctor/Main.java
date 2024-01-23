@@ -66,7 +66,7 @@ import javax.swing.text.BadLocationException;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.83";
+    public final static String VERSION = "2.84";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -1898,12 +1898,12 @@ public class Main extends javax.swing.JFrame {
 
             try {
 
-                StringBuilder sb = new StringBuilder(Files.readString(Paths.get(LOG_FILE)));
+                String log_string = Files.readString(Paths.get(LOG_FILE));
 
                 Helpers.GUIRun(() -> {
 
                     try {
-                        output_textarea.getStyledDocument().insertString(0, sb.toString(), null);
+                        output_textarea.getStyledDocument().insertString(0, log_string, null);
                     } catch (BadLocationException ex) {
                         Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
                     }
