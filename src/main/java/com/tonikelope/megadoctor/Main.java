@@ -14,7 +14,6 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.SystemTray;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -66,7 +65,7 @@ import javax.swing.text.BadLocationException;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.84";
+    public final static String VERSION = "2.85";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -3413,9 +3412,10 @@ public class Main extends javax.swing.JFrame {
     private void formWindowIconified(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowIconified
         // TODO add your handling code here:
 
-        if (SystemTray.isSupported()) {
+        //De momento lo desactivamos por problemas en Wayland
+        /*if (SystemTray.isSupported()) {
             setVisible(false);
-        }
+        }*/
     }//GEN-LAST:event_formWindowIconified
 
     private void purge_cache_menuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_purge_cache_menuActionPerformed
@@ -3468,7 +3468,7 @@ public class Main extends javax.swing.JFrame {
         try {
             ONE_INSTANCE_SOCKET = new ServerSocket(MEGADOCTOR_ONE_INSTANCE_PORT);
 
-            Helpers.createTrayIcon();
+            //Helpers.createTrayIcon();
 
             Helpers.createMegaDoctorDir();
 
