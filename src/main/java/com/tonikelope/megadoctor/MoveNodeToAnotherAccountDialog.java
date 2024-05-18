@@ -55,7 +55,7 @@ public class MoveNodeToAnotherAccountDialog extends javax.swing.JDialog implemen
             emails.add(email);
         }
 
-        Collections.sort(emails);
+        Collections.sort(emails, String.CASE_INSENSITIVE_ORDER);
 
         for (String email : emails) {
             if (!skip_emails.contains(email)) {

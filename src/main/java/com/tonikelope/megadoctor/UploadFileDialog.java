@@ -173,7 +173,7 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
             emails.add(email);
         }
 
-        Collections.sort(emails);
+        Collections.sort(emails, String.CASE_INSENSITIVE_ORDER);
 
         for (String email : emails) {
             email_combobox.addItem(email);

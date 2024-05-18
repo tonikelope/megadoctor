@@ -333,7 +333,7 @@ public class Helpers {
             }
         }
 
-        Collections.sort(emails);
+        Collections.sort(emails, String.CASE_INSENSITIVE_ORDER);
 
         final String space_required = Helpers.formatBytes(required);
 
