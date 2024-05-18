@@ -65,7 +65,7 @@ import javax.swing.text.BadLocationException;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.86";
+    public final static String VERSION = "2.87";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -761,6 +761,7 @@ public class Main extends javax.swing.JFrame {
             getVamos_button().setEnabled(enable || isRunning_global_check());
             getUpload_button().setEnabled(enable && !isPausing_transference() && !isProvisioning_upload());
             getSave_button().setEnabled(enable);
+            new_account.setEnabled(enable);
         });
     }
 
@@ -2226,8 +2227,9 @@ public class Main extends javax.swing.JFrame {
         pause_button = new javax.swing.JButton();
         copy_all_button = new javax.swing.JButton();
         transferences_panel = new javax.swing.JPanel();
-        jMenuBar1 = new javax.swing.JMenuBar();
-        jMenu2 = new javax.swing.JMenu();
+        new_account = new javax.swing.JButton();
+        barra_menu = new javax.swing.JMenuBar();
+        options_menu = new javax.swing.JMenu();
         jMenuItem2 = new javax.swing.JMenuItem();
         session_menu = new javax.swing.JCheckBoxMenuItem();
         menu_https = new javax.swing.JCheckBoxMenuItem();
@@ -2433,7 +2435,7 @@ public class Main extends javax.swing.JFrame {
                 .addComponent(pause_button)
                 .addGap(18, 18, 18)
                 .addComponent(cancel_all_button)
-                .addContainerGap(229, Short.MAX_VALUE))
+                .addContainerGap(662, Short.MAX_VALUE))
         );
         transferences_control_panelLayout.setVerticalGroup(
             transferences_control_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -2470,10 +2472,21 @@ public class Main extends javax.swing.JFrame {
 
         mainSplitPanel.setBottomComponent(tabbed_panel);
 
-        jMenuBar1.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
+        new_account.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
+        new_account.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/mega.png"))); // NOI18N
+        new_account.setText("NEW ACCOUNT");
+        new_account.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        new_account.setDoubleBuffered(true);
+        new_account.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                new_accountActionPerformed(evt);
+            }
+        });
 
-        jMenu2.setText("Options");
-        jMenu2.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
+        barra_menu.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
+
+        options_menu.setText("Options");
+        options_menu.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
 
         jMenuItem2.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
         jMenuItem2.setText("Configure auto allocation excluded accounts");
@@ -2482,12 +2495,12 @@ public class Main extends javax.swing.JFrame {
                 jMenuItem2ActionPerformed(evt);
             }
         });
-        jMenu2.add(jMenuItem2);
+        options_menu.add(jMenuItem2);
 
         session_menu.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
         session_menu.setSelected(true);
         session_menu.setText("Keep session on disk");
-        jMenu2.add(session_menu);
+        options_menu.add(session_menu);
 
         menu_https.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
         menu_https.setSelected(true);
@@ -2497,7 +2510,7 @@ public class Main extends javax.swing.JFrame {
                 menu_httpsActionPerformed(evt);
             }
         });
-        jMenu2.add(menu_https);
+        options_menu.add(menu_https);
 
         purge_cache_menu.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
         purge_cache_menu.setForeground(new java.awt.Color(255, 0, 0));
@@ -2509,9 +2522,9 @@ public class Main extends javax.swing.JFrame {
                 purge_cache_menuActionPerformed(evt);
             }
         });
-        jMenu2.add(purge_cache_menu);
+        options_menu.add(purge_cache_menu);
 
-        jMenuBar1.add(jMenu2);
+        barra_menu.add(options_menu);
 
         jMenu1.setText("Help");
         jMenu1.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
@@ -2525,9 +2538,9 @@ public class Main extends javax.swing.JFrame {
         });
         jMenu1.add(jMenuItem1);
 
-        jMenuBar1.add(jMenu1);
+        barra_menu.add(jMenu1);
 
-        setJMenuBar(jMenuBar1);
+        setJMenuBar(barra_menu);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -2546,6 +2559,8 @@ public class Main extends javax.swing.JFrame {
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(upload_button)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(new_account)
                                 .addGap(18, 18, 18)
                                 .addComponent(save_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -2561,27 +2576,26 @@ public class Main extends javax.swing.JFrame {
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(logo_label, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(upload_button)
+                        .addComponent(save_button)
+                        .addComponent(clear_log_button)
+                        .addComponent(new_account, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(layout.createSequentialGroup()
                         .addContainerGap()
-                        .addComponent(vamos_button))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(logo_label)
-                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                .addComponent(upload_button)
-                                .addComponent(save_button)
-                                .addComponent(clear_log_button)))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(check_only_new_checkbox)
-                            .addComponent(status_label))))
+                        .addComponent(vamos_button)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(check_only_new_checkbox)
+                    .addComponent(status_label))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(progressbar, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(show_accounts))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(mainSplitPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 394, Short.MAX_VALUE)
+                .addComponent(mainSplitPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 607, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -3436,6 +3450,57 @@ public class Main extends javax.swing.JFrame {
         saveMISC();
     }//GEN-LAST:event_menu_httpsActionPerformed
 
+    private void new_accountActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_new_accountActionPerformed
+        // TODO add your handling code here:
+        _running_main_action = true;
+
+        enableTOPControls(false);
+        options_menu.setEnabled(false);
+        vamos_button.setEnabled(false);
+        MAIN_WINDOW.getProgressbar().setIndeterminate(true);
+        MAIN_WINDOW.getStatus_label().setText("Creating new account, please wait...");
+
+        Helpers.threadRun(() -> {
+
+            logout(true);
+
+            if (Helpers.mostrarMensajeInformativoSINO(this,
+                    "This feature has been included to facilitate the creation of your MEGA account through"
+                    + "\nits official API (in case you do not want or are unable to use a web browser)."
+                    + "\n<b>YOU MUST USE IT RESPECTING ITS TERMS OF USE</b>"
+                    + "\n\nCONTINUE?") == 0) {
+
+                String[] account = Helpers.registerNewMEGAaccount();
+
+                if (account != null) {
+
+                    Helpers.mostrarMensajeInformativo(this, "<b>Account successfully created</b>\n" + String.join("#", account));
+
+                    output_textarea_append("\nAccount successfully created:\n" + String.join("#", account) + "\n\n");
+
+                    Helpers.GUIRun(() -> {
+                        this.cuentas_textarea.append("\n" + String.join("#", account));
+                    });
+
+                } else {
+                    Helpers.mostrarMensajeInformativo(this, "SOMETHING FAILED (try again later)");
+                }
+            }
+
+            _running_main_action = false;
+
+            enableTOPControls(true);
+
+            Helpers.GUIRun(() -> {
+                MAIN_WINDOW.getProgressbar().setIndeterminate(false);
+                MAIN_WINDOW.getStatus_label().setText("");
+                options_menu.setEnabled(true);
+                vamos_button.setEnabled(true);
+            });
+
+        });
+    }//GEN-LAST:event_new_accountActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -3502,6 +3567,7 @@ public class Main extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JMenuBar barra_menu;
     private javax.swing.JButton cancel_all_button;
     private javax.swing.JCheckBox check_only_new_checkbox;
     private javax.swing.JButton clear_log_button;
@@ -3510,8 +3576,6 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JScrollPane cuentas_scrollpanel;
     private javax.swing.JTextArea cuentas_textarea;
     private javax.swing.JMenu jMenu1;
-    private javax.swing.JMenu jMenu2;
-    private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JMenuItem jMenuItem2;
     private javax.swing.JPanel jPanel1;
@@ -3519,6 +3583,8 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JLabel logo_label;
     private javax.swing.JSplitPane mainSplitPanel;
     private javax.swing.JCheckBoxMenuItem menu_https;
+    private javax.swing.JButton new_account;
+    private javax.swing.JMenu options_menu;
     private javax.swing.JTextPane output_textarea;
     private javax.swing.JButton pause_button;
     private javax.swing.JProgressBar progressbar;

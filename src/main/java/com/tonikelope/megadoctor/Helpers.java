@@ -70,9 +70,12 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
@@ -109,6 +112,9 @@ import javax.swing.JTextPane;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.undo.UndoManager;
+import me.shivzee.JMailTM;
+import me.shivzee.util.JMailBuilder;
+import me.shivzee.util.Message;
 
 /**
  *
@@ -424,6 +430,99 @@ public class Helpers {
             w.repaint();
 
         });
+
+    }
+
+    public static String genRandomString(int l) {
+        if (l < 1) {
+            throw new IllegalArgumentException("Length must be > 0");
+        }
+        StringBuilder cadena = new StringBuilder(l);
+        for (int i = 0; i < l; i++) {
+            var tipo = new Random().nextInt(62);
+            char caracter;
+            if (tipo < 10) {
+                // Generar un dígito (0-9)
+                caracter = (char) ('0' + tipo);
+            } else if (tipo < 36) {
+                // Generar una letra mayúscula (A-Z)
+                caracter = (char) ('A' + tipo - 10);
+            } else {
+                // Generar una letra minúscula (a-z)
+                caracter = (char) ('a' + tipo - 36);
+            }
+            cadena.append(caracter);
+        }
+        return cadena.toString();
+    }
+
+    public static String[] registerNewMEGAaccount() {
+
+        final CyclicBarrier barrera = new CyclicBarrier(2);
+
+        JMailTM mailer = null;
+
+        final String password = Helpers.genRandomString(32);
+
+        final String[] c = new String[1];
+
+        try {
+            mailer = JMailBuilder.createDefault(password);
+
+            mailer.init();
+
+            final String email = mailer.getSelf().getEmail();
+
+            mailer.openEventListener(new me.shivzee.callbacks.EventListener() {
+                @Override
+                public void onMessageReceived(Message message) {
+
+                    try {
+
+                        String link = Helpers.findFirstRegex("https.*?#confirm[a-zA-Z0-9_-]+", message.getContent(), 0);
+
+                        if (link != null) {
+
+                            String[] confirm = Helpers.runProcess(new String[]{"mega-confirm", link, email, password}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null, true, null);
+
+                            c[0] = confirm[2];
+
+                            barrera.await();
+                        }
+
+                    } catch (Exception ex) {
+                        Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+
+                @Override
+                public void onError(String error) {
+                    Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, "Some Error Occurred {0}", error);
+                }
+            });
+
+            String[] register = Helpers.runProcess(new String[]{"mega-signup", mailer.getSelf().getEmail(), password}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null, true, null);
+
+            if (Integer.parseInt(register[2]) == 0) {
+
+                try {
+                    barrera.await(120, TimeUnit.SECONDS);
+                } catch (Exception ex) {
+                    Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+                mailer.closeMessageListener();
+
+                return (!barrera.isBroken() && Integer.parseInt(c[0]) == 0) ? new String[]{mailer.getSelf().getEmail(), password} : null;
+            }
+
+            mailer.closeMessageListener();
+
+        } catch (Exception ex) {
+            Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return null;
 
     }
 
