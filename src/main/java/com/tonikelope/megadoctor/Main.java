@@ -65,7 +65,7 @@ import javax.swing.text.BadLocationException;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.87";
+    public final static String VERSION = "2.88";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -219,6 +219,7 @@ public class Main extends javax.swing.JFrame {
         transferences_control_panel.setVisible(false);
         progressbar.setMinimum(0);
         getUpload_button().setEnabled(false);
+        new_account_button.setEnabled(false);
         transf_scroll.getVerticalScrollBar().setUnitIncrement(20);
         setTitle("MegaDoctor " + VERSION + " - MEGAcmd's best friend");
         progressbar.setIndeterminate(true);
@@ -761,7 +762,8 @@ public class Main extends javax.swing.JFrame {
             getVamos_button().setEnabled(enable || isRunning_global_check());
             getUpload_button().setEnabled(enable && !isPausing_transference() && !isProvisioning_upload());
             getSave_button().setEnabled(enable);
-            new_account.setEnabled(enable);
+            new_account_button.setEnabled(enable);
+            options_menu.setEnabled(enable);
         });
     }
 
@@ -1943,7 +1945,7 @@ public class Main extends javax.swing.JFrame {
                             cuentas_textarea.setForeground(null);
                         }
 
-                        cuentas_textarea.append(String.join("\n", accounts));
+                        cuentas_textarea.append(String.join("\n", accounts) + "\n");
 
                         cuentas_textarea.setCaretPosition(0);
 
@@ -2208,9 +2210,6 @@ public class Main extends javax.swing.JFrame {
         vamos_button = new javax.swing.JButton();
         status_label = new javax.swing.JLabel();
         progressbar = new javax.swing.JProgressBar();
-        save_button = new javax.swing.JButton();
-        upload_button = new javax.swing.JButton();
-        clear_log_button = new javax.swing.JButton();
         check_only_new_checkbox = new javax.swing.JCheckBox();
         show_accounts = new javax.swing.JLabel();
         mainSplitPanel = new javax.swing.JSplitPane();
@@ -2227,12 +2226,17 @@ public class Main extends javax.swing.JFrame {
         pause_button = new javax.swing.JButton();
         copy_all_button = new javax.swing.JButton();
         transferences_panel = new javax.swing.JPanel();
-        new_account = new javax.swing.JButton();
+        jPanel2 = new javax.swing.JPanel();
+        clear_log_button = new javax.swing.JButton();
+        new_account_button = new javax.swing.JButton();
+        upload_button = new javax.swing.JButton();
+        save_button = new javax.swing.JButton();
         barra_menu = new javax.swing.JMenuBar();
         options_menu = new javax.swing.JMenu();
         jMenuItem2 = new javax.swing.JMenuItem();
         session_menu = new javax.swing.JCheckBoxMenuItem();
         menu_https = new javax.swing.JCheckBoxMenuItem();
+        jSeparator1 = new javax.swing.JPopupMenu.Separator();
         purge_cache_menu = new javax.swing.JMenuItem();
         jMenu1 = new javax.swing.JMenu();
         jMenuItem1 = new javax.swing.JMenuItem();
@@ -2269,41 +2273,6 @@ public class Main extends javax.swing.JFrame {
         status_label.setFont(new java.awt.Font("Noto Sans", 3, 18)); // NOI18N
         status_label.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
         status_label.setDoubleBuffered(true);
-
-        save_button.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
-        save_button.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/guardar.png"))); // NOI18N
-        save_button.setText("SAVE LOG TO FILE");
-        save_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-        save_button.setDoubleBuffered(true);
-        save_button.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                save_buttonActionPerformed(evt);
-            }
-        });
-
-        upload_button.setBackground(new java.awt.Color(0, 0, 0));
-        upload_button.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
-        upload_button.setForeground(new java.awt.Color(255, 255, 255));
-        upload_button.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/new_upload.png"))); // NOI18N
-        upload_button.setText("NEW UPLOAD");
-        upload_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-        upload_button.setDoubleBuffered(true);
-        upload_button.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                upload_buttonActionPerformed(evt);
-            }
-        });
-
-        clear_log_button.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
-        clear_log_button.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/trash.png"))); // NOI18N
-        clear_log_button.setText("CLEAR LOG");
-        clear_log_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-        clear_log_button.setDoubleBuffered(true);
-        clear_log_button.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                clear_log_buttonActionPerformed(evt);
-            }
-        });
 
         check_only_new_checkbox.setFont(new java.awt.Font("Noto Sans", 1, 16)); // NOI18N
         check_only_new_checkbox.setSelected(true);
@@ -2472,16 +2441,78 @@ public class Main extends javax.swing.JFrame {
 
         mainSplitPanel.setBottomComponent(tabbed_panel);
 
-        new_account.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
-        new_account.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/mega.png"))); // NOI18N
-        new_account.setText("NEW ACCOUNT");
-        new_account.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-        new_account.setDoubleBuffered(true);
-        new_account.addActionListener(new java.awt.event.ActionListener() {
+        clear_log_button.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
+        clear_log_button.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/trash.png"))); // NOI18N
+        clear_log_button.setText("CLEAR LOG");
+        clear_log_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        clear_log_button.setDoubleBuffered(true);
+        clear_log_button.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                new_accountActionPerformed(evt);
+                clear_log_buttonActionPerformed(evt);
             }
         });
+
+        new_account_button.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
+        new_account_button.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/mega.png"))); // NOI18N
+        new_account_button.setText("NEW ACCOUNT");
+        new_account_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        new_account_button.setDoubleBuffered(true);
+        new_account_button.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                new_account_buttonActionPerformed(evt);
+            }
+        });
+
+        upload_button.setBackground(new java.awt.Color(0, 0, 0));
+        upload_button.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
+        upload_button.setForeground(new java.awt.Color(255, 255, 255));
+        upload_button.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/new_upload.png"))); // NOI18N
+        upload_button.setText("NEW UPLOAD");
+        upload_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        upload_button.setDoubleBuffered(true);
+        upload_button.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                upload_buttonActionPerformed(evt);
+            }
+        });
+
+        save_button.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
+        save_button.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/guardar.png"))); // NOI18N
+        save_button.setText("SAVE LOG TO FILE");
+        save_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        save_button.setDoubleBuffered(true);
+        save_button.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                save_buttonActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
+        jPanel2.setLayout(jPanel2Layout);
+        jPanel2Layout.setHorizontalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addGap(0, 0, 0)
+                .addComponent(upload_button)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(new_account_button)
+                .addGap(18, 18, 18)
+                .addComponent(save_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(clear_log_button)
+                .addGap(0, 0, 0))
+        );
+        jPanel2Layout.setVerticalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(upload_button)
+                        .addComponent(save_button)
+                        .addComponent(clear_log_button))
+                    .addComponent(new_account_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(0, 0, 0))
+        );
 
         barra_menu.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
 
@@ -2511,6 +2542,7 @@ public class Main extends javax.swing.JFrame {
             }
         });
         options_menu.add(menu_https);
+        options_menu.add(jSeparator1);
 
         purge_cache_menu.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
         purge_cache_menu.setForeground(new java.awt.Color(255, 0, 0));
@@ -2557,15 +2589,8 @@ public class Main extends javax.swing.JFrame {
                         .addComponent(logo_label)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(upload_button)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(new_account)
-                                .addGap(18, 18, 18)
-                                .addComponent(save_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(clear_log_button))
-                            .addComponent(vamos_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                            .addComponent(vamos_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                     .addComponent(mainSplitPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(check_only_new_checkbox)
@@ -2576,16 +2601,13 @@ public class Main extends javax.swing.JFrame {
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(logo_label, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(upload_button)
-                        .addComponent(save_button)
-                        .addComponent(clear_log_button)
-                        .addComponent(new_account, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                    .addComponent(logo_label)
                     .addGroup(layout.createSequentialGroup()
                         .addContainerGap()
-                        .addComponent(vamos_button)))
+                        .addComponent(vamos_button)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(check_only_new_checkbox)
@@ -2595,7 +2617,7 @@ public class Main extends javax.swing.JFrame {
                     .addComponent(progressbar, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(show_accounts))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(mainSplitPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 607, Short.MAX_VALUE)
+                .addComponent(mainSplitPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 615, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -3450,13 +3472,11 @@ public class Main extends javax.swing.JFrame {
         saveMISC();
     }//GEN-LAST:event_menu_httpsActionPerformed
 
-    private void new_accountActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_new_accountActionPerformed
+    private void new_account_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_new_account_buttonActionPerformed
         // TODO add your handling code here:
         _running_main_action = true;
 
         enableTOPControls(false);
-        options_menu.setEnabled(false);
-        vamos_button.setEnabled(false);
         MAIN_WINDOW.getProgressbar().setIndeterminate(true);
         MAIN_WINDOW.getStatus_label().setText("Creating new account, please wait...");
 
@@ -3465,10 +3485,10 @@ public class Main extends javax.swing.JFrame {
             logout(true);
 
             if (Helpers.mostrarMensajeInformativoSINO(this,
-                    "This feature has been included to facilitate the creation of your MEGA account through"
-                    + "\nits official API (in case you do not want or are unable to use a web browser)."
-                    + "\n<b>YOU MUST USE IT RESPECTING ITS TERMS OF USE</b>"
-                    + "\n\nCONTINUE?") == 0) {
+                    "This feature helps in the creation of your MEGA account through its official API"
+                    + "\n(in case you do not want or are unable to use a web browser)."
+                    + "\n<b>YOU MUST AGREE TO ITS TERMS OF USE</b>"
+                    + "\n\n<b>CONTINUE?</b>") == 0) {
 
                 String[] account = Helpers.registerNewMEGAaccount();
 
@@ -3487,19 +3507,16 @@ public class Main extends javax.swing.JFrame {
                 }
             }
 
-            _running_main_action = false;
-
-            enableTOPControls(true);
-
-            Helpers.GUIRun(() -> {
+            Helpers.GUIRunAndWait(() -> {
+                enableTOPControls(true);
                 MAIN_WINDOW.getProgressbar().setIndeterminate(false);
                 MAIN_WINDOW.getStatus_label().setText("");
-                options_menu.setEnabled(true);
-                vamos_button.setEnabled(true);
             });
 
+            _running_main_action = false;
+
         });
-    }//GEN-LAST:event_new_accountActionPerformed
+    }//GEN-LAST:event_new_account_buttonActionPerformed
 
     /**
      * @param args the command line arguments
@@ -3579,11 +3596,13 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JMenuItem jMenuItem2;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JLabel logo_label;
     private javax.swing.JSplitPane mainSplitPanel;
     private javax.swing.JCheckBoxMenuItem menu_https;
-    private javax.swing.JButton new_account;
+    private javax.swing.JButton new_account_button;
     private javax.swing.JMenu options_menu;
     private javax.swing.JTextPane output_textarea;
     private javax.swing.JButton pause_button;
