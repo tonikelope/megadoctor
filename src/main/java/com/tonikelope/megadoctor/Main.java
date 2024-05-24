@@ -65,7 +65,7 @@ import javax.swing.text.BadLocationException;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.89";
+    public final static String VERSION = "2.90";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -519,7 +519,7 @@ public class Main extends javax.swing.JFrame {
 
                                 cuentas_textarea.setEnabled(!busy());
 
-                                new_account_button.setEnabled(!busy());
+                                new_account_button.setEnabled(!busy() || (_current_transference != null && _current_transference.isPaused()));
 
                                 purge_cache_menu.setEnabled(!busy());
 
@@ -543,7 +543,7 @@ public class Main extends javax.swing.JFrame {
 
                                 cuentas_textarea.setEnabled(!busy());
 
-                                new_account_button.setEnabled(!busy());
+                                new_account_button.setEnabled(!busy() || (_current_transference != null && _current_transference.isPaused()));
 
                                 purge_cache_menu.setEnabled(!busy());
                             }
@@ -3486,38 +3486,43 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.threadRun(() -> {
 
-            logout(true);
+            synchronized (TRANSFERENCES_LOCK) {
 
-            if (Helpers.mostrarMensajeInformativoSINO(this,
-                    "This feature helps in the creation of your MEGA account through its official API"
-                    + "\n(in case you do not want or are unable to use a web browser)."
-                    + "\n<b>YOU MUST AGREE TO ITS TERMS OF USE</b>"
-                    + "\n\n<b>CONTINUE?</b>") == 0) {
+                logout(true);
 
-                String[] account = Helpers.registerNewMEGAaccount();
+                if (Helpers.mostrarMensajeInformativoSINO(this,
+                        "This feature helps in the creation of your MEGA account through its official API"
+                        + "\n(in case you do not want or are unable to use a web browser)."
+                        + "\n<b>YOU MUST AGREE TO ITS TERMS OF USE</b>"
+                        + "\n\n<b>CONTINUE?</b>") == 0) {
 
-                if (account != null) {
+                    String[] account = Helpers.registerNewMEGAaccount();
 
-                    Helpers.mostrarMensajeInformativo(this, "<b>Account successfully created</b>\n" + String.join("#", account));
+                    if (account != null) {
 
-                    output_textarea_append("\nAccount successfully created:\n" + String.join("#", account) + "\n\n");
+                        Helpers.mostrarMensajeInformativo(this, "<b>Account successfully created</b>\n" + String.join("#", account));
 
-                    Helpers.GUIRun(() -> {
-                        this.cuentas_textarea.append("\n" + String.join("#", account));
-                    });
+                        output_textarea_append("\nAccount successfully created:\n" + String.join("#", account) + "\n\n");
 
-                } else {
-                    Helpers.mostrarMensajeInformativo(this, "SOMETHING FAILED (try again later)");
+                        Helpers.GUIRun(() -> {
+                            this.cuentas_textarea.append("\n" + String.join("#", account));
+                        });
+
+                    } else {
+                        Helpers.mostrarMensajeInformativo(this, "SOMETHING FAILED (try again later)");
+                    }
                 }
+
+                Helpers.GUIRunAndWait(() -> {
+                    enableTOPControls(true);
+                    MAIN_WINDOW.getProgressbar().setIndeterminate(false);
+                    MAIN_WINDOW.getStatus_label().setText("");
+                });
+
+                _running_main_action = false;
+
+                TRANSFERENCES_LOCK.notifyAll();
             }
-
-            Helpers.GUIRunAndWait(() -> {
-                enableTOPControls(true);
-                MAIN_WINDOW.getProgressbar().setIndeterminate(false);
-                MAIN_WINDOW.getStatus_label().setText("");
-            });
-
-            _running_main_action = false;
 
         });
     }//GEN-LAST:event_new_account_buttonActionPerformed
