@@ -65,7 +65,7 @@ import javax.swing.text.BadLocationException;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.88";
+    public final static String VERSION = "2.89";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -519,6 +519,8 @@ public class Main extends javax.swing.JFrame {
 
                                 cuentas_textarea.setEnabled(!busy());
 
+                                new_account_button.setEnabled(!busy());
+
                                 purge_cache_menu.setEnabled(!busy());
 
                                 getPause_button().setVisible(isSomeTransference_running());
@@ -540,6 +542,8 @@ public class Main extends javax.swing.JFrame {
                                 vamos_button.setEnabled(!busy() || (isRunning_global_check() && !isAborting_global_check()));
 
                                 cuentas_textarea.setEnabled(!busy());
+
+                                new_account_button.setEnabled(!busy());
 
                                 purge_cache_menu.setEnabled(!busy());
                             }
