@@ -65,7 +65,7 @@ import javax.swing.text.BadLocationException;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.91";
+    public final static String VERSION = "2.92";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -1760,49 +1760,42 @@ public class Main extends javax.swing.JFrame {
 
         });
 
-        if (MEGA_ACCOUNTS.containsKey(email) || refresh_session) {
+        Main.FREE_SPACE_CACHE.remove(email);
 
-            Main.FREE_SPACE_CACHE.remove(email);
+        if (!MEGA_ACCOUNTS.containsKey(email) || refresh_session) {
 
-            if (refresh_session) {
+            String[] account_data = Helpers.extractAccountLoginDataFromText(email, cuentas_textarea.getText());
 
-                String[] account_data = Helpers.extractAccountLoginDataFromText(email, cuentas_textarea.getText());
-
-                if (!MEGA_ACCOUNTS.containsKey(email) || !account_data[1].equals(MEGA_ACCOUNTS.get(email))) {
-                    MEGA_ACCOUNTS.put(email, account_data[1]);
-                }
-
-                MEGA_SESSIONS.remove(email);
-
-                logout(false);
+            if (!MEGA_ACCOUNTS.containsKey(email) || !account_data[1].equals(MEGA_ACCOUNTS.get(email))) {
+                MEGA_ACCOUNTS.put(email, account_data[1]);
             }
 
-            if (login(email)) {
+            MEGA_SESSIONS.remove(email);
 
-                String stats = getAccountStatistics(email);
+            logout(false);
+        }
 
-                parseAccountNodes(email);
+        if (login(email)) {
 
-                _last_email_force_refresh = email;
+            String stats = getAccountStatistics(email);
 
-                Helpers.GUIRun(() -> {
+            parseAccountNodes(email);
 
-                    output_textarea_append("\n[" + email + "] (" + reason + ")\n\n" + stats + "\n\n");
-                    Helpers.JTextFieldRegularPopupMenu.addMainMEGAPopupMenuTo(output_textarea);
-                    Helpers.JTextFieldRegularPopupMenu.addAccountsMEGAPopupMenuTo(cuentas_textarea);
-                });
+            _last_email_force_refresh = email;
 
-                if (notification) {
-                    Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "<b>" + email + "</b>\nREFRESHED");
-                }
-            } else {
-                output_textarea_append("\n[" + email + "] LOGIN ERROR\n\n");
-                Helpers.mostrarMensajeError(MAIN_WINDOW, "LOGIN ERROR WITH <b>" + email + "</b>");
+            Helpers.GUIRun(() -> {
+
+                output_textarea_append("\n[" + email + "] (" + reason + ")\n\n" + stats + "\n\n");
+                Helpers.JTextFieldRegularPopupMenu.addMainMEGAPopupMenuTo(output_textarea);
+                Helpers.JTextFieldRegularPopupMenu.addAccountsMEGAPopupMenuTo(cuentas_textarea);
+            });
+
+            if (notification) {
+                Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "<b>" + email + "</b>\nREFRESHED");
             }
-
         } else {
-
-            Helpers.mostrarMensajeError(MAIN_WINDOW, "YOU MUST SELECT AN ALREADY CHECKED ACCOUNT OR FORCE A FULL REFRESH");
+            output_textarea_append("\n[" + email + "] LOGIN ERROR\n\n");
+            Helpers.mostrarMensajeError(MAIN_WINDOW, "LOGIN ERROR WITH <b>" + email + "</b>");
         }
 
         Helpers.GUIRunAndWait(() -> {
