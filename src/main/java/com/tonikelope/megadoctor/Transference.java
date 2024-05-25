@@ -379,6 +379,9 @@ public final class Transference extends javax.swing.JPanel {
                 progress.setIndeterminate(true);
                 folder_stats_scroll.setVisible(false);
                 action.setText("RESET (QUEUED)");
+                if (getBackground().equals(Main.MAIN_WINDOW.getPause_button().getBackground())) {
+                    setBackground(null);
+                }
                 Main.MAIN_WINDOW.getTransferences().revalidate();
                 Main.MAIN_WINDOW.getTransferences().repaint();
             });
@@ -411,6 +414,10 @@ public final class Transference extends javax.swing.JPanel {
                 status_icon.setVisible(true);
 
                 action.setText("CANCELED");
+
+                if (getBackground().equals(Main.MAIN_WINDOW.getPause_button().getBackground())) {
+                    setBackground(null);
+                }
 
                 Main.MAIN_WINDOW.getTransferences().revalidate();
 

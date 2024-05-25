@@ -122,6 +122,8 @@ import me.shivzee.util.Message;
  */
 public class Helpers {
 
+    public static final int NEW_ACCOUNT_CONFIRM_TIMEOUT = 60;
+
     public static final ConcurrentLinkedQueue<Process> PROCESSES_QUEUE = new ConcurrentLinkedQueue<>();
 
     public static void createMegaDoctorDir() {
@@ -466,6 +468,31 @@ public class Helpers {
 
         final String[] c = new String[1];
 
+        c[0] = "*";
+
+        Helpers.threadRun(() -> {
+
+            int t = Helpers.NEW_ACCOUNT_CONFIRM_TIMEOUT;
+
+            while (!barrera.isBroken() && "*".equals(c[0]) && t > 0) {
+                final int ft = t--;
+
+                Helpers.GUIRun(() -> {
+                    MAIN_WINDOW.getStatus_label().setText("Creating new account, please wait (" + String.valueOf(ft) + ")...");
+                });
+
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+
+            Helpers.GUIRun(() -> {
+                MAIN_WINDOW.getStatus_label().setText("");
+            });
+        });
+
         try {
             mailer = JMailBuilder.createDefault(password);
 
@@ -506,7 +533,7 @@ public class Helpers {
             if (Integer.parseInt(register[2]) == 0) {
 
                 try {
-                    barrera.await(120, TimeUnit.SECONDS);
+                    barrera.await(NEW_ACCOUNT_CONFIRM_TIMEOUT, TimeUnit.SECONDS);
                 } catch (Exception ex) {
                     Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
                 }

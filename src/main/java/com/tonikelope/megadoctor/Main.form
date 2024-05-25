@@ -538,7 +538,7 @@
                   <Component id="upload_button" min="-2" max="-2" attributes="0"/>
                   <EmptySpace max="-2" attributes="0"/>
                   <Component id="new_account_button" min="-2" max="-2" attributes="0"/>
-                  <EmptySpace type="separate" max="-2" attributes="0"/>
+                  <EmptySpace type="separate" max="32767" attributes="0"/>
                   <Component id="save_button" max="32767" attributes="0"/>
                   <EmptySpace max="-2" attributes="0"/>
                   <Component id="clear_log_button" min="-2" max="-2" attributes="0"/>

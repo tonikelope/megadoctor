@@ -65,7 +65,7 @@ import javax.swing.text.BadLocationException;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.90";
+    public final static String VERSION = "2.91";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -519,7 +519,7 @@ public class Main extends javax.swing.JFrame {
 
                                 cuentas_textarea.setEnabled(!busy());
 
-                                new_account_button.setEnabled(!busy() || (_current_transference != null && _current_transference.isPaused()));
+                                new_account_button.setEnabled(getUpload_button().isEnabled());
 
                                 purge_cache_menu.setEnabled(!busy());
 
@@ -543,7 +543,7 @@ public class Main extends javax.swing.JFrame {
 
                                 cuentas_textarea.setEnabled(!busy());
 
-                                new_account_button.setEnabled(!busy() || (_current_transference != null && _current_transference.isPaused()));
+                                new_account_button.setEnabled(getUpload_button().isEnabled());
 
                                 purge_cache_menu.setEnabled(!busy());
                             }
@@ -2500,7 +2500,7 @@ public class Main extends javax.swing.JFrame {
                 .addComponent(upload_button)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(new_account_button)
-                .addGap(18, 18, 18)
+                .addGap(18, 18, Short.MAX_VALUE)
                 .addComponent(save_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(clear_log_button)
@@ -2932,6 +2932,8 @@ public class Main extends javax.swing.JFrame {
 
             getPause_button().setEnabled(false);
 
+            new_account_button.setEnabled(false);
+
             Helpers.threadRun(() -> {
 
                 while (isSomeTransference_running() && isPausing_transference()) {
@@ -2986,6 +2988,7 @@ public class Main extends javax.swing.JFrame {
                                 Helpers.GUIRunAndWait(() -> {
                                     progressbar.setIndeterminate(false);
                                     getUpload_button().setEnabled(true);
+                                    new_account_button.setEnabled(true);
                                     getPause_button().setEnabled(true);
                                     getUpload_button().setText("NEW UPLOAD");
                                 });
@@ -3171,6 +3174,7 @@ public class Main extends javax.swing.JFrame {
 
                                         progressbar.setIndeterminate(false);
                                         getUpload_button().setEnabled(true);
+                                        new_account_button.setEnabled(true);
                                         getPause_button().setEnabled(true);
                                         getUpload_button().setText("NEW UPLOAD");
                                     });
@@ -3185,6 +3189,7 @@ public class Main extends javax.swing.JFrame {
                     } else {
                         getUpload_button().setText("NEW UPLOAD");
                         getUpload_button().setEnabled(true);
+                        new_account_button.setEnabled(true);
                         getPause_button().setEnabled(true);
 
                         _provisioning_upload = false;
