@@ -65,7 +65,7 @@ import javax.swing.text.BadLocationException;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.92";
+    public final static String VERSION = "2.93";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -3489,7 +3489,7 @@ public class Main extends javax.swing.JFrame {
                 logout(true);
 
                 if (Helpers.mostrarMensajeInformativoSINO(this,
-                        "This feature helps in the creation of your MEGA account through its official API"
+                        "This feature helps in the creation of a MEGA account through its official API"
                         + "\n(in case you do not want or are unable to use a web browser)."
                         + "\n<b>YOU MUST AGREE TO ITS TERMS OF USE</b>"
                         + "\n\n<b>CONTINUE?</b>") == 0) {
@@ -3500,11 +3500,13 @@ public class Main extends javax.swing.JFrame {
 
                         Helpers.mostrarMensajeInformativo(this, "<b>Account successfully created</b>\n" + String.join("#", account));
 
-                        output_textarea_append("\nAccount successfully created:\n" + String.join("#", account) + "\n\n");
+                        output_textarea_append("\nAccount successfully created (copied to clipboard):\n" + String.join("#", account) + "\n\n");
 
                         Helpers.GUIRun(() -> {
                             this.cuentas_textarea.append("\n" + String.join("#", account));
                         });
+                        
+                        Helpers.copyTextToClipboard(String.join("#", account));
 
                     } else {
                         Helpers.mostrarMensajeInformativo(this, "SOMETHING FAILED (try again later)");
