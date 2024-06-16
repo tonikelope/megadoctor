@@ -65,7 +65,7 @@ import javax.swing.text.BadLocationException;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.93";
+    public final static String VERSION = "2.94";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -3498,14 +3498,14 @@ public class Main extends javax.swing.JFrame {
 
                     if (account != null) {
 
-                        Helpers.mostrarMensajeInformativo(this, "<b>Account successfully created</b>\n" + String.join("#", account));
+                        Helpers.mostrarMensajeInformativo(this, "<b>Account successfully created (copied to clipboard)</b>\n" + String.join("#", account));
 
                         output_textarea_append("\nAccount successfully created (copied to clipboard):\n" + String.join("#", account) + "\n\n");
 
                         Helpers.GUIRun(() -> {
                             this.cuentas_textarea.append("\n" + String.join("#", account));
                         });
-                        
+
                         Helpers.copyTextToClipboard(String.join("#", account));
 
                     } else {
@@ -3574,21 +3574,45 @@ public class Main extends javax.swing.JFrame {
             });
 
         } catch (Exception ex) {
-            Helpers.mostrarMensajeError(null, "THERE IS ANOTHER MEGADOCTOR INSTANCE ALREADY RUNNING");
+            if (Helpers.mostrarMensajeInformativoSINO(null, "<b>THERE IS ANOTHER MEGADOCTOR INSTANCE ALREADY RUNNING</b>\n\nIT IS STRONGLY DISCOURAGED TO RUN SEVERAL INSTANCES OF MEGADOCTOR\nAT THE SAME TIME BECAUSE THEY COULD CORRUPT YOUR FILES\n\n<b>Continue anyway ignoring this warning?</b>") == 0) {
 
-            if (ONE_INSTANCE_SOCKET != null) {
-                try {
-                    ONE_INSTANCE_SOCKET.close();
-                } catch (IOException ex2) {
-                    Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                if (ONE_INSTANCE_SOCKET != null) {
+                    try {
+                        ONE_INSTANCE_SOCKET.close();
+                    } catch (IOException ex2) {
+                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 }
+
+                Helpers.createMegaDoctorDir();
+
+                /* Create and display the form */
+                java.awt.EventQueue.invokeLater(new Runnable() {
+                    public void run() {
+
+                        MAIN_WINDOW = new Main();
+                        MAIN_WINDOW.init();
+                        MAIN_WINDOW.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                        MAIN_WINDOW.setVisible(true);
+                    }
+                });
+
+            } else {
+
+                if (ONE_INSTANCE_SOCKET != null) {
+                    try {
+                        ONE_INSTANCE_SOCKET.close();
+                    } catch (IOException ex2) {
+                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+
+                Main.EXIT = true;
+
+                Helpers.destroyAllExternalProcesses();
+
+                System.exit(1);
             }
-
-            Main.EXIT = true;
-
-            Helpers.destroyAllExternalProcesses();
-
-            System.exit(1);
         }
     }
 
