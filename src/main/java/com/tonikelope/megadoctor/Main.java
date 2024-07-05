@@ -65,7 +65,7 @@ import javax.swing.text.BadLocationException;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.95";
+    public final static String VERSION = "2.96";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -351,9 +351,7 @@ public class Main extends javax.swing.JFrame {
 
                                         }
 
-                                        RandomAccessFile toFile = new RandomAccessFile(fileName.toFile(), "rw");
-
-                                        try (FileChannel toChannel = toFile.getChannel()) {
+                                        try (RandomAccessFile toFile = new RandomAccessFile(fileName.toFile(), "rw"); FileChannel toChannel = toFile.getChannel()) {
 
                                             if (toFile.length() > 0) {
                                                 toChannel.position(toFile.length());
@@ -362,23 +360,14 @@ public class Main extends javax.swing.JFrame {
                                             sourceChannel.position(position);
 
                                             toChannel.transferFrom(sourceChannel, toFile.length(), current_chunk_size - toFile.length());
+
+                                            toChannel.force(true);
                                         }
 
-                                        if (toFile.length() != current_chunk_size) {
-
-                                            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "FILE SPLITTER BAD CHUNK SIZE ERROR! " + fileName.toString() + " " + String.valueOf(toFile.length()) + " <-----> " + String.valueOf(current_chunk_size));
-
-                                        }
-
-                                        toFile.close();
                                     } else {
                                         Logger.getLogger(Main.class.getName()).log(Level.WARNING, "FileSplitter PART " + String.valueOf(i + 1) + " EXISTS (SKIPPING)" + task[0]);
                                     }
 
-                                }
-
-                                if (Files.size(fileName) != current_chunk_size) {
-                                    throw new Exception("FILE SPLITTER BAD CHUNK SIZE ERROR! " + fileName.toString());
                                 }
 
                             } else {
@@ -405,9 +394,7 @@ public class Main extends javax.swing.JFrame {
 
                                             }
 
-                                            RandomAccessFile toFile = new RandomAccessFile(fileName.toFile(), "rw");
-
-                                            try (FileChannel toChannel = toFile.getChannel()) {
+                                            try (RandomAccessFile toFile = new RandomAccessFile(fileName.toFile(), "rw"); FileChannel toChannel = toFile.getChannel();) {
 
                                                 if (toFile.length() > 0) {
                                                     toChannel.position(toFile.length());
@@ -416,17 +403,9 @@ public class Main extends javax.swing.JFrame {
                                                 sourceChannel.position(position);
 
                                                 toChannel.transferFrom(sourceChannel, toFile.length(), current_chunk_size - toFile.length());
+
+                                                toChannel.force(true);
                                             }
-
-                                            if (toFile.length() != current_chunk_size) {
-
-                                                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "FILE SPLITTER BAD CHUNK SIZE ERROR! " + fileName.toString() + " " + String.valueOf(toFile.length()) + " <-----> " + String.valueOf(current_chunk_size));
-
-                                                i--;
-
-                                            }
-
-                                            toFile.close();
 
                                         } else {
                                             Logger.getLogger(Main.class.getName()).log(Level.WARNING, "FileSplitter PART " + String.valueOf(i + 1) + " EXISTS (SKIPPING)" + task[0]);
