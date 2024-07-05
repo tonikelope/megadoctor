@@ -65,7 +65,7 @@ import javax.swing.text.BadLocationException;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.96";
+    public final static String VERSION = "2.97";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -341,7 +341,7 @@ public class Main extends javax.swing.JFrame {
 
                                     if (!(Files.exists(fileName) && Files.size(fileName) == current_chunk_size)) {
 
-                                        Logger.getLogger(Main.class.getName()).log(Level.WARNING, "FileSplitter PART " + String.valueOf(i + 1) + " " + task[0]);
+                                        Logger.getLogger(Main.class.getName()).log(Level.WARNING, "FileSplitter PART " + String.valueOf(i + 1) + " " + Helpers.formatBytes(current_chunk_size) + " " + task[0]);
 
                                         long position = chunk_size * i;
 
@@ -352,10 +352,6 @@ public class Main extends javax.swing.JFrame {
                                         }
 
                                         try (RandomAccessFile toFile = new RandomAccessFile(fileName.toFile(), "rw"); FileChannel toChannel = toFile.getChannel()) {
-
-                                            if (toFile.length() > 0) {
-                                                toChannel.position(toFile.length());
-                                            }
 
                                             sourceChannel.position(position);
 
@@ -384,7 +380,7 @@ public class Main extends javax.swing.JFrame {
 
                                         if (!(Files.exists(fileName) && Files.size(fileName) == current_chunk_size)) {
 
-                                            Logger.getLogger(Main.class.getName()).log(Level.WARNING, "FileSplitter PART " + String.valueOf(i + 1) + " " + task[0]);
+                                            Logger.getLogger(Main.class.getName()).log(Level.WARNING, "FileSplitter PART " + String.valueOf(i + 1) + " " + Helpers.formatBytes(current_chunk_size) + " " + task[0]);
 
                                             long position = chunk_size * i;
 
@@ -395,10 +391,6 @@ public class Main extends javax.swing.JFrame {
                                             }
 
                                             try (RandomAccessFile toFile = new RandomAccessFile(fileName.toFile(), "rw"); FileChannel toChannel = toFile.getChannel();) {
-
-                                                if (toFile.length() > 0) {
-                                                    toChannel.position(toFile.length());
-                                                }
 
                                                 sourceChannel.position(position);
 
