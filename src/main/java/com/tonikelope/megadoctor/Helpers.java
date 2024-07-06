@@ -43,6 +43,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.lang.reflect.InvocationTargetException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -115,6 +117,7 @@ import javax.swing.undo.UndoManager;
 import me.shivzee.JMailTM;
 import me.shivzee.util.JMailBuilder;
 import me.shivzee.util.Message;
+import uk.co.caprica.vlcjinfo.MediaInfo;
 
 /**
  *
@@ -125,6 +128,16 @@ public class Helpers {
     public static final int NEW_ACCOUNT_CONFIRM_TIMEOUT = 60;
 
     public static final ConcurrentLinkedQueue<Process> PROCESSES_QUEUE = new ConcurrentLinkedQueue<>();
+
+    public static String getMediaInfo(String filename) {
+        Writer writer = new StringWriter();
+
+        MediaInfo mediaInfo = MediaInfo.mediaInfo(filename);
+
+        mediaInfo.dump(writer);
+
+        return writer.toString();
+    }
 
     public static void createMegaDoctorDir() {
 
@@ -2195,6 +2208,19 @@ public class Helpers {
                 }
             };
 
+            Action copyMediaInfoLinkAction = new AbstractAction("COPY MEDIAINFO") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    Helpers.threadRun(() -> {
+
+                        Helpers.copyTextToClipboard(transference.getMediainfo());
+                        Helpers.mostrarMensajeInformativo(Main.MAIN_WINDOW, "MEDIAINFO COPIED TO CLIPBOARD");
+
+                    });
+
+                }
+            };
+
             if (!transference.isFinishing() && !transference.isFinished() && !transference.isCanceled()) {
 
                 JMenuItem cancelTransference = new JMenuItem(cancelTransferenceLinkAction);
@@ -2240,6 +2266,12 @@ public class Helpers {
                     popup.add(retryTransference);
                 }
             }
+
+            JMenuItem copyMediaInfo = new JMenuItem(copyMediaInfoLinkAction);
+
+            copyMediaInfo.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/mediainfo.png")));
+
+            popup.add(copyMediaInfo);
 
             updateComponentFont(popup, popup.getFont(), 1.20f);
 

@@ -66,6 +66,11 @@ public final class Transference extends javax.swing.JPanel {
     private volatile boolean _split_finished;
     private volatile boolean _retry;
     private volatile String _remote_handle = null;
+    private final String _mediainfo;
+
+    public String getMediainfo() {
+        return _mediainfo;
+    }
 
     public String getRemote_handle() {
         return _remote_handle;
@@ -1115,6 +1120,8 @@ public final class Transference extends javax.swing.JPanel {
         initComponents();
 
         status_icon.setVisible(false);
+
+        _mediainfo = Helpers.getMediaInfo(lpath);
 
         Helpers.JTextFieldRegularPopupMenu.addTransferencePopupMenuTo(this);
 
