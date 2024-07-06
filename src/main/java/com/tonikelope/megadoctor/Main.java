@@ -65,7 +65,7 @@ import javax.swing.text.BadLocationException;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.99";
+    public final static String VERSION = "3.0";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -3204,14 +3204,13 @@ public class Main extends javax.swing.JFrame {
                             Transference t = TRANSFERENCES_MAP.get(c);
 
                             if (t.isFinished()) {
-                                String filename = new File(t.getLpath()).getName();
 
                                 if (!t.isCanceled() && !t.isError()) {
 
-                                    links.add(filename + (t.getRemote_handle() != null ? " <" + t.getRemote_handle() + ">" : "") + " (" + Helpers.formatBytes(t.getFileSize()) + ")" + "   [" + t.getEmail() + "]   " + (t.getPublic_link() != null ? t.getPublic_link() : ""));
+                                    links.add(t.getLpath() + " -> " + t.getRpath() + " " + (t.getRemote_handle() != null ? " <" + t.getRemote_handle() + ">" : "") + " (" + Helpers.formatBytes(t.getFileSize()) + ")" + "   [" + t.getEmail() + "]   " + (t.getPublic_link() != null ? t.getPublic_link() : ""));
 
                                 } else {
-                                    links.add("[ERROR/CANCELED] " + filename + " (" + Helpers.formatBytes(t.getFileSize()) + ")" + "   [" + t.getEmail() + "]   ");
+                                    links.add("[ERROR/CANCELED] " + t.getLpath() + " (" + Helpers.formatBytes(t.getFileSize()) + ")" + "   [" + t.getEmail() + "]   ");
 
                                 }
 

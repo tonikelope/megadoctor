@@ -302,13 +302,13 @@ public final class Transference extends javax.swing.JPanel {
                             Transference t = TRANSFERENCES_MAP.get(c);
 
                             if (t == this && t.isFinished()) {
-                                String filename = new File(t.getLpath()).getName();
+
                                 if (!t.isCanceled() && !t.isError()) {
 
-                                    cleared_file = filename + (t.getRemote_handle() != null ? " <" + t.getRemote_handle() + ">" : "") + " (" + Helpers.formatBytes(t.getFileSize()) + ")" + "   [" + t.getEmail() + "]   " + (t.getPublic_link() != null ? t.getPublic_link() : "");
+                                    cleared_file = t.getLpath() + " -> " + t.getRpath() + " " + (t.getRemote_handle() != null ? " <" + t.getRemote_handle() + ">" : "") + " (" + Helpers.formatBytes(t.getFileSize()) + ")" + "   [" + t.getEmail() + "]   " + (t.getPublic_link() != null ? t.getPublic_link() : "");
 
                                 } else {
-                                    cleared_file = "[ERROR/CANCELED] " + filename + " (" + Helpers.formatBytes(t.getFileSize()) + ")" + "   [" + t.getEmail() + "]   ";
+                                    cleared_file = "[ERROR/CANCELED] " + t.getLpath() + " (" + Helpers.formatBytes(t.getFileSize()) + ")" + "   [" + t.getEmail() + "]   ";
 
                                 }
 
