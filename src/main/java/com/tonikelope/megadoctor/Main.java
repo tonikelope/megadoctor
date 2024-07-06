@@ -65,7 +65,7 @@ import javax.swing.text.BadLocationException;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "2.97";
+    public final static String VERSION = "2.98";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -343,19 +343,18 @@ public class Main extends javax.swing.JFrame {
 
                                         Logger.getLogger(Main.class.getName()).log(Level.WARNING, "FileSplitter PART " + String.valueOf(i + 1) + " " + Helpers.formatBytes(current_chunk_size) + " " + task[0]);
 
-                                        long position = chunk_size * i;
+                                        long source_offset = chunk_size * i;
 
-                                        if (Files.exists(fileName)) {
+                                        long dest_bytes_copied = Files.exists(fileName) ? Files.size(fileName) : 0;
 
-                                            position += Files.size(fileName);
+                                        try (RandomAccessFile toFile = new RandomAccessFile(fileName.toFile(), "rw"); FileChannel toChannel = toFile.getChannel();) {
 
-                                        }
+                                            while (dest_bytes_copied < current_chunk_size) {
 
-                                        try (RandomAccessFile toFile = new RandomAccessFile(fileName.toFile(), "rw"); FileChannel toChannel = toFile.getChannel()) {
+                                                sourceChannel.position(source_offset + dest_bytes_copied);
 
-                                            sourceChannel.position(position);
-
-                                            toChannel.transferFrom(sourceChannel, toFile.length(), current_chunk_size - toFile.length());
+                                                dest_bytes_copied += toChannel.transferFrom(sourceChannel, dest_bytes_copied, current_chunk_size - dest_bytes_copied);
+                                            }
 
                                             toChannel.force(true);
                                         }
@@ -382,19 +381,18 @@ public class Main extends javax.swing.JFrame {
 
                                             Logger.getLogger(Main.class.getName()).log(Level.WARNING, "FileSplitter PART " + String.valueOf(i + 1) + " " + Helpers.formatBytes(current_chunk_size) + " " + task[0]);
 
-                                            long position = chunk_size * i;
+                                            long source_offset = chunk_size * i;
 
-                                            if (Files.exists(fileName)) {
-
-                                                position += Files.size(fileName);
-
-                                            }
+                                            long dest_bytes_copied = Files.exists(fileName) ? Files.size(fileName) : 0;
 
                                             try (RandomAccessFile toFile = new RandomAccessFile(fileName.toFile(), "rw"); FileChannel toChannel = toFile.getChannel();) {
 
-                                                sourceChannel.position(position);
+                                                while (dest_bytes_copied < current_chunk_size) {
 
-                                                toChannel.transferFrom(sourceChannel, toFile.length(), current_chunk_size - toFile.length());
+                                                    sourceChannel.position(source_offset + dest_bytes_copied);
+
+                                                    dest_bytes_copied += toChannel.transferFrom(sourceChannel, dest_bytes_copied, current_chunk_size - dest_bytes_copied);
+                                                }
 
                                                 toChannel.force(true);
                                             }
