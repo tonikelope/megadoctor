@@ -65,7 +65,7 @@ import javax.swing.text.BadLocationException;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "3.0";
+    public final static String VERSION = "3.1";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -963,11 +963,11 @@ public class Main extends javax.swing.JFrame {
                                     String filename = new File(t.getLpath()).getName();
                                     if (!t.isCanceled() && !t.isError()) {
 
-                                        links.add(filename + (t.getRemote_handle() != null ? " <" + t.getRemote_handle() + ">" : "") + " (" + Helpers.formatBytes(t.getFileSize()) + ")" + "   [" + t.getEmail() + "]   " + (t.getPublic_link() != null ? t.getPublic_link() : ""));
+                                        links.add(t.getLpath() + " -> " + t.getRpath() + " " + (t.getRemote_handle() != null ? " <" + t.getRemote_handle() + ">" : "") + " (" + Helpers.formatBytes(t.getFileSize()) + ")" + "   [" + t.getEmail() + "]   " + (t.getPublic_link() != null ? t.getPublic_link() : ""));
 
                                     } else {
 
-                                        links.add("[ERROR/CANCELED] " + filename + " (" + Helpers.formatBytes(t.getFileSize()) + ")" + "   [" + t.getEmail() + "]   ");
+                                        links.add("[ERROR/CANCELED] " + t.getLpath() + " (" + Helpers.formatBytes(t.getFileSize()) + ")" + "   [" + t.getEmail() + "]   ");
 
                                     }
                                 }
@@ -2223,6 +2223,8 @@ public class Main extends javax.swing.JFrame {
         menu_https = new javax.swing.JCheckBoxMenuItem();
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
         purge_cache_menu = new javax.swing.JMenuItem();
+        jMenu2 = new javax.swing.JMenu();
+        jMenuItem3 = new javax.swing.JMenuItem();
         jMenu1 = new javax.swing.JMenu();
         jMenuItem1 = new javax.swing.JMenuItem();
 
@@ -2542,6 +2544,20 @@ public class Main extends javax.swing.JFrame {
         options_menu.add(purge_cache_menu);
 
         barra_menu.add(options_menu);
+
+        jMenu2.setText("Tools");
+        jMenu2.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
+
+        jMenuItem3.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
+        jMenuItem3.setText("MediaInfo");
+        jMenuItem3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem3ActionPerformed(evt);
+            }
+        });
+        jMenu2.add(jMenuItem3);
+
+        barra_menu.add(jMenu2);
 
         jMenu1.setText("Help");
         jMenu1.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
@@ -3514,6 +3530,33 @@ public class Main extends javax.swing.JFrame {
         });
     }//GEN-LAST:event_new_account_buttonActionPerformed
 
+    private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed
+        // TODO add your handling code here:
+        JFileChooser fileChooser = new JFileChooser();
+
+        fileChooser.setPreferredSize(new Dimension(800, 600));
+
+        Helpers.updateComponentFont(fileChooser, fileChooser.getFont(), 1.20f);
+
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+
+        int option = fileChooser.showOpenDialog(this);
+
+        if (option == JFileChooser.APPROVE_OPTION) {
+
+            File file = fileChooser.getSelectedFile();
+
+            String info = Helpers.getMediaInfo(file.getAbsolutePath());
+
+            Helpers.copyTextToClipboard(info);
+
+            Main.MAIN_WINDOW.output_textarea_append("\nMEDIAINFO of -> " + file.getAbsolutePath() + "\n" + info + "\n");
+
+            Helpers.mostrarMensajeInformativo(Main.MAIN_WINDOW, "MEDIAINFO COPIED TO CLIPBOARD");
+        }
+
+    }//GEN-LAST:event_jMenuItem3ActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -3613,8 +3656,10 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JScrollPane cuentas_scrollpanel;
     private javax.swing.JTextArea cuentas_textarea;
     private javax.swing.JMenu jMenu1;
+    private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JMenuItem jMenuItem2;
+    private javax.swing.JMenuItem jMenuItem3;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane2;
