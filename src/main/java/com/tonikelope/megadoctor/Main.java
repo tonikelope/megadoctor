@@ -65,7 +65,7 @@ import javax.swing.text.BadLocationException;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "3.1";
+    public final static String VERSION = "3.2";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -2224,7 +2224,7 @@ public class Main extends javax.swing.JFrame {
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
         purge_cache_menu = new javax.swing.JMenuItem();
         jMenu2 = new javax.swing.JMenu();
-        jMenuItem3 = new javax.swing.JMenuItem();
+        mediainfomenu = new javax.swing.JMenuItem();
         jMenu1 = new javax.swing.JMenu();
         jMenuItem1 = new javax.swing.JMenuItem();
 
@@ -2548,14 +2548,14 @@ public class Main extends javax.swing.JFrame {
         jMenu2.setText("Tools");
         jMenu2.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
 
-        jMenuItem3.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
-        jMenuItem3.setText("MediaInfo");
-        jMenuItem3.addActionListener(new java.awt.event.ActionListener() {
+        mediainfomenu.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
+        mediainfomenu.setText("MediaInfo");
+        mediainfomenu.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem3ActionPerformed(evt);
+                mediainfomenuActionPerformed(evt);
             }
         });
-        jMenu2.add(jMenuItem3);
+        jMenu2.add(mediainfomenu);
 
         barra_menu.add(jMenu2);
 
@@ -3530,7 +3530,7 @@ public class Main extends javax.swing.JFrame {
         });
     }//GEN-LAST:event_new_account_buttonActionPerformed
 
-    private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed
+    private void mediainfomenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mediainfomenuActionPerformed
         // TODO add your handling code here:
         JFileChooser fileChooser = new JFileChooser();
 
@@ -3544,18 +3544,27 @@ public class Main extends javax.swing.JFrame {
 
         if (option == JFileChooser.APPROVE_OPTION) {
 
+            mediainfomenu.setEnabled(false);
+
             File file = fileChooser.getSelectedFile();
 
-            String info = Helpers.getMediaInfo(file.getAbsolutePath());
+            Helpers.threadRun(() -> {
+                String info = Helpers.getMediaInfo(file.getAbsolutePath());
 
-            Helpers.copyTextToClipboard(info);
+                Helpers.copyTextToClipboard(info);
 
-            Main.MAIN_WINDOW.output_textarea_append("\nMEDIAINFO of -> " + file.getAbsolutePath() + "\n" + info + "\n");
+                Main.MAIN_WINDOW.output_textarea_append("\n##### MEDIAINFO of -> " + file.getAbsolutePath() + "\n" + info + "\n");
 
-            Helpers.mostrarMensajeInformativo(Main.MAIN_WINDOW, "MEDIAINFO COPIED TO CLIPBOARD");
+                Helpers.mostrarMensajeInformativo(Main.MAIN_WINDOW, "MEDIAINFO COPIED TO CLIPBOARD");
+
+                Helpers.GUIRun(() -> {
+                    mediainfomenu.setEnabled(true);
+                });
+            });
+
         }
 
-    }//GEN-LAST:event_jMenuItem3ActionPerformed
+    }//GEN-LAST:event_mediainfomenuActionPerformed
 
     /**
      * @param args the command line arguments
@@ -3659,13 +3668,13 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JMenuItem jMenuItem2;
-    private javax.swing.JMenuItem jMenuItem3;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JLabel logo_label;
     private javax.swing.JSplitPane mainSplitPanel;
+    private javax.swing.JMenuItem mediainfomenu;
     private javax.swing.JCheckBoxMenuItem menu_https;
     private javax.swing.JButton new_account_button;
     private javax.swing.JMenu options_menu;

@@ -136,7 +136,11 @@ public class Helpers {
 
         mediaInfo.dump(writer);
 
-        return writer.toString();
+        final Pattern pattern = Pattern.compile("^\\s{2,}|(?<=\\n) +", Pattern.MULTILINE);
+
+        final Matcher matcher = pattern.matcher(writer.toString());
+
+        return matcher.replaceAll("    ");
     }
 
     public static void createMegaDoctorDir() {
@@ -2214,7 +2218,7 @@ public class Helpers {
                     Helpers.threadRun(() -> {
 
                         Helpers.copyTextToClipboard(transference.getMediainfo());
-                        Main.MAIN_WINDOW.output_textarea_append("\nMEDIAINFO of -> " + transference.getLpath() + "\n" + transference.getMediainfo() + "\n");
+                        Main.MAIN_WINDOW.output_textarea_append("\n##### MEDIAINFO of -> " + transference.getLpath() + "\n" + transference.getMediainfo() + "\n");
                         Helpers.mostrarMensajeInformativo(Main.MAIN_WINDOW, "MEDIAINFO COPIED TO CLIPBOARD");
 
                     });
