@@ -10,6 +10,7 @@ by tonikelope
  */
 package com.tonikelope.megadoctor;
 
+import static com.tonikelope.megadoctor.UploadFileDialog.LAST_FOLDER;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -65,7 +66,7 @@ import javax.swing.text.BadLocationException;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "3.2";
+    public final static String VERSION = "3.3";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -3535,6 +3536,10 @@ public class Main extends javax.swing.JFrame {
         JFileChooser fileChooser = new JFileChooser();
 
         fileChooser.setPreferredSize(new Dimension(800, 600));
+        
+        if (LAST_FOLDER != null) {
+            fileChooser.setCurrentDirectory(new File(LAST_FOLDER));
+        }
 
         Helpers.updateComponentFont(fileChooser, fileChooser.getFont(), 1.20f);
 
@@ -3547,6 +3552,8 @@ public class Main extends javax.swing.JFrame {
             mediainfomenu.setEnabled(false);
 
             File file = fileChooser.getSelectedFile();
+            
+            LAST_FOLDER = file.getParentFile().getAbsolutePath();
 
             Helpers.threadRun(() -> {
                 String info = Helpers.getMediaInfo(file.getAbsolutePath());
