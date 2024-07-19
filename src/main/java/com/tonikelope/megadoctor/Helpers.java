@@ -2272,17 +2272,21 @@ public class Helpers {
                 }
             }
 
-            JMenuItem copyMediaInfo = new JMenuItem(copyMediaInfoLinkAction);
+            if (transference.getMediainfo() != null) {
 
-            copyMediaInfo.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/mediainfo.png")));
+                JMenuItem copyMediaInfo = new JMenuItem(copyMediaInfoLinkAction);
 
-            popup.add(copyMediaInfo);
+                copyMediaInfo.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/mediainfo.png")));
+
+                popup.add(copyMediaInfo);
+            }
 
             updateComponentFont(popup, popup.getFont(), 1.20f);
 
             popup.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
             transference.getMain_panel().setComponentPopupMenu(popup);
+
         }
 
         private JTextFieldRegularPopupMenu() {

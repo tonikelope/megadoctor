@@ -66,7 +66,7 @@ import javax.swing.text.BadLocationException;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "3.3";
+    public final static String VERSION = "3.4";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -3536,7 +3536,7 @@ public class Main extends javax.swing.JFrame {
         JFileChooser fileChooser = new JFileChooser();
 
         fileChooser.setPreferredSize(new Dimension(800, 600));
-        
+
         if (LAST_FOLDER != null) {
             fileChooser.setCurrentDirectory(new File(LAST_FOLDER));
         }
@@ -3552,7 +3552,7 @@ public class Main extends javax.swing.JFrame {
             mediainfomenu.setEnabled(false);
 
             File file = fileChooser.getSelectedFile();
-            
+
             LAST_FOLDER = file.getParentFile().getAbsolutePath();
 
             Helpers.threadRun(() -> {

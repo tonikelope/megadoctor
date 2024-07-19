@@ -1121,7 +1121,7 @@ public final class Transference extends javax.swing.JPanel {
 
         status_icon.setVisible(false);
 
-        _mediainfo = Helpers.getMediaInfo(lpath);
+        _mediainfo = Files.isRegularFile(Paths.get(lpath)) ? Helpers.getMediaInfo(lpath) : null;
 
         Helpers.JTextFieldRegularPopupMenu.addTransferencePopupMenuTo(this);
 
