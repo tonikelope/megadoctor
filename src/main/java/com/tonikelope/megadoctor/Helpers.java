@@ -130,17 +130,21 @@ public class Helpers {
     public static final ConcurrentLinkedQueue<Process> PROCESSES_QUEUE = new ConcurrentLinkedQueue<>();
 
     public static String getMediaInfo(String filename) {
-        Writer writer = new StringWriter();
+        try {
+            Writer writer = new StringWriter();
 
-        MediaInfo mediaInfo = MediaInfo.mediaInfo(filename);
+            MediaInfo mediaInfo = MediaInfo.mediaInfo(filename);
 
-        mediaInfo.dump(writer);
+            mediaInfo.dump(writer);
 
-        final Pattern pattern = Pattern.compile("^\\s{2,}|(?<=\\n) +", Pattern.MULTILINE);
+            final Pattern pattern = Pattern.compile("^\\s{2,}|(?<=\\n) +", Pattern.MULTILINE);
 
-        final Matcher matcher = pattern.matcher(writer.toString());
+            final Matcher matcher = pattern.matcher(writer.toString());
 
-        return matcher.replaceAll("    ");
+            return matcher.replaceAll("    ");
+        } catch (Exception ex) {
+            return null;
+        }
     }
 
     public static void createMegaDoctorDir() {

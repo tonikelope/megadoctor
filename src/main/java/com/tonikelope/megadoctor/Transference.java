@@ -66,7 +66,7 @@ public final class Transference extends javax.swing.JPanel {
     private volatile boolean _split_finished;
     private volatile boolean _retry;
     private volatile String _remote_handle = null;
-    private final String _mediainfo;
+    private volatile String _mediainfo = null;
 
     public String getMediainfo() {
         return _mediainfo;
@@ -1121,9 +1121,7 @@ public final class Transference extends javax.swing.JPanel {
 
         status_icon.setVisible(false);
 
-        _mediainfo = Files.isRegularFile(Paths.get(lpath)) ? Helpers.getMediaInfo(lpath) : null;
-
-        Helpers.JTextFieldRegularPopupMenu.addTransferencePopupMenuTo(this);
+        _mediainfo = !Files.isDirectory(Paths.get(lpath)) ? Helpers.getMediaInfo(lpath) : null;
 
         DefaultCaret caret = (DefaultCaret) folder_stats_textarea.getCaret();
 
@@ -1205,6 +1203,8 @@ public final class Transference extends javax.swing.JPanel {
                 local_path.setText("[" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + (_action == 1 ? _lpath : (_lpath + (_rpath.startsWith("/") ? "" : "/") + _rpath)));
 
                 progress.setIndeterminate(false);
+
+                Helpers.JTextFieldRegularPopupMenu.addTransferencePopupMenuTo(this);
             });
 
         });
