@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.tonikelope.megadoctor</groupId>
     <artifactId>MegaDoctor</artifactId>
-    <version>3.6</version>
+    <version>3.7</version>
     <packaging>jar</packaging>
     <repositories>
         <repository>
@@ -16,16 +16,6 @@
             <groupId>com.github.shivam1608</groupId>
             <artifactId>JMailTM</artifactId>
             <version>main-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <version>1.7.21</version>
-        </dependency>
-        <dependency>
-            <groupId>uk.co.caprica</groupId>
-            <artifactId>vlcj-info</artifactId>
-            <version>2.0.4</version>
         </dependency>
     </dependencies>
     <build>

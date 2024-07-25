@@ -66,11 +66,6 @@ public final class Transference extends javax.swing.JPanel {
     private volatile boolean _split_finished;
     private volatile boolean _retry;
     private volatile String _remote_handle = null;
-    private volatile String _mediainfo = null;
-
-    public String getMediainfo() {
-        return _mediainfo;
-    }
 
     public String getRemote_handle() {
         return _remote_handle;
@@ -1120,8 +1115,6 @@ public final class Transference extends javax.swing.JPanel {
         initComponents();
 
         status_icon.setVisible(false);
-
-        _mediainfo = !Files.isDirectory(Paths.get(lpath)) ? Helpers.getMediaInfo(lpath) : null;
 
         DefaultCaret caret = (DefaultCaret) folder_stats_textarea.getCaret();
 

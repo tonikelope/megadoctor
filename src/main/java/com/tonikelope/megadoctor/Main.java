@@ -65,7 +65,7 @@ import javax.swing.text.BadLocationException;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "3.6";
+    public final static String VERSION = "3.7";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -84,7 +84,6 @@ public class Main extends javax.swing.JFrame {
     public final static Object TRANSFERENCES_LOCK = new Object();
     public volatile static ServerSocket ONE_INSTANCE_SOCKET = null;
     public volatile static boolean EXIT = false;
-    public volatile static String LAST_FOLDER = null;
 
     public final static ConcurrentHashMap<Component, Transference> TRANSFERENCES_MAP = new ConcurrentHashMap<>();
     public final static Object FILE_SPLITTER_LOCK = new Object();
@@ -2224,8 +2223,6 @@ public class Main extends javax.swing.JFrame {
         menu_https = new javax.swing.JCheckBoxMenuItem();
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
         purge_cache_menu = new javax.swing.JMenuItem();
-        jMenu2 = new javax.swing.JMenu();
-        mediainfomenu = new javax.swing.JMenuItem();
         jMenu1 = new javax.swing.JMenu();
         jMenuItem1 = new javax.swing.JMenuItem();
 
@@ -2545,20 +2542,6 @@ public class Main extends javax.swing.JFrame {
         options_menu.add(purge_cache_menu);
 
         barra_menu.add(options_menu);
-
-        jMenu2.setText("Tools");
-        jMenu2.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
-
-        mediainfomenu.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
-        mediainfomenu.setText("MediaInfo");
-        mediainfomenu.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                mediainfomenuActionPerformed(evt);
-            }
-        });
-        jMenu2.add(mediainfomenu);
-
-        barra_menu.add(jMenu2);
 
         jMenu1.setText("Help");
         jMenu1.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
@@ -3531,48 +3514,6 @@ public class Main extends javax.swing.JFrame {
         });
     }//GEN-LAST:event_new_account_buttonActionPerformed
 
-    private void mediainfomenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mediainfomenuActionPerformed
-        // TODO add your handling code here:
-        JFileChooser fileChooser = new JFileChooser();
-
-        fileChooser.setPreferredSize(new Dimension(800, 600));
-
-        if (LAST_FOLDER != null) {
-            fileChooser.setCurrentDirectory(new File(LAST_FOLDER));
-        }
-
-        Helpers.updateComponentFont(fileChooser, fileChooser.getFont(), 1.20f);
-
-        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-
-        int option = fileChooser.showOpenDialog(this);
-
-        if (option == JFileChooser.APPROVE_OPTION) {
-
-            mediainfomenu.setEnabled(false);
-
-            File file = fileChooser.getSelectedFile();
-
-            LAST_FOLDER = file.getParentFile().getAbsolutePath();
-
-            Helpers.threadRun(() -> {
-                String info = Helpers.getMediaInfo(file.getAbsolutePath());
-
-                Helpers.copyTextToClipboard(info);
-
-                Main.MAIN_WINDOW.output_textarea_append("\n##### MEDIAINFO of -> " + file.getAbsolutePath() + "\n" + info + "\n");
-
-                Helpers.mostrarMensajeInformativo(Main.MAIN_WINDOW, "MEDIAINFO COPIED TO CLIPBOARD");
-
-                Helpers.GUIRun(() -> {
-                    mediainfomenu.setEnabled(true);
-                });
-            });
-
-        }
-
-    }//GEN-LAST:event_mediainfomenuActionPerformed
-
     /**
      * @param args the command line arguments
      */
@@ -3672,7 +3613,6 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JScrollPane cuentas_scrollpanel;
     private javax.swing.JTextArea cuentas_textarea;
     private javax.swing.JMenu jMenu1;
-    private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JMenuItem jMenuItem2;
     private javax.swing.JPanel jPanel1;
@@ -3681,7 +3621,6 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JLabel logo_label;
     private javax.swing.JSplitPane mainSplitPanel;
-    private javax.swing.JMenuItem mediainfomenu;
     private javax.swing.JCheckBoxMenuItem menu_https;
     private javax.swing.JButton new_account_button;
     private javax.swing.JMenu options_menu;
