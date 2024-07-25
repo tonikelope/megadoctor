@@ -10,7 +10,6 @@ by tonikelope
  */
 package com.tonikelope.megadoctor;
 
-import static com.tonikelope.megadoctor.UploadFileDialog.LAST_FOLDER;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -66,7 +65,7 @@ import javax.swing.text.BadLocationException;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "3.4";
+    public final static String VERSION = "3.5";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -85,6 +84,7 @@ public class Main extends javax.swing.JFrame {
     public final static Object TRANSFERENCES_LOCK = new Object();
     public volatile static ServerSocket ONE_INSTANCE_SOCKET = null;
     public volatile static boolean EXIT = false;
+    public volatile static String LAST_FOLDER = null;
 
     public final static ConcurrentHashMap<Component, Transference> TRANSFERENCES_MAP = new ConcurrentHashMap<>();
     public final static Object FILE_SPLITTER_LOCK = new Object();
