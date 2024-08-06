@@ -846,7 +846,13 @@ public final class Transference extends javax.swing.JPanel {
 
                                         status_icon.setVisible(true);
 
-                                        local_path.setText("[" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + (_action == 1 ? _lpath : (_lpath + (_rpath.startsWith("/") ? "" : "/") + _rpath)));
+                                        File f = new File(_lpath);
+
+                                        var short_lpath = "/.../" + f.getParentFile().getName() + File.separator + f.getName();
+
+                                        local_path.setText("[" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + (_action == 1 ? short_lpath : (short_lpath + (_rpath.startsWith("/") ? "" : "/") + _rpath)));
+
+                                        local_path.setToolTipText("[" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + (_action == 1 ? _lpath : (_lpath + (_rpath.startsWith("/") ? "" : "/") + _rpath)));
 
                                         action.setText("(Avg: " + Helpers.formatBytes(speed) + "/s)");
 
@@ -1134,7 +1140,13 @@ public final class Transference extends javax.swing.JPanel {
 
         _lpath = lpath;
 
-        local_path.setText(_lpath);
+        File f = new File(_lpath);
+
+        var short_lpath = "/.../" + f.getParentFile().getName() + File.separator + f.getName();
+
+        local_path.setText(short_lpath);
+
+        local_path.setToolTipText(_lpath);
 
         remote_path.setText("...");
 
@@ -1193,7 +1205,9 @@ public final class Transference extends javax.swing.JPanel {
                     local_path.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/folder.png")));
                 }
 
-                local_path.setText("[" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + (_action == 1 ? _lpath : (_lpath + (_rpath.startsWith("/") ? "" : "/") + _rpath)));
+                local_path.setText("[" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + (_action == 1 ? short_lpath : (short_lpath + (_rpath.startsWith("/") ? "" : "/") + _rpath)));
+
+                local_path.setToolTipText("[" + ((isDirectory() && _size == 0) ? "---" : Helpers.formatBytes(_size)) + "] " + (_action == 1 ? _lpath : (_lpath + (_rpath.startsWith("/") ? "" : "/") + _rpath)));
 
                 progress.setIndeterminate(false);
 
