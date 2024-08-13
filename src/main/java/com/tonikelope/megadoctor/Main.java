@@ -65,7 +65,7 @@ import javax.swing.text.BadLocationException;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "3.9";
+    public final static String VERSION = "3.10";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -221,6 +221,7 @@ public class Main extends javax.swing.JFrame {
         getUpload_button().setEnabled(false);
         new_account_button.setEnabled(false);
         transf_scroll.getVerticalScrollBar().setUnitIncrement(20);
+        transf_scroll.getHorizontalScrollBar().setUnitIncrement(20);
         setTitle("MegaDoctor " + VERSION + " - MEGAcmd's best friend");
         progressbar.setIndeterminate(true);
         status_label.setText("Loading data (be patient)...");
@@ -2203,13 +2204,13 @@ public class Main extends javax.swing.JFrame {
         tabbed_panel = new javax.swing.JTabbedPane();
         jScrollPane2 = new javax.swing.JScrollPane();
         output_textarea = new javax.swing.JTextPane();
-        transf_scroll = new javax.swing.JScrollPane();
-        jPanel1 = new javax.swing.JPanel();
+        jPanel3 = new javax.swing.JPanel();
         transferences_control_panel = new javax.swing.JPanel();
         cancel_all_button = new javax.swing.JButton();
         clear_trans_button = new javax.swing.JButton();
         pause_button = new javax.swing.JButton();
         copy_all_button = new javax.swing.JButton();
+        transf_scroll = new javax.swing.JScrollPane();
         transferences_panel = new javax.swing.JPanel();
         jPanel2 = new javax.swing.JPanel();
         clear_log_button = new javax.swing.JButton();
@@ -2326,9 +2327,6 @@ public class Main extends javax.swing.JFrame {
 
         tabbed_panel.addTab("Log", new javax.swing.ImageIcon(getClass().getResource("/images/log.png")), jScrollPane2); // NOI18N
 
-        transf_scroll.setBorder(null);
-        transf_scroll.setDoubleBuffered(true);
-
         cancel_all_button.setBackground(new java.awt.Color(255, 51, 0));
         cancel_all_button.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
         cancel_all_button.setForeground(new java.awt.Color(255, 255, 255));
@@ -2389,7 +2387,7 @@ public class Main extends javax.swing.JFrame {
                 .addComponent(pause_button)
                 .addGap(18, 18, 18)
                 .addComponent(cancel_all_button)
-                .addContainerGap(662, Short.MAX_VALUE))
+                .addContainerGap(334, Short.MAX_VALUE))
         );
         transferences_control_panelLayout.setVerticalGroup(
             transferences_control_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -2403,26 +2401,31 @@ public class Main extends javax.swing.JFrame {
                 .addContainerGap())
         );
 
-        transferences_panel.setLayout(new java.awt.BorderLayout());
+        transf_scroll.setBorder(null);
 
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(transferences_panel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+        transferences_panel.setLayout(new java.awt.BorderLayout());
+        transf_scroll.setViewportView(transferences_panel);
+
+        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
+        jPanel3.setLayout(jPanel3Layout);
+        jPanel3Layout.setHorizontalGroup(
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(transferences_control_panel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(jPanel3Layout.createSequentialGroup()
+                .addGap(0, 0, 0)
+                .addComponent(transf_scroll)
+                .addGap(0, 0, 0))
         );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
+        jPanel3Layout.setVerticalGroup(
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel3Layout.createSequentialGroup()
                 .addComponent(transferences_control_panel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(0, 0, 0)
-                .addComponent(transferences_panel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(transf_scroll)
+                .addGap(0, 0, 0))
         );
 
-        transf_scroll.setViewportView(jPanel1);
-
-        tabbed_panel.addTab("Transferences", new javax.swing.ImageIcon(getClass().getResource("/images/transfers.png")), transf_scroll); // NOI18N
+        tabbed_panel.addTab("Transferences", new javax.swing.ImageIcon(getClass().getResource("/images/transfers.png")), jPanel3); // NOI18N
 
         mainSplitPanel.setBottomComponent(tabbed_panel);
 
@@ -2602,7 +2605,7 @@ public class Main extends javax.swing.JFrame {
                     .addComponent(progressbar, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(show_accounts))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(mainSplitPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 615, Short.MAX_VALUE)
+                .addComponent(mainSplitPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 570, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -3615,8 +3618,8 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JMenuItem jMenuItem2;
-    private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
+    private javax.swing.JPanel jPanel3;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JLabel logo_label;
