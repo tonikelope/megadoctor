@@ -497,27 +497,30 @@ public final class Transference extends javax.swing.JPanel {
 
     public void resume() {
 
-        if (_paused && _running) {
+        if (_paused) {
             _paused = false;
 
-            Main.MAIN_WINDOW.setTransferences_paused(false);
+            if (_running) {
 
-            synchronized (TRANSFERENCES_LOCK) {
+                Main.MAIN_WINDOW.setTransferences_paused(false);
 
-                Helpers.GUIRun(() -> {
-                    action.setText("(RESUMING...)");
+                synchronized (TRANSFERENCES_LOCK) {
 
-                });
+                    Helpers.GUIRun(() -> {
+                        action.setText("(RESUMING...)");
 
-                Main.MAIN_WINDOW.login(_email);
+                    });
 
-                Helpers.runProcess(new String[]{"mega-transfers", "-ra"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
+                    Main.MAIN_WINDOW.login(_email);
 
-                TRANSFERENCES_LOCK.notifyAll();
+                    Helpers.runProcess(new String[]{"mega-transfers", "-ra"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null);
 
+                    TRANSFERENCES_LOCK.notifyAll();
+
+                }
+
+                waitTransferStart();
             }
-
-            waitTransferStart();
 
             Helpers.GUIRun(() -> {
                 setBackground(null);
@@ -718,6 +721,7 @@ public final class Transference extends javax.swing.JPanel {
                                 status_icon.setVisible(false);
                                 Main.MAIN_WINDOW.getVamos_button().setEnabled(false);
                                 Main.MAIN_WINDOW.getCuentas_textarea().setEnabled(false);
+                                setBackground(null);
                                 action.setText("(STARTING...)");
                             });
 
