@@ -65,7 +65,7 @@ import javax.swing.text.BadLocationException;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "3.10";
+    public final static String VERSION = "3.11";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -218,7 +218,7 @@ public class Main extends javax.swing.JFrame {
         transferences_panel.add(transferences);
         transferences_control_panel.setVisible(false);
         progressbar.setMinimum(0);
-        getUpload_button().setEnabled(false);
+        upload_button.setEnabled(false);
         new_account_button.setEnabled(false);
         transf_scroll.getVerticalScrollBar().setUnitIncrement(20);
         transf_scroll.getHorizontalScrollBar().setUnitIncrement(20);
@@ -314,9 +314,7 @@ public class Main extends javax.swing.JFrame {
                     try {
                         Object[] task = (Object[]) FILE_SPLITTER_TASKS.peek();
 
-                        Transference t = findSplitTransference((String) task[0]);
-
-                        if (t != null) {
+                        if (findSplitTransference((String) task[0]) != null) {
 
                             boolean delete_after_split = (boolean) task[2];
 
@@ -342,7 +340,7 @@ public class Main extends javax.swing.JFrame {
 
                                     if (!(Files.exists(fileName) && Files.size(fileName) == current_chunk_size)) {
 
-                                        Logger.getLogger(Main.class.getName()).log(Level.WARNING, "FileSplitter PART " + String.valueOf(i + 1) + " " + Helpers.formatBytes(current_chunk_size) + " " + task[0]);
+                                        Logger.getLogger(Main.class.getName()).log(Level.WARNING, "FileSplitter PART {0} {1} {2}", new Object[]{String.valueOf(i + 1), Helpers.formatBytes(current_chunk_size), task[0]});
 
                                         long source_offset = chunk_size * i;
 
@@ -361,16 +359,16 @@ public class Main extends javax.swing.JFrame {
                                         }
 
                                     } else {
-                                        Logger.getLogger(Main.class.getName()).log(Level.WARNING, "FileSplitter PART " + String.valueOf(i + 1) + " EXISTS (SKIPPING)" + task[0]);
+                                        Logger.getLogger(Main.class.getName()).log(Level.WARNING, "FileSplitter PART {0} EXISTS (SKIPPING){1}", new Object[]{String.valueOf(i + 1), task[0]});
                                     }
 
                                 }
 
                             } else {
 
-                                Logger.getLogger(Main.class.getName()).log(Level.WARNING, "FileSplitter splitting file" + task[0]);
+                                Logger.getLogger(Main.class.getName()).log(Level.WARNING, "FileSplitter splitting file{0}", task[0]);
 
-                                for (int i = 0; i < tot_chunks && !t.isFinished(); i++) {
+                                for (int i = 0; i < tot_chunks && findSplitTransference((String) task[0]) != null; i++) {
 
                                     long current_chunk_size = Math.min(chunk_size, file_size - chunk_size * i);
 
@@ -380,7 +378,7 @@ public class Main extends javax.swing.JFrame {
 
                                         if (!(Files.exists(fileName) && Files.size(fileName) == current_chunk_size)) {
 
-                                            Logger.getLogger(Main.class.getName()).log(Level.WARNING, "FileSplitter PART " + String.valueOf(i + 1) + " " + Helpers.formatBytes(current_chunk_size) + " " + task[0]);
+                                            Logger.getLogger(Main.class.getName()).log(Level.WARNING, "FileSplitter PART {0} {1} {2}", new Object[]{String.valueOf(i + 1), Helpers.formatBytes(current_chunk_size), task[0]});
 
                                             long source_offset = chunk_size * i;
 
@@ -399,7 +397,7 @@ public class Main extends javax.swing.JFrame {
                                             }
 
                                         } else {
-                                            Logger.getLogger(Main.class.getName()).log(Level.WARNING, "FileSplitter PART " + String.valueOf(i + 1) + " EXISTS (SKIPPING)" + task[0]);
+                                            Logger.getLogger(Main.class.getName()).log(Level.WARNING, "FileSplitter PART {0} EXISTS (SKIPPING){1}", new Object[]{String.valueOf(i + 1), task[0]});
                                         }
 
                                     }
@@ -413,7 +411,7 @@ public class Main extends javax.swing.JFrame {
                             }
 
                         } else {
-                            Logger.getLogger(Main.class.getName()).log(Level.WARNING, "FileSplitter transference not found: " + task[0]);
+                            Logger.getLogger(Main.class.getName()).log(Level.WARNING, "FileSplitter transference not found: {0}", task[0]);
                         }
                     } catch (IOException ex) {
                         Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
@@ -976,7 +974,7 @@ public class Main extends javax.swing.JFrame {
 
                             if (!links.isEmpty()) {
                                 Collections.sort(links);
-                                output_textarea_append("\n\nTRANSFERENCES CLEARED (on exit):\n\n" + String.join("\n", links) + "\n\n");
+                                output_textarea_append("\n\nTRANSFERENCES CLEARED (on exit):\n\n" + String.join("\n\n", links) + "\n\n");
                             }
                         }
 
@@ -3225,7 +3223,7 @@ public class Main extends javax.swing.JFrame {
                         if (!links.isEmpty()) {
 
                             Collections.sort(links);
-                            output_textarea_append("\n\nTRANSFERENCES CLEARED:\n\n" + String.join("\n", links) + "\n\n");
+                            output_textarea_append("\n\nTRANSFERENCES CLEARED:\n\n" + String.join("\n\n", links) + "\n\n");
                         }
 
                         transferences.revalidate();
