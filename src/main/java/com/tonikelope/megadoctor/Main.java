@@ -65,7 +65,7 @@ import javax.swing.text.BadLocationException;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "3.13";
+    public final static String VERSION = "3.14";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -328,6 +328,8 @@ public class Main extends javax.swing.JFrame {
 
                             Integer part = (Integer) task[3];
 
+                            boolean io_error = false;
+
                             if (part != null) {
 
                                 int i = part - 1;
@@ -344,19 +346,36 @@ public class Main extends javax.swing.JFrame {
 
                                         long source_offset = chunk_size * i;
 
-                                        long dest_bytes_copied = Files.exists(fileName) ? Files.size(fileName) : 0;
+                                        do {
+                                            io_error = false;
 
-                                        try (RandomAccessFile toFile = new RandomAccessFile(fileName.toFile(), "rw"); FileChannel toChannel = toFile.getChannel();) {
+                                            long dest_bytes_copied = Files.exists(fileName) ? Files.size(fileName) : 0;
 
-                                            while (dest_bytes_copied < current_chunk_size) {
+                                            try (RandomAccessFile toFile = new RandomAccessFile(fileName.toFile(), "rw"); FileChannel toChannel = toFile.getChannel();) {
 
-                                                sourceChannel.position(source_offset + dest_bytes_copied);
+                                                while (dest_bytes_copied < current_chunk_size) {
 
-                                                dest_bytes_copied += toChannel.transferFrom(sourceChannel, dest_bytes_copied, current_chunk_size - dest_bytes_copied);
+                                                    sourceChannel.position(source_offset + dest_bytes_copied);
+
+                                                    dest_bytes_copied += toChannel.transferFrom(sourceChannel, dest_bytes_copied, current_chunk_size - dest_bytes_copied);
+                                                }
+
+                                                toChannel.force(true);
+
+                                            } catch (IOException ex) {
+                                                Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
+                                                io_error = true;
                                             }
 
-                                            toChannel.force(true);
-                                        }
+                                            if (io_error) {
+                                                try {
+                                                    Thread.sleep(5000);
+                                                } catch (InterruptedException ex) {
+                                                    Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
+                                                }
+                                            }
+
+                                        } while (io_error && findSplitTransference((String) task[0]) != null);
 
                                     } else {
                                         Logger.getLogger(Main.class.getName()).log(Level.WARNING, "FileSplitter PART {0} EXISTS (SKIPPING){1}", new Object[]{String.valueOf(i + 1), task[0]});
@@ -382,19 +401,35 @@ public class Main extends javax.swing.JFrame {
 
                                             long source_offset = chunk_size * i;
 
-                                            long dest_bytes_copied = Files.exists(fileName) ? Files.size(fileName) : 0;
+                                            do {
+                                                io_error = false;
 
-                                            try (RandomAccessFile toFile = new RandomAccessFile(fileName.toFile(), "rw"); FileChannel toChannel = toFile.getChannel();) {
+                                                long dest_bytes_copied = Files.exists(fileName) ? Files.size(fileName) : 0;
 
-                                                while (dest_bytes_copied < current_chunk_size) {
+                                                try (RandomAccessFile toFile = new RandomAccessFile(fileName.toFile(), "rw"); FileChannel toChannel = toFile.getChannel();) {
 
-                                                    sourceChannel.position(source_offset + dest_bytes_copied);
+                                                    while (dest_bytes_copied < current_chunk_size) {
 
-                                                    dest_bytes_copied += toChannel.transferFrom(sourceChannel, dest_bytes_copied, current_chunk_size - dest_bytes_copied);
+                                                        sourceChannel.position(source_offset + dest_bytes_copied);
+
+                                                        dest_bytes_copied += toChannel.transferFrom(sourceChannel, dest_bytes_copied, current_chunk_size - dest_bytes_copied);
+                                                    }
+
+                                                    toChannel.force(true);
+                                                } catch (IOException ex) {
+                                                    Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
+                                                    io_error = true;
                                                 }
 
-                                                toChannel.force(true);
-                                            }
+                                                if (io_error) {
+                                                    try {
+                                                        Thread.sleep(5000);
+                                                    } catch (InterruptedException ex) {
+                                                        Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
+                                                    }
+                                                }
+
+                                            } while (io_error && findSplitTransference((String) task[0]) != null);
 
                                         } else {
                                             Logger.getLogger(Main.class.getName()).log(Level.WARNING, "FileSplitter PART {0} EXISTS (SKIPPING){1}", new Object[]{String.valueOf(i + 1), task[0]});
@@ -406,7 +441,7 @@ public class Main extends javax.swing.JFrame {
 
                             }
 
-                            if (delete_after_split) {
+                            if (!io_error && delete_after_split) {
                                 Files.deleteIfExists(Paths.get(file_path));
                             }
 
