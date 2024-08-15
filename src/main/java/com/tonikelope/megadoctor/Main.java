@@ -65,7 +65,7 @@ import javax.swing.text.BadLocationException;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "3.12";
+    public final static String VERSION = "3.13";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -309,9 +309,9 @@ public class Main extends javax.swing.JFrame {
 
                 if (!FILE_SPLITTER_TASKS.isEmpty()) {
 
-                    saveFileSplitterTasks();
-
                     try {
+                        saveFileSplitterTasks();
+
                         Object[] task = (Object[]) FILE_SPLITTER_TASKS.peek();
 
                         if (findSplitTransference((String) task[0]) != null) {
@@ -413,15 +413,14 @@ public class Main extends javax.swing.JFrame {
                         } else {
                             Logger.getLogger(Main.class.getName()).log(Level.WARNING, "FileSplitter transference not found: {0}", task[0]);
                         }
-                    } catch (IOException ex) {
-                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+
+                        FILE_SPLITTER_TASKS.poll();
+
+                        saveFileSplitterTasks();
+
                     } catch (Exception ex) {
                         Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
                     }
-
-                    FILE_SPLITTER_TASKS.poll();
-
-                    saveFileSplitterTasks();
 
                 } else {
 
@@ -3245,48 +3244,41 @@ public class Main extends javax.swing.JFrame {
 
         getCancel_all_button().setEnabled(false);
 
-        Helpers.threadRun(() -> {
-            synchronized (TRANSFERENCES_LOCK) {
-                Helpers.GUIRunAndWait(() -> {
-                    if (transferences.getComponentCount() > 0) {
+        if (transferences.getComponentCount() > 0) {
 
-                        if (Helpers.mostrarMensajeInformativoSINO(this, "All transactions in progress or on hold will be lost. ARE YOU SURE?") == 0) {
+            if (Helpers.mostrarMensajeInformativoSINO(this, "All transactions in progress or on hold will be lost. ARE YOU SURE?") == 0) {
 
-                            Helpers.threadRun(() -> {
+                Helpers.threadRun(() -> {
 
-                                synchronized (TRANSFERENCES_LOCK) {
+                    synchronized (TRANSFERENCES_LOCK) {
 
-                                    Helpers.GUIRunAndWait(() -> {
-                                        transferences_control_panel.setVisible(false);
-                                        progressbar.setIndeterminate(true);
-                                        getUpload_button().setEnabled(false);
-                                        TRANSFERENCES_MAP.clear();
-                                        transferences.removeAll();
-                                        transferences.revalidate();
-                                        transferences.repaint();
-                                    });
+                        Helpers.GUIRunAndWait(() -> {
+                            transferences_control_panel.setVisible(false);
+                            progressbar.setIndeterminate(true);
+                            getUpload_button().setEnabled(false);
+                            TRANSFERENCES_MAP.clear();
+                            transferences.removeAll();
+                            transferences.revalidate();
+                            transferences.repaint();
+                        });
 
-                                    if (_current_transference != null) {
-                                        _current_transference.stop();
-                                    }
-                                    Helpers.GUIRunAndWait(() -> {
-                                        getCancel_all_button().setEnabled(true);
-                                    });
-
-                                    TRANSFERENCES_LOCK.notifyAll();
-                                }
-
-                            });
-
-                        } else {
-                            getCancel_all_button().setEnabled(true);
+                        if (_current_transference != null) {
+                            _current_transference.stop();
                         }
+                        Helpers.GUIRunAndWait(() -> {
+                            getCancel_all_button().setEnabled(true);
+                            progressbar.setIndeterminate(false);
+                        });
+
+                        TRANSFERENCES_LOCK.notifyAll();
                     }
+
                 });
 
+            } else {
+                getCancel_all_button().setEnabled(true);
             }
-        });
-
+        }
     }//GEN-LAST:event_cancel_all_buttonActionPerformed
 
     private void tabbed_panelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tabbed_panelMouseClicked
