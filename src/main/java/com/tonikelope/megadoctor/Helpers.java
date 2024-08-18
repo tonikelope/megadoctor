@@ -458,11 +458,11 @@ public class Helpers {
         return cadena.toString();
     }
 
-    public static void copyCompletedTransfers() {
+    public static void copyCompletedUploads() {
 
         String log = Main.MAIN_WINDOW.getOutput_textarea().getText();
 
-        final String regex = "^.+-> *(.+<H:.*?>.+)$";
+        final String regex = "^.+->.+?([^" + Pattern.quote(File.separator) + "]+<H:.*?>.+)$";
 
         final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
 
@@ -1671,12 +1671,12 @@ public class Helpers {
                 }
             };
 
-            Action copyTransfersAction = new AbstractAction("COPY ALL COMPLETED TRANSFERS LINKS") {
+            Action copyTransfersAction = new AbstractAction("COPY ALL COMPLETED UPLOADS LINKS") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
 
                     Helpers.threadRun(() -> {
-                        copyCompletedTransfers();
+                        copyCompletedUploads();
                     });
 
                 }
