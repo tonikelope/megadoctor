@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStreamWriter;
@@ -65,7 +66,7 @@ import javax.swing.text.BadLocationException;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "3.14";
+    public final static String VERSION = "3.15";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -82,6 +83,7 @@ public class Main extends javax.swing.JFrame {
     public final static String FREE_SPACE_CACHE_FILE = MEGADOCTOR_DIR + File.separator + "megadoctor_free_space_cache";
     public final static String LOG_FILE = MEGADOCTOR_DIR + File.separator + "megadoctor_log";
     public final static Object TRANSFERENCES_LOCK = new Object();
+    public final static Object LOG_LOCK = new Object();
     public volatile static ServerSocket ONE_INSTANCE_SOCKET = null;
     public volatile static boolean EXIT = false;
 
@@ -115,10 +117,12 @@ public class Main extends javax.swing.JFrame {
     private volatile boolean _provisioning_upload = false;
 
     public void output_textarea_append(String msg) {
-        try {
-            output_textarea.getStyledDocument().insertString(output_textarea.getStyledDocument().getLength(), msg, null);
-        } catch (BadLocationException ex) {
-            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        synchronized (LOG_LOCK) {
+            try {
+                output_textarea.getStyledDocument().insertString(output_textarea.getStyledDocument().getLength(), msg, null);
+            } catch (BadLocationException ex) {
+                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
 
@@ -2249,6 +2253,7 @@ public class Main extends javax.swing.JFrame {
         new_account_button = new javax.swing.JButton();
         upload_button = new javax.swing.JButton();
         save_button = new javax.swing.JButton();
+        load_log_button = new javax.swing.JButton();
         barra_menu = new javax.swing.JMenuBar();
         options_menu = new javax.swing.JMenu();
         jMenuItem2 = new javax.swing.JMenuItem();
@@ -2419,7 +2424,7 @@ public class Main extends javax.swing.JFrame {
                 .addComponent(pause_button)
                 .addGap(18, 18, 18)
                 .addComponent(cancel_all_button)
-                .addContainerGap(334, Short.MAX_VALUE))
+                .addContainerGap(650, Short.MAX_VALUE))
         );
         transferences_control_panelLayout.setVerticalGroup(
             transferences_control_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -2443,10 +2448,7 @@ public class Main extends javax.swing.JFrame {
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(transferences_control_panel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addGroup(jPanel3Layout.createSequentialGroup()
-                .addGap(0, 0, 0)
-                .addComponent(transf_scroll)
-                .addGap(0, 0, 0))
+            .addComponent(transf_scroll)
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -2498,12 +2500,23 @@ public class Main extends javax.swing.JFrame {
 
         save_button.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
         save_button.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/guardar.png"))); // NOI18N
-        save_button.setText("SAVE LOG TO FILE");
+        save_button.setText("SAVE LOG");
         save_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         save_button.setDoubleBuffered(true);
         save_button.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 save_buttonActionPerformed(evt);
+            }
+        });
+
+        load_log_button.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
+        load_log_button.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/cargar.png"))); // NOI18N
+        load_log_button.setText("LOAD LOG");
+        load_log_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        load_log_button.setDoubleBuffered(true);
+        load_log_button.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                load_log_buttonActionPerformed(evt);
             }
         });
 
@@ -2516,21 +2529,24 @@ public class Main extends javax.swing.JFrame {
                 .addComponent(upload_button)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(new_account_button)
-                .addGap(18, 18, Short.MAX_VALUE)
-                .addComponent(save_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(save_button)
+                .addGap(18, 18, 18)
+                .addComponent(load_log_button)
+                .addGap(18, 18, 18)
                 .addComponent(clear_log_button)
                 .addGap(0, 0, 0))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(new_account_button, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(upload_button)
-                        .addComponent(save_button)
-                        .addComponent(clear_log_button))
-                    .addComponent(new_account_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addComponent(clear_log_button)
+                        .addComponent(load_log_button)
+                        .addComponent(save_button)))
                 .addGap(0, 0, 0))
         );
 
@@ -2611,7 +2627,7 @@ public class Main extends javax.swing.JFrame {
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(vamos_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                    .addComponent(mainSplitPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                    .addComponent(mainSplitPanel)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(check_only_new_checkbox)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -2861,11 +2877,13 @@ public class Main extends javax.swing.JFrame {
             if (!file.getName().toLowerCase().endsWith(".txt")) {
                 file = new File(file.getParentFile(), file.getName() + ".txt");
             }
-
-            try {
-                output_textarea.write(new OutputStreamWriter(new FileOutputStream(file), "utf-8"));
-            } catch (Exception e) {
-                e.printStackTrace();
+            synchronized (LOG_LOCK) {
+                try {
+                    output_textarea.write(new OutputStreamWriter(new FileOutputStream(file), "utf-8"));
+                    Helpers.mostrarMensajeInformativo(this, "DONE");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
 
@@ -3325,7 +3343,8 @@ public class Main extends javax.swing.JFrame {
 
     private void clear_log_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clear_log_buttonActionPerformed
         // TODO add your handling code here:
-        if (!busy() && Helpers.mostrarMensajeInformativoSINO(this, "SURE?") == 0) {
+        if (!busy() && Helpers.mostrarMensajeInformativoSINO(this, "ARE YOU SURE?") == 0) {
+            save_button.doClick();
             output_textarea.setText("");
         }
     }//GEN-LAST:event_clear_log_buttonActionPerformed
@@ -3542,6 +3561,39 @@ public class Main extends javax.swing.JFrame {
         });
     }//GEN-LAST:event_new_account_buttonActionPerformed
 
+    private void load_log_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_load_log_buttonActionPerformed
+        // TODO add your handling code here:
+
+        JFileChooser fileChooser = new JFileChooser();
+
+        fileChooser.setPreferredSize(new Dimension(800, 600));
+
+        Helpers.updateComponentFont(fileChooser, fileChooser.getFont(), 1.20f);
+
+        int retval = fileChooser.showOpenDialog(this);
+
+        if (retval == JFileChooser.APPROVE_OPTION) {
+
+            File file = fileChooser.getSelectedFile();
+
+            if (file == null) {
+                return;
+            }
+
+            if (Helpers.mostrarMensajeInformativoSINO(this, "The content of the current log will be overwritten. ARE YOU SURE?") == 0) {
+                synchronized (LOG_LOCK) {
+                    try {
+                        output_textarea.read(new InputStreamReader(new FileInputStream(file), "utf-8"), null);
+                        Helpers.mostrarMensajeInformativo(this, "DONE");
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+
+    }//GEN-LAST:event_load_log_buttonActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -3647,6 +3699,7 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel3;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JPopupMenu.Separator jSeparator1;
+    private javax.swing.JButton load_log_button;
     private javax.swing.JLabel logo_label;
     private javax.swing.JSplitPane mainSplitPanel;
     private javax.swing.JCheckBoxMenuItem menu_https;

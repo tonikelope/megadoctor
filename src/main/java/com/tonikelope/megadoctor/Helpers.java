@@ -458,6 +458,30 @@ public class Helpers {
         return cadena.toString();
     }
 
+    public static void copyCompletedTransfers() {
+
+        String log = Main.MAIN_WINDOW.getOutput_textarea().getText();
+
+        final String regex = "^.+-> *(.+<H:.*?>.+)$";
+
+        final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+
+        final Matcher matcher = pattern.matcher(log);
+
+        ArrayList<String> transfers = new ArrayList<>();
+
+        while (matcher.find()) {
+            transfers.add(matcher.group(1));
+        }
+
+        Collections.sort(transfers);
+
+        Helpers.copyTextToClipboard(String.join("\n\n", transfers.toArray(new String[0])));
+
+        Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL COMPLETED TRANSFERES COPIED TO CLIPBOARD");
+
+    }
+
     public static String[] registerNewMEGAaccount() {
 
         final CyclicBarrier barrera = new CyclicBarrier(2);
@@ -547,6 +571,8 @@ public class Helpers {
 
         } catch (Exception ex) {
             Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            barrera.reset();
         }
 
         return null;
@@ -1645,6 +1671,17 @@ public class Helpers {
                 }
             };
 
+            Action copyTransfersAction = new AbstractAction("COPY ALL COMPLETED TRANSFERS LINKS") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+
+                    Helpers.threadRun(() -> {
+                        copyCompletedTransfers();
+                    });
+
+                }
+            };
+
             Action downloadMEGANodesAction = new AbstractAction("DOWNLOAD SELECTED FOLDERS/FILES") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
@@ -1843,6 +1880,12 @@ public class Helpers {
             JMenuItem selectAll = new JMenuItem(selectAllAction);
             selectAll.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/select_all.png")));
             popup.add(selectAll);
+
+            popup.addSeparator();
+
+            JMenuItem copyTransfers = new JMenuItem(copyTransfersAction);
+            copyTransfers.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/copy.png")));
+            popup.add(copyTransfers);
 
             popup.addSeparator();
 
