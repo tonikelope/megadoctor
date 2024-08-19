@@ -478,7 +478,7 @@ public class Helpers {
 
         Helpers.copyTextToClipboard(String.join("\n\n", transfers.toArray(new String[0])));
 
-        Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL COMPLETED TRANSFERES COPIED TO CLIPBOARD");
+        Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "ALL COMPLETED UPLOADS COPIED TO CLIPBOARD");
 
     }
 
