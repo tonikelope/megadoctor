@@ -66,7 +66,7 @@ import javax.swing.text.BadLocationException;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "3.16";
+    public final static String VERSION = "3.17";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -788,9 +788,10 @@ public class Main extends javax.swing.JFrame {
             MAIN_WINDOW.getCuentas_textarea().setEnabled(enable);
             clear_log_button.setEnabled(enable);
             check_only_new_checkbox.setEnabled(enable);
-            getVamos_button().setEnabled(enable || isRunning_global_check());
-            getUpload_button().setEnabled(enable && !isPausing_transference() && !isProvisioning_upload());
-            getSave_button().setEnabled(enable);
+            vamos_button.setEnabled(enable || isRunning_global_check());
+            upload_button.setEnabled(enable && !isPausing_transference() && !isProvisioning_upload());
+            save_button.setEnabled(enable);
+            load_log_button.setEnabled(enable);
             new_account_button.setEnabled(enable);
             options_menu.setEnabled(enable);
         });
