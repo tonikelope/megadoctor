@@ -502,7 +502,7 @@ public class Helpers {
                 final int ft = t--;
 
                 Helpers.GUIRun(() -> {
-                    MAIN_WINDOW.getStatus_label().setText("Creating new account, please wait (" + String.valueOf(ft) + ")...");
+                    MAIN_WINDOW.getStatus_label().setText("Creating new MEGA account, please wait (" + String.valueOf(ft) + ")...");
                 });
 
                 try {
