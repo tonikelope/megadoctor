@@ -543,6 +543,8 @@ public class Helpers {
 
                     } catch (Exception ex) {
                         Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
+                    } finally {
+                        barrera.reset();
                     }
                 }
 
@@ -553,6 +555,8 @@ public class Helpers {
             });
 
             String[] register = Helpers.runProcess(new String[]{"mega-signup", mailer.getSelf().getEmail(), password}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null, true, null);
+
+            Logger.getLogger(Helpers.class.getName()).log(Level.INFO, register[1]);
 
             if (Integer.parseInt(register[2]) == 0) {
 
@@ -567,11 +571,14 @@ public class Helpers {
                 return (!barrera.isBroken() && Integer.parseInt(c[0]) == 0) ? new String[]{mailer.getSelf().getEmail(), password} : null;
             }
 
-            mailer.closeMessageListener();
-
         } catch (Exception ex) {
             Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
+
+            if (mailer != null) {
+                mailer.closeMessageListener();
+            }
+
             barrera.reset();
         }
 
