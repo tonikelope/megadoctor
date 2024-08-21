@@ -3533,8 +3533,6 @@ public class Main extends javax.swing.JFrame {
 
                     if (account != null) {
 
-                        Helpers.mostrarMensajeInformativo(this, "<b>Account successfully created (copied to clipboard)</b>\n" + String.join("#", account));
-
                         output_textarea_append("\nAccount successfully created (copied to clipboard):\n" + String.join("#", account) + "\n\n");
 
                         Helpers.GUIRun(() -> {
