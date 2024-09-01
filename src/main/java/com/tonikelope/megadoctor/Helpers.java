@@ -498,7 +498,7 @@ public class Helpers {
 
             int t = Helpers.NEW_ACCOUNT_CONFIRM_TIMEOUT;
 
-            while (!barrera.isBroken() && "*".equals(c[0]) && t > 0) {
+            while ("*".equals(c[0]) && t > 0) {
                 final int ft = t--;
 
                 Helpers.GUIRun(() -> {
@@ -512,75 +512,94 @@ public class Helpers {
                 }
             }
 
+            if (t == 0) {
+                c[0] = "#";
+            }
+
             Helpers.GUIRun(() -> {
                 MAIN_WINDOW.getStatus_label().setText("");
             });
         });
 
-        try {
-            mailer = JMailBuilder.createDefault(password);
+        boolean antiflood;
 
-            mailer.init();
+        do {
 
-            final String email = mailer.getSelf().getEmail();
+            antiflood = false;
 
-            mailer.openEventListener(new me.shivzee.callbacks.EventListener() {
-                @Override
-                public void onMessageReceived(Message message) {
+            try {
+                mailer = JMailBuilder.createDefault(password);
+
+                mailer.init();
+
+                final String email = mailer.getSelf().getEmail();
+
+                mailer.openEventListener(new me.shivzee.callbacks.EventListener() {
+                    @Override
+                    public void onMessageReceived(Message message) {
+
+                        try {
+
+                            String link = Helpers.findFirstRegex("https.*?#confirm[a-zA-Z0-9_-]+", message.getContent(), 0);
+
+                            if (link != null) {
+
+                                String[] confirm = Helpers.runProcess(new String[]{"mega-confirm", link, email, password}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null, true, null);
+
+                                c[0] = confirm[2];
+
+                                barrera.await();
+                            }
+
+                        } catch (Exception ex) {
+                            Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
+                            c[0] = "";
+                        }
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, "Some Error Occurred {0}", error);
+                    }
+                });
+
+                String[] register = Helpers.runProcess(new String[]{"mega-signup", mailer.getSelf().getEmail(), password}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null, true, null);
+
+                Logger.getLogger(Helpers.class.getName()).log(Level.INFO, register[1]);
+
+                if (Integer.parseInt(register[2]) == 0) {
 
                     try {
-
-                        String link = Helpers.findFirstRegex("https.*?#confirm[a-zA-Z0-9_-]+", message.getContent(), 0);
-
-                        if (link != null) {
-
-                            String[] confirm = Helpers.runProcess(new String[]{"mega-confirm", link, email, password}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null, true, null);
-
-                            c[0] = confirm[2];
-
-                            barrera.await();
-                        }
-
+                        barrera.await(NEW_ACCOUNT_CONFIRM_TIMEOUT, TimeUnit.SECONDS);
                     } catch (Exception ex) {
-                        Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
-                    } finally {
-                        barrera.reset();
+                        Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, "MEGA-CONFIRM EMAIL TIMEOUT :(");
                     }
+
+                    mailer.closeMessageListener();
+
+                    return (!barrera.isBroken() && Integer.parseInt(c[0]) == 0) ? new String[]{mailer.getSelf().getEmail(), password} : null;
                 }
 
-                @Override
-                public void onError(String error) {
-                    Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, "Some Error Occurred {0}", error);
-                }
-            });
-
-            String[] register = Helpers.runProcess(new String[]{"mega-signup", mailer.getSelf().getEmail(), password}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null, true, null);
-
-            Logger.getLogger(Helpers.class.getName()).log(Level.INFO, register[1]);
-
-            if (Integer.parseInt(register[2]) == 0) {
+            } catch (javax.security.auth.login.LoginException ex1) {
+                antiflood = true;
 
                 try {
-                    barrera.await(NEW_ACCOUNT_CONFIRM_TIMEOUT, TimeUnit.SECONDS);
-                } catch (Exception ex) {
+                    Thread.sleep(5000);
+                } catch (InterruptedException ex) {
                     Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
                 }
 
-                mailer.closeMessageListener();
-
-                return (!barrera.isBroken() && Integer.parseInt(c[0]) == 0) ? new String[]{mailer.getSelf().getEmail(), password} : null;
+            } catch (Exception ex) {
+                Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
             }
 
-        } catch (Exception ex) {
-            Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
+        } while (antiflood && !"#".equals(c[0]));
 
-            if (mailer != null) {
-                mailer.closeMessageListener();
-            }
-
-            barrera.reset();
+        if (mailer != null) {
+            mailer.closeMessageListener();
         }
+
+        c[0] = "";
 
         return null;
 

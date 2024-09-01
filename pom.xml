@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.tonikelope.megadoctor</groupId>
     <artifactId>MegaDoctor</artifactId>
-    <version>3.19</version>
+    <version>3.20</version>
     <packaging>jar</packaging>
     <repositories>
         <repository>
@@ -42,7 +42,7 @@
                             <mainClass>com.tonikelope.megadoctor.Main</mainClass>
                         </manifest>
                         <manifestEntries>
-                            <SplashScreen-Image>images/megadoctor_splash.png</SplashScreen-Image>
+                            <SplashScreen-Image>images/megadoctor_splash.jpg</SplashScreen-Image>
                         </manifestEntries>
                     </archive>
                     <descriptorRefs>
