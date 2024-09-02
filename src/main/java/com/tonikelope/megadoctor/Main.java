@@ -66,7 +66,7 @@ import javax.swing.text.BadLocationException;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "3.20";
+    public final static String VERSION = "3.21";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -3533,7 +3533,7 @@ public class Main extends javax.swing.JFrame {
 
                     if (account != null) {
 
-                        Helpers.mostrarMensajeInformativo(this, "MEGA ACCOUNT CREATED");
+                        Helpers.mostrarMensajeInformativo(this, "<b>Account successfully created (copied to clipboard)</b>\n" + String.join("#", account));
 
                         output_textarea_append("\nAccount successfully created (copied to clipboard):\n" + String.join("#", account) + "\n\n");
 
