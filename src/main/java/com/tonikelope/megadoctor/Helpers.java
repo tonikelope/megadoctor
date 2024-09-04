@@ -553,7 +553,7 @@ public class Helpers {
 
                         } catch (Exception ex) {
                             Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
-                            c[0] = "";
+                            c[0] = "-";
                         }
                     }
 
@@ -599,7 +599,7 @@ public class Helpers {
             mailer.closeMessageListener();
         }
 
-        c[0] = "";
+        c[0] = "-";
 
         return null;
 
