@@ -126,6 +126,8 @@ public class Helpers {
 
     public static final ConcurrentLinkedQueue<Process> PROCESSES_QUEUE = new ConcurrentLinkedQueue<>();
 
+    public static volatile String MEGA_REGISTER_STATUS = new String();
+
     public static void createMegaDoctorDir() {
 
         if (!Files.exists(Paths.get(Main.MEGADOCTOR_DIR))) {
@@ -490,15 +492,13 @@ public class Helpers {
 
         final String password = Helpers.genRandomString(32);
 
-        final String[] c = new String[1];
-
-        c[0] = "*";
+        MEGA_REGISTER_STATUS = "*";
 
         Helpers.threadRun(() -> {
 
             int t = Helpers.NEW_ACCOUNT_CONFIRM_TIMEOUT;
 
-            while ("*".equals(c[0]) && t > 0) {
+            while ("*".equals(MEGA_REGISTER_STATUS) && t > 0) {
                 final int ft = t--;
 
                 Helpers.GUIRun(() -> {
@@ -513,7 +513,8 @@ public class Helpers {
             }
 
             if (t == 0) {
-                c[0] = "#";
+
+                MEGA_REGISTER_STATUS = "#";
             }
 
             Helpers.GUIRun(() -> {
@@ -544,16 +545,16 @@ public class Helpers {
 
                             if (link != null) {
 
-                                String[] confirm = Helpers.runProcess(new String[]{"mega-confirm", link, email, password}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null, true, null);
+                                String[] confirm = Helpers.runProcess(new String[]{"mega-confirm", link, email, password}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null, true, null, NEW_ACCOUNT_CONFIRM_TIMEOUT);
 
-                                c[0] = confirm[2];
+                                MEGA_REGISTER_STATUS = confirm[2];
 
                                 barrera.await();
                             }
 
                         } catch (Exception ex) {
                             Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
-                            c[0] = "-";
+                            MEGA_REGISTER_STATUS = "-";
                         }
                     }
 
@@ -563,7 +564,7 @@ public class Helpers {
                     }
                 });
 
-                String[] register = Helpers.runProcess(new String[]{"mega-signup", mailer.getSelf().getEmail(), password}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null, true, null);
+                String[] register = Helpers.runProcess(new String[]{"mega-signup", mailer.getSelf().getEmail(), password}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null, true, null, NEW_ACCOUNT_CONFIRM_TIMEOUT);
 
                 Logger.getLogger(Helpers.class.getName()).log(Level.INFO, register[1]);
 
@@ -577,7 +578,7 @@ public class Helpers {
 
                     mailer.closeMessageListener();
 
-                    return (!barrera.isBroken() && Integer.parseInt(c[0]) == 0) ? new String[]{mailer.getSelf().getEmail(), password} : null;
+                    return (!barrera.isBroken() && Integer.parseInt(MEGA_REGISTER_STATUS) == 0) ? new String[]{mailer.getSelf().getEmail(), password} : null;
                 }
 
             } catch (javax.security.auth.login.LoginException ex1) {
@@ -593,13 +594,13 @@ public class Helpers {
                 Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
             }
 
-        } while (antiflood && !"#".equals(c[0]));
+        } while (antiflood && !"#".equals(MEGA_REGISTER_STATUS));
 
         if (mailer != null) {
             mailer.closeMessageListener();
         }
 
-        c[0] = "-";
+        MEGA_REGISTER_STATUS = "-";
 
         return null;
 
@@ -1122,41 +1123,30 @@ public class Helpers {
 
     public static String[] runProcess(String[] command, String path, boolean redirectstream, Pattern stop_regex) {
 
+        return runProcess(command, path, redirectstream, stop_regex, 0);
+    }
+
+    public static String[] runProcess(String[] command, String path, boolean redirectstream, Pattern stop_regex, long timeout) {
         if (Main.EXIT) {
             return null;
         }
-
         Process process = null;
-
         try {
-
             ProcessBuilder processbuilder = new ProcessBuilder(Helpers.buildCommand(command));
-
             if (path != null && !"".equals(path)) {
                 processbuilder.environment().put("PATH", path + File.pathSeparator + System.getenv("PATH"));
             }
-
             processbuilder.redirectErrorStream(redirectstream);
-
             process = processbuilder.start();
-
             PROCESSES_QUEUE.add(process);
-
             long pid = process.pid();
-
             StringBuilder sb = new StringBuilder();
-
             try (BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-
                 String line;
-
                 while ((line = br.readLine()) != null) {
                     sb.append(line).append("\n");
-
                     if (stop_regex != null) {
-
                         Matcher matcher = stop_regex.matcher(Pattern.quote(line));
-
                         if (matcher.find()) {
                             break;
                         }
@@ -1165,24 +1155,21 @@ public class Helpers {
             } catch (Exception ex) {
                 Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
             }
-
-            process.waitFor();
-
+            if (timeout > 0) {
+                process.waitFor(timeout, TimeUnit.SECONDS);
+            } else {
+                process.waitFor();
+            }
             process.destroy();
-
             PROCESSES_QUEUE.remove(process);
-
             return new String[]{String.valueOf(pid), new String(sb.toString().getBytes(), StandardCharsets.UTF_8), String.valueOf(process.exitValue())};
         } catch (Exception ex) {
             Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
         }
-
         if (process != null) {
             process.destroyForcibly();
         }
-
         PROCESSES_QUEUE.remove(process);
-
         return null;
     }
 
