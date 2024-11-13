@@ -66,12 +66,12 @@ import javax.swing.text.BadLocationException;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "3.23";
+    public final static String VERSION = "3.24";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final static String MEGA_CMD_URL = "https://mega.io/cmd";
-    public final static String MEGA_CMD_WINDOWS_PATH = "C:\\Users\\" + System.getProperty("user.name") + "\\AppData\\Local\\MEGAcmd";
+    public final static String MEGA_CMD_WINDOWS_PATH = (System.getenv("LOCALAPPDATA") != null ? System.getenv("LOCALAPPDATA") : "") + "\\MEGAcmd";
     public final static String MEGADOCTOR_DIR = System.getProperty("user.home") + File.separator + ".megadoctor";
     public final static String MEGADOCTOR_MISC_FILE = MEGADOCTOR_DIR + File.separator + "megadoctor_misc";
     public final static String SESSIONS_FILE = MEGADOCTOR_DIR + File.separator + "megadoctor_sessions";
@@ -251,6 +251,11 @@ public class Main extends javax.swing.JFrame {
         MEGA_CMD_VERSION = Helpers.runProcess(new String[]{"mega-version"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null, false, Pattern.compile("MEGAcmd version:"))[1];
 
         if (MEGA_CMD_VERSION == null || "".equals(MEGA_CMD_VERSION)) {
+
+            String mega_version_output = Helpers.runProcess(new String[]{"mega-version"}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null, true, null)[1];
+            Logger.getLogger(Main.class.getName()).log(Level.INFO, "MEGA_CMD_WINDOWS_PATH -> " + (Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null));
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "mega-version: " + mega_version_output);
+
             Helpers.mostrarMensajeError(this, "MEGA CMD IS REQUIRED");
             Helpers.openBrowserURLAndWait(MEGA_CMD_URL);
             if (ONE_INSTANCE_SOCKET != null) {
