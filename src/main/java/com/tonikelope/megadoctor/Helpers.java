@@ -126,8 +126,6 @@ public class Helpers {
 
     public static final ConcurrentLinkedQueue<Process> PROCESSES_QUEUE = new ConcurrentLinkedQueue<>();
 
-    public static volatile String MEGA_REGISTER_STATUS = new String();
-
     public static void createMegaDoctorDir() {
 
         if (!Files.exists(Paths.get(Main.MEGADOCTOR_DIR))) {
@@ -492,13 +490,15 @@ public class Helpers {
 
         final String password = Helpers.genRandomString(32);
 
-        MEGA_REGISTER_STATUS = "*";
+        final String[] mega_register_status = new String[1];
+
+        mega_register_status[0] = "*";
 
         Helpers.threadRun(() -> {
 
             int t = Helpers.NEW_ACCOUNT_CONFIRM_TIMEOUT;
 
-            while ("*".equals(MEGA_REGISTER_STATUS) && t > 0) {
+            while ("*".equals(mega_register_status[0]) && t > 0) {
                 final int ft = t--;
 
                 Helpers.GUIRun(() -> {
@@ -514,7 +514,7 @@ public class Helpers {
 
             if (t == 0) {
 
-                MEGA_REGISTER_STATUS = "#";
+                mega_register_status[0] = "#";
             }
 
             Helpers.GUIRun(() -> {
@@ -547,14 +547,14 @@ public class Helpers {
 
                                 String[] confirm = Helpers.runProcess(new String[]{"mega-confirm", link, email, password}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null, true, null, NEW_ACCOUNT_CONFIRM_TIMEOUT);
 
-                                MEGA_REGISTER_STATUS = confirm[2];
+                                mega_register_status[0] = confirm[2];
 
                                 barrera.await();
                             }
 
                         } catch (Exception ex) {
                             Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
-                            MEGA_REGISTER_STATUS = "-";
+                            mega_register_status[0] = "-";
                         }
                     }
 
@@ -578,7 +578,7 @@ public class Helpers {
 
                     mailer.closeMessageListener();
 
-                    return (!barrera.isBroken() && Integer.parseInt(MEGA_REGISTER_STATUS) == 0) ? new String[]{mailer.getSelf().getEmail(), password} : null;
+                    return (!barrera.isBroken() && Integer.parseInt(mega_register_status[0]) == 0) ? new String[]{mailer.getSelf().getEmail(), password} : null;
                 }
 
             } catch (javax.security.auth.login.LoginException ex1) {
@@ -594,13 +594,13 @@ public class Helpers {
                 Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
             }
 
-        } while (antiflood && !"#".equals(MEGA_REGISTER_STATUS));
+        } while (antiflood && !"#".equals(mega_register_status[0]));
 
         if (mailer != null) {
             mailer.closeMessageListener();
         }
 
-        MEGA_REGISTER_STATUS = "-";
+        mega_register_status[0] = "-";
 
         return null;
 

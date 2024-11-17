@@ -14,6 +14,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -53,8 +54,10 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
+import javax.swing.JSpinner;
 import javax.swing.JTextArea;
 import javax.swing.JTextPane;
+import javax.swing.SwingUtilities;
 import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 import javax.swing.plaf.ColorUIResource;
@@ -66,7 +69,7 @@ import javax.swing.text.BadLocationException;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "3.24";
+    public final static String VERSION = "3.25";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -238,6 +241,19 @@ public class Main extends javax.swing.JFrame {
         output_textarea.putClientProperty("Nimbus.Overrides", defaults);
         output_textarea.putClientProperty("Nimbus.Overrides.InheritDefaults", true);
         output_textarea.setBackground(bgColor);
+        ((JSpinner.DefaultEditor) new_account_counter.getEditor()).getTextField().setEditable(false);
+        new_account_counter.setVisible(false);
+
+        new_account_button.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                // Detectar clic derecho (botón 3 del mouse)
+                if (SwingUtilities.isRightMouseButton(e) && e.isShiftDown() && e.isControlDown()) {
+                    new_account_counter.setVisible(!new_account_counter.isVisible()); // Alternar visibilidad
+                }
+            }
+        });
+
         pack();
         setEnabled(false);
     }
@@ -2260,6 +2276,7 @@ public class Main extends javax.swing.JFrame {
         upload_button = new javax.swing.JButton();
         save_button = new javax.swing.JButton();
         load_log_button = new javax.swing.JButton();
+        new_account_counter = new javax.swing.JSpinner();
         barra_menu = new javax.swing.JMenuBar();
         options_menu = new javax.swing.JMenu();
         jMenuItem2 = new javax.swing.JMenuItem();
@@ -2526,6 +2543,11 @@ public class Main extends javax.swing.JFrame {
             }
         });
 
+        new_account_counter.setFont(new java.awt.Font("Noto Sans", 0, 24)); // NOI18N
+        new_account_counter.setModel(new javax.swing.SpinnerNumberModel(1, 1, 100, 1));
+        new_account_counter.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        new_account_counter.setDoubleBuffered(true);
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
@@ -2535,6 +2557,8 @@ public class Main extends javax.swing.JFrame {
                 .addComponent(upload_button)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(new_account_button)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(new_account_counter, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(save_button)
                 .addGap(18, 18, 18)
@@ -2546,13 +2570,15 @@ public class Main extends javax.swing.JFrame {
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
+                .addGap(0, 0, 0)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(new_account_button)
                     .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(upload_button)
                         .addComponent(clear_log_button)
                         .addComponent(load_log_button)
-                        .addComponent(save_button)))
+                        .addComponent(save_button))
+                    .addComponent(new_account_counter, javax.swing.GroupLayout.Alignment.LEADING))
                 .addGap(0, 0, 0))
         );
 
@@ -3516,17 +3542,23 @@ public class Main extends javax.swing.JFrame {
 
     private void new_account_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_new_account_buttonActionPerformed
         // TODO add your handling code here:
+
         _running_main_action = true;
 
         enableTOPControls(false);
+        new_account_counter.setEnabled(false);
         MAIN_WINDOW.getProgressbar().setIndeterminate(true);
         MAIN_WINDOW.getStatus_label().setText("Creating new account, please wait...");
+
+        final int tot_accounts = (int) new_account_counter.getValue();
 
         Helpers.threadRun(() -> {
 
             synchronized (TRANSFERENCES_LOCK) {
 
-                logout(true);
+                int ok = -1;
+
+                ArrayList<String> cuentas = new ArrayList<>();
 
                 if (Helpers.mostrarMensajeInformativoSINO(this,
                         "This feature helps in the creation of a MEGA account through its official API"
@@ -3534,27 +3566,56 @@ public class Main extends javax.swing.JFrame {
                         + "\n<b>YOU MUST AGREE TO ITS TERMS OF USE</b>"
                         + "\n\n<b>CONTINUE?</b>") == 0) {
 
-                    String[] account = Helpers.registerNewMEGAaccount();
+                    ok = 0;
 
-                    if (account != null) {
+                    for (int i = 0; i < tot_accounts && !_closing; i++) {
 
-                        Helpers.mostrarMensajeInformativo(this, "<b>Account successfully created (copied to clipboard)</b>\n" + String.join("#", account));
+                        logout(true);
 
-                        output_textarea_append("\nAccount successfully created (copied to clipboard):\n" + String.join("#", account) + "\n\n");
+                        String[] account = Helpers.registerNewMEGAaccount();
 
-                        Helpers.GUIRun(() -> {
-                            this.cuentas_textarea.append("\n" + String.join("#", account));
-                        });
+                        if (account != null) {
 
-                        Helpers.copyTextToClipboard(String.join("#", account));
+                            if (tot_accounts == 1) {
+                                Helpers.mostrarMensajeInformativo(this, "<b>Account successfully created (copied to clipboard)</b>\n" + String.join("#", account));
+                            }
 
-                    } else {
-                        Helpers.mostrarMensajeError(this, "MEGA ACCOUNT CREATION FAILED (try again later)");
+                            if (tot_accounts == 1) {
+                                output_textarea_append("\nAccount successfully created (copied to clipboard):\n" + String.join("#", account) + "\n\n");
+
+                                Helpers.copyTextToClipboard(String.join("#", account));
+
+                            } else {
+                                output_textarea_append("\nAccount successfully created:\n" + String.join("#", account) + "\n\n");
+                                cuentas.add(String.join("#", account));
+                            }
+
+                            Helpers.GUIRun(() -> {
+                                this.cuentas_textarea.append("\n" + String.join("#", account));
+                            });
+
+                            ok++;
+
+                            Helpers.GUIRunAndWait(() -> {
+
+                                MAIN_WINDOW.getStatus_label().setText("");
+                            });
+
+                        } else if (tot_accounts == 1) {
+                            Helpers.mostrarMensajeError(this, "MEGA ACCOUNT CREATION FAILED (try again later)");
+                        }
+
                     }
+                }
+
+                if (tot_accounts > 1 && ok >= 0) {
+                    Helpers.mostrarMensajeInformativo(this, "<b>Accounts (" + String.valueOf(ok) + ") successfully created (copied to clipboard)</b>");
+                    Helpers.copyTextToClipboard(String.join("\n", cuentas));
                 }
 
                 Helpers.GUIRunAndWait(() -> {
                     enableTOPControls(true);
+                    new_account_counter.setEnabled(true);
                     MAIN_WINDOW.getProgressbar().setIndeterminate(false);
                     MAIN_WINDOW.getStatus_label().setText("");
                 });
@@ -3710,6 +3771,7 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JSplitPane mainSplitPanel;
     private javax.swing.JCheckBoxMenuItem menu_https;
     private javax.swing.JButton new_account_button;
+    private javax.swing.JSpinner new_account_counter;
     private javax.swing.JMenu options_menu;
     private javax.swing.JTextPane output_textarea;
     private javax.swing.JButton pause_button;
