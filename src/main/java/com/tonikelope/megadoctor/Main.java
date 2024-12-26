@@ -70,7 +70,7 @@ import javax.swing.text.BadLocationException;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "3.27";
+    public final static String VERSION = "3.28";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -809,7 +809,7 @@ public class Main extends javax.swing.JFrame {
         return session_output.replaceAll("^.+: +(.+)$", "$1").trim();
     }
 
-    private void enableTOPControls(boolean enable) {
+    public void enableTOPControls(boolean enable) {
         Helpers.GUIRun(() -> {
             MAIN_WINDOW.getCuentas_textarea().setEnabled(enable);
             clear_log_button.setEnabled(enable);

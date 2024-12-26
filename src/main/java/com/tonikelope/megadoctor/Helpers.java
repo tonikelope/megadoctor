@@ -89,6 +89,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.List;
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiEvent;
 import javax.sound.midi.MidiSystem;
@@ -120,8 +121,10 @@ import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.undo.UndoManager;
 import me.shivzee.JMailTM;
+import me.shivzee.callbacks.MessageFetchedCallback;
 import me.shivzee.util.JMailBuilder;
 import me.shivzee.util.Message;
+import me.shivzee.util.Response;
 
 /**
  *
@@ -135,11 +138,85 @@ public class Helpers {
 
     public static final ConcurrentLinkedQueue<Process> PROCESSES_QUEUE = new ConcurrentLinkedQueue<>();
 
+    public static void fetchTMmailMessages(String email, String password) {
+
+        MAIN_WINDOW.enableTOPControls(false);
+
+        Helpers.GUIRun(() -> {
+            MAIN_WINDOW.getStatus_label().setText("Reading emails from " + email + "...");
+            MAIN_WINDOW.output_textarea_append("\n\nReading emails from " + email + "...");
+        });
+
+        try {
+            JMailTM mailer = JMailBuilder.login(email, password);
+
+            mailer.init();
+
+            mailer.fetchMessages(new MessageFetchedCallback() {
+                @Override
+                public void onMessagesFetched(List<Message> list) {
+
+                    if (list.isEmpty()) {
+
+                        Helpers.GUIRun(() -> {
+                            MAIN_WINDOW.output_textarea_append("\nTHERE ARE NO MESSAGES\n\n");
+                        });
+
+                        Helpers.mostrarMensajeInformativo(MAIN_WINDOW, "NO MESSAGES");
+
+                    } else {
+
+                        int i = 1;
+                        for (Message message : list) {
+                            Helpers.GUIRun(() -> {
+                                MAIN_WINDOW.output_textarea_append("\n\n(" + String.valueOf(i) + "/" + String.valueOf(list.size()) + ") " + message.getSenderName() + " (" + message.getSenderAddress() + ") [" + message.getCreatedAt() + "]\n" + message.getContent() + "\n\n");
+                            });
+                        }
+
+                        Helpers.mostrarMensajeInformativo(MAIN_WINDOW, String.valueOf(list.size()) + " MESSAGES");
+
+                    }
+
+                    Helpers.GUIRun(() -> {
+                        MAIN_WINDOW.getStatus_label().setText("");
+                    });
+
+                    MAIN_WINDOW.enableTOPControls(true);
+
+                }
+
+                @Override
+                public void onError(Response response) {
+
+                    Helpers.GUIRun(() -> {
+                        MAIN_WINDOW.getStatus_label().setText("");
+                    });
+
+                    MAIN_WINDOW.enableTOPControls(true);
+
+                }
+            });
+
+        } catch (javax.security.auth.login.LoginException ex) {
+            Helpers.mostrarMensajeError(MAIN_WINDOW, "ERROR READING EMAILS FROM " + email + "\n\nIs this a TM mail?");
+
+            Helpers.GUIRun(() -> {
+                MAIN_WINDOW.getStatus_label().setText("");
+                MAIN_WINDOW.output_textarea_append("\nERROR -> Is this a TM mail?\n\n");
+            });
+
+            MAIN_WINDOW.enableTOPControls(true);
+
+        } catch (Exception ex) {
+            Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+    }
+
     public static boolean MEGAWebLogin(String email, String password, boolean headless) {
 
         Helpers.GUIRun(() -> {
-            MAIN_WINDOW.getStatus_label().setBackground(Color.YELLOW);
-            MAIN_WINDOW.getStatus_label().setText("Haciendo WEB LOGIN en " + email + "...");
+            MAIN_WINDOW.getStatus_label().setText("Web login in " + email + "...");
         });
 
         try (Playwright playwright = Playwright.create()) {
@@ -151,7 +228,6 @@ public class Helpers {
 
                 // Navegar a la página de login de MEGA
                 page.navigate("https://mega.nz/login");
-
                 page.waitForLoadState(LoadState.NETWORKIDLE);
                 // Esperar los selectores de los campos de login
                 page.locator("input#login-name2").waitFor(new Locator.WaitForOptions().setTimeout(DOM_SELECTOR_TIMEOUT));
@@ -167,7 +243,6 @@ public class Helpers {
             }
 
             Helpers.GUIRun(() -> {
-                MAIN_WINDOW.getStatus_label().setBackground(null);
                 MAIN_WINDOW.getStatus_label().setText("");
             });
 
@@ -176,7 +251,6 @@ public class Helpers {
 
         } catch (Exception e) {
             Helpers.GUIRun(() -> {
-                MAIN_WINDOW.getStatus_label().setBackground(null);
                 MAIN_WINDOW.getStatus_label().setText("");
             });
             return false;
@@ -1570,6 +1644,23 @@ public class Helpers {
                 }
             };
 
+            Action readTMmailsAction = new AbstractAction("Read emails from SELECTED ACCOUNT") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                        Helpers.threadRun(() -> {
+
+                            String email = Helpers.extractFirstEmailFromtext(txtArea.getSelectedText());
+
+                            if (email != null) {
+
+                                Helpers.fetchTMmailMessages(email, MEGA_ACCOUNTS.get(email));
+                            }
+                        });
+                    }
+                }
+            };
+
             Action forceRefreshAccountAction = new AbstractAction("REFRESH (FULL) SELECTED ACCOUNT") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
@@ -1648,6 +1739,14 @@ public class Helpers {
             JMenuItem selectAll = new JMenuItem(selectAllAction);
             selectAll.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/select_all.png")));
             popup.add(selectAll);
+
+            popup.addSeparator();
+
+            JMenuItem readEmails = new JMenuItem(readTMmailsAction);
+
+            readEmails.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/refresh.png")));
+
+            popup.add(readEmails);
 
             popup.addSeparator();
 
@@ -1872,7 +1971,7 @@ public class Helpers {
                 }
             };
 
-            Action forceRefreshAccountAction = new AbstractAction("REFRESH SELECTED ACCOUNT") {
+            Action forceRefreshAccountAction = new AbstractAction("REFRESH (FULL) SELECTED ACCOUNT") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
                     if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
