@@ -10,6 +10,13 @@ by tonikelope
  */
 package com.tonikelope.megadoctor;
 
+import com.microsoft.playwright.Browser;
+import com.microsoft.playwright.BrowserContext;
+import com.microsoft.playwright.BrowserType;
+import com.microsoft.playwright.Locator;
+import com.microsoft.playwright.Page;
+import com.microsoft.playwright.Playwright;
+import com.microsoft.playwright.options.LoadState;
 import static com.tonikelope.megadoctor.Main.MAIN_WINDOW;
 import static com.tonikelope.megadoctor.Main.MEGA_ACCOUNTS;
 import static com.tonikelope.megadoctor.Main.MEGA_CMD_WINDOWS_PATH;
@@ -124,7 +131,57 @@ public class Helpers {
 
     public static final int NEW_ACCOUNT_CONFIRM_TIMEOUT = 60;
 
+    public static final int DOM_SELECTOR_TIMEOUT = 20000;
+
     public static final ConcurrentLinkedQueue<Process> PROCESSES_QUEUE = new ConcurrentLinkedQueue<>();
+
+    public static boolean MEGAWebLogin(String email, String password, boolean headless) {
+
+        Helpers.GUIRun(() -> {
+            MAIN_WINDOW.getStatus_label().setBackground(Color.YELLOW);
+            MAIN_WINDOW.getStatus_label().setText("Haciendo WEB LOGIN en " + email + "...");
+        });
+
+        try (Playwright playwright = Playwright.create()) {
+            try (Browser browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(headless))) {
+
+                BrowserContext context = browser.newContext(new Browser.NewContextOptions().setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.5938.132 Safari/537.36"));
+
+                Page page = context.newPage();
+
+                // Navegar a la página de login de MEGA
+                page.navigate("https://mega.nz/login");
+
+                page.waitForLoadState(LoadState.NETWORKIDLE);
+                // Esperar los selectores de los campos de login
+                page.locator("input#login-name2").waitFor(new Locator.WaitForOptions().setTimeout(DOM_SELECTOR_TIMEOUT));
+                page.locator("input#login-password2").waitFor(new Locator.WaitForOptions().setTimeout(DOM_SELECTOR_TIMEOUT));
+                // Rellenar email y password
+                page.fill("input#login-name2", email);
+                page.fill("input#login-password2", password);
+                // Hacer clic en el botón de login
+                page.click("button.login-button");
+                // Esperar hasta que se cargue el selector de la carpeta principal
+                page.locator(".fm-new-folder").waitFor(new Locator.WaitForOptions().setTimeout(DOM_SELECTOR_TIMEOUT));
+                // Cerrar el navegador
+            }
+
+            Helpers.GUIRun(() -> {
+                MAIN_WINDOW.getStatus_label().setBackground(null);
+                MAIN_WINDOW.getStatus_label().setText("");
+            });
+
+            // Login exitoso
+            return true;
+
+        } catch (Exception e) {
+            Helpers.GUIRun(() -> {
+                MAIN_WINDOW.getStatus_label().setBackground(null);
+                MAIN_WINDOW.getStatus_label().setText("");
+            });
+            return false;
+        }
+    }
 
     public static void createMegaDoctorDir() {
 
@@ -1513,7 +1570,7 @@ public class Helpers {
                 }
             };
 
-            Action forceRefreshAccountAction = new AbstractAction("REFRESH SELECTED ACCOUNT") {
+            Action forceRefreshAccountAction = new AbstractAction("REFRESH (FULL) SELECTED ACCOUNT") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
                     if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {

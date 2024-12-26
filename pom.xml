@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.tonikelope.megadoctor</groupId>
     <artifactId>MegaDoctor</artifactId>
-    <version>3.25</version>
+    <version>3.27</version>
     <packaging>jar</packaging>
     <repositories>
         <repository>
@@ -21,6 +21,11 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
             <version>1.7.21</version>
+        </dependency>
+        <dependency>
+            <groupId>com.microsoft.playwright</groupId>
+            <artifactId>playwright</artifactId>
+            <version>1.49.0</version> <!-- Verifica la última versión -->
         </dependency>
     </dependencies>
     <build>

@@ -49,6 +49,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -69,7 +70,7 @@ import javax.swing.text.BadLocationException;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "3.25";
+    public final static String VERSION = "3.27";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -209,6 +210,10 @@ public class Main extends javax.swing.JFrame {
 
     public JPanel getTransferences() {
         return transferences;
+    }
+
+    public JCheckBoxMenuItem getHeadless_menu() {
+        return headless_menu;
     }
 
     /**
@@ -809,6 +814,7 @@ public class Main extends javax.swing.JFrame {
             MAIN_WINDOW.getCuentas_textarea().setEnabled(enable);
             clear_log_button.setEnabled(enable);
             check_only_new_checkbox.setEnabled(enable);
+            check_force_full_checkbox.setEnabled(enable);
             vamos_button.setEnabled(enable || isRunning_global_check());
             upload_button.setEnabled(enable && !isPausing_transference() && !isProvisioning_upload());
             save_button.setEnabled(enable);
@@ -1820,6 +1826,13 @@ public class Main extends javax.swing.JFrame {
             MEGA_SESSIONS.remove(email);
 
             logout(false);
+
+            Helpers.MEGAWebLogin(email, MEGA_ACCOUNTS.get(email), getHeadless_menu().isSelected());
+
+            Helpers.GUIRun(() -> {
+                MAIN_WINDOW.getStatus_label().setText("REFRESHING " + email + " PLEASE WAIT...");
+
+            });
         }
 
         if (login(email)) {
@@ -2254,7 +2267,6 @@ public class Main extends javax.swing.JFrame {
         vamos_button = new javax.swing.JButton();
         status_label = new javax.swing.JLabel();
         progressbar = new javax.swing.JProgressBar();
-        check_only_new_checkbox = new javax.swing.JCheckBox();
         show_accounts = new javax.swing.JLabel();
         mainSplitPanel = new javax.swing.JSplitPane();
         cuentas_scrollpanel = new javax.swing.JScrollPane();
@@ -2277,9 +2289,13 @@ public class Main extends javax.swing.JFrame {
         save_button = new javax.swing.JButton();
         load_log_button = new javax.swing.JButton();
         new_account_counter = new javax.swing.JSpinner();
+        check_options_panel = new javax.swing.JPanel();
+        check_force_full_checkbox = new javax.swing.JCheckBox();
+        check_only_new_checkbox = new javax.swing.JCheckBox();
         barra_menu = new javax.swing.JMenuBar();
         options_menu = new javax.swing.JMenu();
         jMenuItem2 = new javax.swing.JMenuItem();
+        headless_menu = new javax.swing.JCheckBoxMenuItem();
         session_menu = new javax.swing.JCheckBoxMenuItem();
         menu_https = new javax.swing.JCheckBoxMenuItem();
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
@@ -2319,18 +2335,7 @@ public class Main extends javax.swing.JFrame {
         status_label.setFont(new java.awt.Font("Noto Sans", 3, 18)); // NOI18N
         status_label.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
         status_label.setDoubleBuffered(true);
-
-        check_only_new_checkbox.setFont(new java.awt.Font("Noto Sans", 1, 16)); // NOI18N
-        check_only_new_checkbox.setSelected(true);
-        check_only_new_checkbox.setText("Check only new accounts");
-        check_only_new_checkbox.setToolTipText("Check only new accounts");
-        check_only_new_checkbox.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-        check_only_new_checkbox.setDoubleBuffered(true);
-        check_only_new_checkbox.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                check_only_new_checkboxActionPerformed(evt);
-            }
-        });
+        status_label.setOpaque(true);
 
         show_accounts.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/vertical_less.png"))); // NOI18N
         show_accounts.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
@@ -2509,7 +2514,7 @@ public class Main extends javax.swing.JFrame {
         });
 
         upload_button.setBackground(new java.awt.Color(0, 0, 0));
-        upload_button.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
+        upload_button.setFont(new java.awt.Font("Noto Sans", 1, 36)); // NOI18N
         upload_button.setForeground(new java.awt.Color(255, 255, 255));
         upload_button.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/new_upload.png"))); // NOI18N
         upload_button.setText("NEW UPLOAD");
@@ -2548,37 +2553,90 @@ public class Main extends javax.swing.JFrame {
         new_account_counter.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         new_account_counter.setDoubleBuffered(true);
 
+        check_options_panel.setBorder(javax.swing.BorderFactory.createTitledBorder("Check options"));
+
+        check_force_full_checkbox.setFont(new java.awt.Font("Noto Sans", 1, 16)); // NOI18N
+        check_force_full_checkbox.setSelected(true);
+        check_force_full_checkbox.setText("Force FULL session refresh");
+        check_force_full_checkbox.setToolTipText("Force FULL login");
+        check_force_full_checkbox.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        check_force_full_checkbox.setDoubleBuffered(true);
+        check_force_full_checkbox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                check_force_full_checkboxActionPerformed(evt);
+            }
+        });
+
+        check_only_new_checkbox.setFont(new java.awt.Font("Noto Sans", 1, 16)); // NOI18N
+        check_only_new_checkbox.setText("Check only new accounts");
+        check_only_new_checkbox.setToolTipText("Check only new accounts");
+        check_only_new_checkbox.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        check_only_new_checkbox.setDoubleBuffered(true);
+        check_only_new_checkbox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                check_only_new_checkboxActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout check_options_panelLayout = new javax.swing.GroupLayout(check_options_panel);
+        check_options_panel.setLayout(check_options_panelLayout);
+        check_options_panelLayout.setHorizontalGroup(
+            check_options_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(check_options_panelLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(check_only_new_checkbox)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(check_force_full_checkbox)
+                .addContainerGap())
+        );
+        check_options_panelLayout.setVerticalGroup(
+            check_options_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(check_options_panelLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(check_options_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(check_only_new_checkbox)
+                    .addComponent(check_force_full_checkbox))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
-                .addGap(0, 0, 0)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(save_button)
+                .addGap(18, 18, 18)
+                .addComponent(load_log_button)
+                .addGap(18, 18, 18)
+                .addComponent(clear_log_button))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
                 .addComponent(upload_button)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(new_account_button)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(new_account_counter, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(save_button)
-                .addGap(18, 18, 18)
-                .addComponent(load_log_button)
-                .addGap(18, 18, 18)
-                .addComponent(clear_log_button)
-                .addGap(0, 0, 0))
+                .addComponent(check_options_panel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
-                .addGap(0, 0, 0)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(new_account_button)
-                    .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(upload_button)
-                        .addComponent(clear_log_button)
-                        .addComponent(load_log_button)
-                        .addComponent(save_button))
-                    .addComponent(new_account_counter, javax.swing.GroupLayout.Alignment.LEADING))
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(check_options_panel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(new_account_counter))
+                    .addComponent(upload_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(new_account_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(clear_log_button)
+                    .addComponent(load_log_button)
+                    .addComponent(save_button))
                 .addGap(0, 0, 0))
         );
 
@@ -2595,6 +2653,11 @@ public class Main extends javax.swing.JFrame {
             }
         });
         options_menu.add(jMenuItem2);
+
+        headless_menu.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
+        headless_menu.setSelected(true);
+        headless_menu.setText("Headless web login");
+        options_menu.add(headless_menu);
 
         session_menu.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
         session_menu.setSelected(true);
@@ -2657,35 +2720,32 @@ public class Main extends javax.swing.JFrame {
                         .addComponent(logo_label)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(vamos_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                            .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(vamos_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                     .addComponent(mainSplitPanel)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(check_only_new_checkbox)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGap(1126, 1126, 1126)
                         .addComponent(status_label, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                    .addComponent(logo_label)
+                .addContainerGap()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addContainerGap()
                         .addComponent(vamos_button)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(logo_label))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(check_only_new_checkbox)
-                    .addComponent(status_label))
+                .addComponent(status_label)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(progressbar, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(show_accounts))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(mainSplitPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 570, Short.MAX_VALUE)
+                .addComponent(mainSplitPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 565, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -2755,6 +2815,10 @@ public class Main extends javax.swing.JFrame {
                             Helpers.GUIRun(() -> {
                                 status_label.setText("Login " + email + " ...");
                             });
+
+                            if (check_force_full_checkbox.isSelected()) {
+                                Helpers.MEGAWebLogin(email, MEGA_ACCOUNTS.get(email), getHeadless_menu().isSelected());
+                            }
 
                             boolean login_ok = login(email);
 
@@ -3563,8 +3627,8 @@ public class Main extends javax.swing.JFrame {
                 if (Helpers.mostrarMensajeInformativoSINO(this,
                         "This feature helps in the creation of a MEGA account through its official API"
                         + "\n(in case you do not want or are unable to use a web browser)."
-                        + "\n<b>YOU MUST AGREE TO ITS TERMS OF USE</b>"
-                        + "\n\n<b>CONTINUE?</b>") == 0) {
+                        + "\n<b>YOU MUST AGREE TO MEGA.IO and MAIL.TM TERMS OF USE</b>"
+                        + "\n\n<i>Note: if you need it, you can login in the new mail at https://mail.tm</i> \n\n<b>CONTINUE?</b>") == 0) {
 
                     ok = 0;
 
@@ -3661,6 +3725,10 @@ public class Main extends javax.swing.JFrame {
 
     }//GEN-LAST:event_load_log_buttonActionPerformed
 
+    private void check_force_full_checkboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_check_force_full_checkboxActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_check_force_full_checkboxActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -3753,12 +3821,15 @@ public class Main extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenuBar barra_menu;
     private javax.swing.JButton cancel_all_button;
+    private javax.swing.JCheckBox check_force_full_checkbox;
     private javax.swing.JCheckBox check_only_new_checkbox;
+    private javax.swing.JPanel check_options_panel;
     private javax.swing.JButton clear_log_button;
     private javax.swing.JButton clear_trans_button;
     private javax.swing.JButton copy_all_button;
     private javax.swing.JScrollPane cuentas_scrollpanel;
     private javax.swing.JTextArea cuentas_textarea;
+    private javax.swing.JCheckBoxMenuItem headless_menu;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JMenuItem jMenuItem2;
