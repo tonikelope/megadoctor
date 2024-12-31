@@ -70,7 +70,7 @@ import javax.swing.text.BadLocationException;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "3.28";
+    public final static String VERSION = "3.29";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -115,7 +115,6 @@ public class Main extends javax.swing.JFrame {
     private volatile Transference _current_transference = null;
     private volatile String _last_email_force_refresh = null;
     private volatile JPanel transferences = null;
-    private volatile boolean _check_only_new = true;
     private volatile boolean _pausing_transference = false;
     private volatile boolean _transferences_paused = false;
     private volatile boolean _provisioning_upload = false;
@@ -685,6 +684,10 @@ public class Main extends javax.swing.JFrame {
             Helpers.GUIRun(() -> {
                 status_label.setForeground(Color.BLUE);
             });
+
+            if (double_login_menu.isSelected()) {
+                Helpers.MEGAWebLogin(email, password, headless_menu.isSelected());
+            }
 
             String[] login = Helpers.runProcess(new String[]{"mega-login", email, Helpers.escapeMEGAPassword(password)}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null, true, null);
 
@@ -1944,6 +1947,8 @@ public class Main extends javax.swing.JFrame {
 
         Helpers.GUIRunAndWait(() -> {
             menu_https.setSelected(Main.MEGADOCTOR_MISC.containsKey("megacmd_https") && (boolean) Main.MEGADOCTOR_MISC.get("megacmd_https"));
+            double_login_menu.setSelected(Main.MEGADOCTOR_MISC.containsKey("double_login") && (boolean) Main.MEGADOCTOR_MISC.get("double_login"));
+            headless_menu.setSelected(Main.MEGADOCTOR_MISC.containsKey("headless_weblogin") && (boolean) Main.MEGADOCTOR_MISC.get("headless_weblogin"));
             cuentas_scrollpanel.setVisible(!(Main.MEGADOCTOR_MISC.containsKey("hide_accounts") && (boolean) Main.MEGADOCTOR_MISC.get("hide_accounts")));
             show_accounts.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/vertical_" + (cuentas_scrollpanel.isVisible() ? "less" : "more") + ".png")));
             revalidate();
@@ -2295,6 +2300,7 @@ public class Main extends javax.swing.JFrame {
         barra_menu = new javax.swing.JMenuBar();
         options_menu = new javax.swing.JMenu();
         jMenuItem2 = new javax.swing.JMenuItem();
+        double_login_menu = new javax.swing.JCheckBoxMenuItem();
         headless_menu = new javax.swing.JCheckBoxMenuItem();
         session_menu = new javax.swing.JCheckBoxMenuItem();
         menu_https = new javax.swing.JCheckBoxMenuItem();
@@ -2502,7 +2508,7 @@ public class Main extends javax.swing.JFrame {
             }
         });
 
-        new_account_button.setFont(new java.awt.Font("Noto Sans", 1, 24)); // NOI18N
+        new_account_button.setFont(new java.awt.Font("Noto Sans", 1, 30)); // NOI18N
         new_account_button.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/mega.png"))); // NOI18N
         new_account_button.setText("NEW ACCOUNT");
         new_account_button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
@@ -2514,7 +2520,7 @@ public class Main extends javax.swing.JFrame {
         });
 
         upload_button.setBackground(new java.awt.Color(0, 0, 0));
-        upload_button.setFont(new java.awt.Font("Noto Sans", 1, 36)); // NOI18N
+        upload_button.setFont(new java.awt.Font("Noto Sans", 1, 30)); // NOI18N
         upload_button.setForeground(new java.awt.Color(255, 255, 255));
         upload_button.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/new_upload.png"))); // NOI18N
         upload_button.setText("NEW UPLOAD");
@@ -2548,7 +2554,7 @@ public class Main extends javax.swing.JFrame {
             }
         });
 
-        new_account_counter.setFont(new java.awt.Font("Noto Sans", 0, 24)); // NOI18N
+        new_account_counter.setFont(new java.awt.Font("Noto Sans", 0, 30)); // NOI18N
         new_account_counter.setModel(new javax.swing.SpinnerNumberModel(1, 1, 100, 1));
         new_account_counter.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         new_account_counter.setDoubleBuffered(true);
@@ -2561,22 +2567,12 @@ public class Main extends javax.swing.JFrame {
         check_force_full_checkbox.setToolTipText("Force FULL login");
         check_force_full_checkbox.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         check_force_full_checkbox.setDoubleBuffered(true);
-        check_force_full_checkbox.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                check_force_full_checkboxActionPerformed(evt);
-            }
-        });
 
         check_only_new_checkbox.setFont(new java.awt.Font("Noto Sans", 1, 16)); // NOI18N
         check_only_new_checkbox.setText("Check only new accounts");
         check_only_new_checkbox.setToolTipText("Check only new accounts");
         check_only_new_checkbox.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         check_only_new_checkbox.setDoubleBuffered(true);
-        check_only_new_checkbox.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                check_only_new_checkboxActionPerformed(evt);
-            }
-        });
 
         javax.swing.GroupLayout check_options_panelLayout = new javax.swing.GroupLayout(check_options_panel);
         check_options_panel.setLayout(check_options_panelLayout);
@@ -2627,11 +2623,9 @@ public class Main extends javax.swing.JFrame {
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(check_options_panel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(0, 0, Short.MAX_VALUE))
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(new_account_counter))
                     .addComponent(upload_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(new_account_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(new_account_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(new_account_counter, javax.swing.GroupLayout.Alignment.TRAILING))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(clear_log_button)
@@ -2654,9 +2648,25 @@ public class Main extends javax.swing.JFrame {
         });
         options_menu.add(jMenuItem2);
 
+        double_login_menu.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
+        double_login_menu.setText("Double \"fresh\" login (web+megacmd)");
+        double_login_menu.setDoubleBuffered(true);
+        double_login_menu.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                double_login_menuActionPerformed(evt);
+            }
+        });
+        options_menu.add(double_login_menu);
+
         headless_menu.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
         headless_menu.setSelected(true);
         headless_menu.setText("Headless web login");
+        headless_menu.setDoubleBuffered(true);
+        headless_menu.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                headless_menuActionPerformed(evt);
+            }
+        });
         options_menu.add(headless_menu);
 
         session_menu.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
@@ -2675,7 +2685,7 @@ public class Main extends javax.swing.JFrame {
         options_menu.add(menu_https);
         options_menu.add(jSeparator1);
 
-        purge_cache_menu.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
+        purge_cache_menu.setFont(new java.awt.Font("Noto Sans", 1, 16)); // NOI18N
         purge_cache_menu.setForeground(new java.awt.Color(255, 0, 0));
         purge_cache_menu.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/menu/clear.png"))); // NOI18N
         purge_cache_menu.setText("Purge MEGAcmd CACHE");
@@ -2709,23 +2719,21 @@ public class Main extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(status_label, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                         .addComponent(show_accounts)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(progressbar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addGroup(layout.createSequentialGroup()
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                         .addComponent(logo_label)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(vamos_button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                    .addComponent(mainSplitPanel)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(1126, 1126, 1126)
-                        .addComponent(status_label, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                    .addComponent(mainSplitPanel, javax.swing.GroupLayout.Alignment.LEADING))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -2786,7 +2794,7 @@ public class Main extends javax.swing.JFrame {
 
                     while (matcher.find()) {
 
-                        if (_check_only_new) {
+                        if (check_only_new_checkbox.isSelected()) {
                             if (!MEGA_ACCOUNTS.containsKey(matcher.group(1))) {
                                 MEGA_ACCOUNTS.put(matcher.group(1), matcher.group(2));
                                 mega_accounts.put(matcher.group(1), matcher.group(2));
@@ -3503,11 +3511,6 @@ public class Main extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_pause_buttonActionPerformed
 
-    private void check_only_new_checkboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_check_only_new_checkboxActionPerformed
-        // TODO add your handling code here:
-        this._check_only_new = check_only_new_checkbox.isSelected();
-    }//GEN-LAST:event_check_only_new_checkboxActionPerformed
-
     private void show_accountsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_show_accountsMouseClicked
         // TODO add your handling code here:
 
@@ -3725,9 +3728,17 @@ public class Main extends javax.swing.JFrame {
 
     }//GEN-LAST:event_load_log_buttonActionPerformed
 
-    private void check_force_full_checkboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_check_force_full_checkboxActionPerformed
+    private void headless_menuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_headless_menuActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_check_force_full_checkboxActionPerformed
+        Main.MEGADOCTOR_MISC.put("headless_weblogin", headless_menu.isSelected());
+        saveMISC();
+    }//GEN-LAST:event_headless_menuActionPerformed
+
+    private void double_login_menuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_double_login_menuActionPerformed
+        // TODO add your handling code here:
+        Main.MEGADOCTOR_MISC.put("double_login", double_login_menu.isSelected());
+        saveMISC();
+    }//GEN-LAST:event_double_login_menuActionPerformed
 
     /**
      * @param args the command line arguments
@@ -3829,6 +3840,7 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JButton copy_all_button;
     private javax.swing.JScrollPane cuentas_scrollpanel;
     private javax.swing.JTextArea cuentas_textarea;
+    private javax.swing.JCheckBoxMenuItem double_login_menu;
     private javax.swing.JCheckBoxMenuItem headless_menu;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenuItem jMenuItem1;

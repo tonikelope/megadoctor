@@ -1644,7 +1644,7 @@ public class Helpers {
                 }
             };
 
-            Action readTMmailsAction = new AbstractAction("Read emails from SELECTED ACCOUNT") {
+            Action checkTMmailsAction = new AbstractAction("CHECK EMAILS FROM SELECTED ACCOUNT") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
                     if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
@@ -1742,7 +1742,7 @@ public class Helpers {
 
             popup.addSeparator();
 
-            JMenuItem readEmails = new JMenuItem(readTMmailsAction);
+            JMenuItem readEmails = new JMenuItem(checkTMmailsAction);
 
             readEmails.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/refresh.png")));
 
@@ -1971,6 +1971,23 @@ public class Helpers {
                 }
             };
 
+            Action checkTMmailsAction = new AbstractAction("CHECK EMAILS FROM SELECTED ACCOUNT") {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    if (!Main.MAIN_WINDOW.busy() && txtArea.isEnabled() && txtArea.getSelectedText() != null && !txtArea.getSelectedText().isEmpty()) {
+                        Helpers.threadRun(() -> {
+
+                            String email = Helpers.extractFirstEmailFromtext(txtArea.getSelectedText());
+
+                            if (email != null) {
+
+                                Helpers.fetchTMmailMessages(email, MEGA_ACCOUNTS.get(email));
+                            }
+                        });
+                    }
+                }
+            };
+
             Action forceRefreshAccountAction = new AbstractAction("REFRESH (FULL) SELECTED ACCOUNT") {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
@@ -2146,7 +2163,7 @@ public class Helpers {
 
                         Helpers.threadRun(() -> {
 
-                            if (Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "WARNING: THIS COULD TAKE A VERY VERY LONG TIME.\n\n<span color='red'><b>CONTINUE?</b></span>") == 0) {
+                            if (Helpers.mostrarMensajeInformativoSINO(MAIN_WINDOW, "<b>WARNING: ENABLING ALL PUBLIC LINKS ON EVERY ACCOUNT COULD TAKE A VERY VERY VERY LONG TIME</b>.\n\n<span color='red'><b>CONTINUE?</b></span>") == 0) {
 
                                 for (String email : MEGA_ACCOUNTS.keySet()) {
                                     Main.MAIN_WINDOW.exportAllNodesInAccount(email, true, false);
@@ -2169,7 +2186,16 @@ public class Helpers {
 
             popup.addSeparator();
 
+            JMenuItem readEmails = new JMenuItem(checkTMmailsAction);
+
+            readEmails.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/refresh.png")));
+
+            popup.add(readEmails);
+
+            popup.addSeparator();
+
             JMenuItem refreshAccount = new JMenuItem(forceRefreshAccountAction);
+
             refreshAccount.setIcon(new javax.swing.ImageIcon(Helpers.class.getResource("/images/menu/refresh.png")));
 
             popup.add(refreshAccount);
