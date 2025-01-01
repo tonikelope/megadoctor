@@ -136,6 +136,10 @@ public class Helpers {
 
     public static final int DOM_SELECTOR_TIMEOUT = 20000;
 
+    public static final float FILE_DIALOG_FONT_ZOOM = 1.3f;
+
+    public static final float FILE_DIALOG_SIZE_ZOOM = 0.7f;
+
     public static final ConcurrentLinkedQueue<Process> PROCESSES_QUEUE = new ConcurrentLinkedQueue<>();
 
     public static void fetchTMmailMessages(String email, String password) {
@@ -215,8 +219,11 @@ public class Helpers {
 
     public static boolean MEGAWebLogin(String email, String password, boolean headless) {
 
+        final String status = MAIN_WINDOW.getStatus_label().getText();
+
         Helpers.GUIRun(() -> {
-            MAIN_WINDOW.getStatus_label().setText("Web login in " + email + "...");
+            MAIN_WINDOW.getStatus_label().setForeground(Color.MAGENTA);
+            MAIN_WINDOW.getStatus_label().setText("WEB-LOGIN in " + email + "...");
         });
 
         try (Playwright playwright = Playwright.create()) {
@@ -243,7 +250,8 @@ public class Helpers {
             }
 
             Helpers.GUIRun(() -> {
-                MAIN_WINDOW.getStatus_label().setText("");
+                MAIN_WINDOW.getStatus_label().setForeground(Color.BLACK);
+                MAIN_WINDOW.getStatus_label().setText(status);
             });
 
             // Login exitoso
@@ -251,7 +259,8 @@ public class Helpers {
 
         } catch (Exception e) {
             Helpers.GUIRun(() -> {
-                MAIN_WINDOW.getStatus_label().setText("");
+                MAIN_WINDOW.getStatus_label().setForeground(Color.BLACK);
+                MAIN_WINDOW.getStatus_label().setText(status);
             });
             return false;
         }

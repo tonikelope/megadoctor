@@ -737,6 +737,9 @@
                 </Property>
                 <Property name="doubleBuffered" type="boolean" value="true"/>
               </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="check_force_full_checkboxActionPerformed"/>
+              </Events>
             </Component>
             <Component class="javax.swing.JCheckBox" name="check_only_new_checkbox">
               <Properties>
@@ -750,6 +753,9 @@
                 </Property>
                 <Property name="doubleBuffered" type="boolean" value="true"/>
               </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="check_only_new_checkboxActionPerformed"/>
+              </Events>
             </Component>
           </SubComponents>
         </Container>

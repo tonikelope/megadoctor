@@ -10,6 +10,7 @@ by tonikelope
  */
 package com.tonikelope.megadoctor;
 
+import static com.tonikelope.megadoctor.Main.MAIN_WINDOW;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.io.File;
@@ -721,13 +722,13 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
         JFileChooser fileChooser = new JFileChooser();
 
-        fileChooser.setPreferredSize(new Dimension(800, 600));
+        fileChooser.setPreferredSize(new Dimension(Math.round(MAIN_WINDOW.getWidth() * Helpers.FILE_DIALOG_SIZE_ZOOM), Math.round(MAIN_WINDOW.getHeight() * Helpers.FILE_DIALOG_SIZE_ZOOM)));
+
+        Helpers.updateComponentFont(fileChooser, fileChooser.getFont(), Helpers.FILE_DIALOG_FONT_ZOOM);
 
         if (LAST_FOLDER != null) {
             fileChooser.setCurrentDirectory(new File(LAST_FOLDER));
         }
-
-        Helpers.updateComponentFont(fileChooser, fileChooser.getFont(), 1.20f);
 
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
@@ -796,13 +797,13 @@ public class UploadFileDialog extends javax.swing.JDialog implements Refresheabl
 
         JFileChooser fileChooser = new JFileChooser();
 
-        fileChooser.setPreferredSize(new Dimension(800, 600));
+        fileChooser.setPreferredSize(new Dimension(Math.round(MAIN_WINDOW.getWidth() * Helpers.FILE_DIALOG_SIZE_ZOOM), Math.round(MAIN_WINDOW.getHeight() * Helpers.FILE_DIALOG_SIZE_ZOOM)));
+
+        Helpers.updateComponentFont(fileChooser, fileChooser.getFont(), Helpers.FILE_DIALOG_FONT_ZOOM);
 
         if (LAST_FOLDER != null) {
             fileChooser.setCurrentDirectory(new File(LAST_FOLDER));
         }
-
-        Helpers.updateComponentFont(fileChooser, fileChooser.getFont(), 1.20f);
 
         fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 

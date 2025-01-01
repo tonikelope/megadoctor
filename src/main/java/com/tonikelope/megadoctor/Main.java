@@ -70,7 +70,7 @@ import javax.swing.text.BadLocationException;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "3.29";
+    public final static String VERSION = "3.30";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -642,7 +642,7 @@ public class Main extends javax.swing.JFrame {
                 status_label.setForeground(new Color(0, 153, 0));
             });
 
-            String[] login_session_output = Helpers.runProcess(new String[]{"mega-login", MEGA_SESSIONS.get(email)}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null, true, null);
+            String[] login_session_output = Helpers.runProcess(new String[]{"mega-login", session}, Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null, true, null);
 
             if (login_session_output[1].contains("security needs upgrading")) {
 
@@ -1743,9 +1743,9 @@ public class Main extends javax.swing.JFrame {
 
             JFileChooser fileChooser = new JFileChooser("DOWNLOAD DIRECTORY");
 
-            fileChooser.setPreferredSize(new Dimension(800, 600));
+            fileChooser.setPreferredSize(new Dimension(Math.round(MAIN_WINDOW.getWidth() * Helpers.FILE_DIALOG_SIZE_ZOOM), Math.round(MAIN_WINDOW.getHeight() * Helpers.FILE_DIALOG_SIZE_ZOOM)));
 
-            Helpers.updateComponentFont(fileChooser, fileChooser.getFont(), 1.20f);
+            Helpers.updateComponentFont(fileChooser, fileChooser.getFont(), Helpers.FILE_DIALOG_FONT_ZOOM);
 
             fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 
@@ -1829,8 +1829,6 @@ public class Main extends javax.swing.JFrame {
             MEGA_SESSIONS.remove(email);
 
             logout(false);
-
-            Helpers.MEGAWebLogin(email, MEGA_ACCOUNTS.get(email), getHeadless_menu().isSelected());
 
             Helpers.GUIRun(() -> {
                 MAIN_WINDOW.getStatus_label().setText("REFRESHING " + email + " PLEASE WAIT...");
@@ -1949,6 +1947,10 @@ public class Main extends javax.swing.JFrame {
             menu_https.setSelected(Main.MEGADOCTOR_MISC.containsKey("megacmd_https") && (boolean) Main.MEGADOCTOR_MISC.get("megacmd_https"));
             double_login_menu.setSelected(Main.MEGADOCTOR_MISC.containsKey("double_login") && (boolean) Main.MEGADOCTOR_MISC.get("double_login"));
             headless_menu.setSelected(Main.MEGADOCTOR_MISC.containsKey("headless_weblogin") && (boolean) Main.MEGADOCTOR_MISC.get("headless_weblogin"));
+
+            check_only_new_checkbox.setSelected(Main.MEGADOCTOR_MISC.containsKey("check_only_new") && (boolean) Main.MEGADOCTOR_MISC.get("check_only_new"));
+            check_force_full_checkbox.setSelected(Main.MEGADOCTOR_MISC.containsKey("check_force_full") && (boolean) Main.MEGADOCTOR_MISC.get("check_force_full"));
+
             cuentas_scrollpanel.setVisible(!(Main.MEGADOCTOR_MISC.containsKey("hide_accounts") && (boolean) Main.MEGADOCTOR_MISC.get("hide_accounts")));
             show_accounts.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/vertical_" + (cuentas_scrollpanel.isVisible() ? "less" : "more") + ".png")));
             revalidate();
@@ -2567,12 +2569,22 @@ public class Main extends javax.swing.JFrame {
         check_force_full_checkbox.setToolTipText("Force FULL login");
         check_force_full_checkbox.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         check_force_full_checkbox.setDoubleBuffered(true);
+        check_force_full_checkbox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                check_force_full_checkboxActionPerformed(evt);
+            }
+        });
 
         check_only_new_checkbox.setFont(new java.awt.Font("Noto Sans", 1, 16)); // NOI18N
         check_only_new_checkbox.setText("Check only new accounts");
         check_only_new_checkbox.setToolTipText("Check only new accounts");
         check_only_new_checkbox.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         check_only_new_checkbox.setDoubleBuffered(true);
+        check_only_new_checkbox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                check_only_new_checkboxActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout check_options_panelLayout = new javax.swing.GroupLayout(check_options_panel);
         check_options_panel.setLayout(check_options_panelLayout);
@@ -2816,7 +2828,10 @@ public class Main extends javax.swing.JFrame {
                                     + "|_|  |_|\\___|\\__, |\\__,_|____/ \\___/ \\___|\\__\\___/|_|   \n"
                                     + "             |___/                                      \n\nCHECKING START -> " + Helpers.getFechaHoraActual() + "\n");
                         });
+
                         int i = 0;
+
+                        logout(!check_force_full_checkbox.isSelected());
 
                         for (String email : mega_accounts.keySet()) {
 
@@ -2824,8 +2839,9 @@ public class Main extends javax.swing.JFrame {
                                 status_label.setText("Login " + email + " ...");
                             });
 
-                            if (check_force_full_checkbox.isSelected()) {
-                                Helpers.MEGAWebLogin(email, MEGA_ACCOUNTS.get(email), getHeadless_menu().isSelected());
+                            if (check_force_full_checkbox.isSelected() && MEGA_SESSIONS.containsKey(email)) {
+
+                                MEGA_SESSIONS.remove(email);
                             }
 
                             boolean login_ok = login(email);
@@ -2964,9 +2980,9 @@ public class Main extends javax.swing.JFrame {
 
         JFileChooser fileChooser = new JFileChooser();
 
-        fileChooser.setPreferredSize(new Dimension(800, 600));
+        fileChooser.setPreferredSize(new Dimension(Math.round(MAIN_WINDOW.getWidth() * Helpers.FILE_DIALOG_SIZE_ZOOM), Math.round(MAIN_WINDOW.getHeight() * Helpers.FILE_DIALOG_SIZE_ZOOM)));
 
-        Helpers.updateComponentFont(fileChooser, fileChooser.getFont(), 1.20f);
+        Helpers.updateComponentFont(fileChooser, fileChooser.getFont(), Helpers.FILE_DIALOG_FONT_ZOOM);
 
         int retval = fileChooser.showSaveDialog(this);
 
@@ -3700,9 +3716,9 @@ public class Main extends javax.swing.JFrame {
 
         JFileChooser fileChooser = new JFileChooser();
 
-        fileChooser.setPreferredSize(new Dimension(800, 600));
+        fileChooser.setPreferredSize(new Dimension(Math.round(MAIN_WINDOW.getWidth() * Helpers.FILE_DIALOG_SIZE_ZOOM), Math.round(MAIN_WINDOW.getHeight() * Helpers.FILE_DIALOG_SIZE_ZOOM)));
 
-        Helpers.updateComponentFont(fileChooser, fileChooser.getFont(), 1.20f);
+        Helpers.updateComponentFont(fileChooser, fileChooser.getFont(), Helpers.FILE_DIALOG_FONT_ZOOM);
 
         int retval = fileChooser.showOpenDialog(this);
 
@@ -3731,14 +3747,35 @@ public class Main extends javax.swing.JFrame {
     private void headless_menuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_headless_menuActionPerformed
         // TODO add your handling code here:
         Main.MEGADOCTOR_MISC.put("headless_weblogin", headless_menu.isSelected());
+
         saveMISC();
     }//GEN-LAST:event_headless_menuActionPerformed
 
     private void double_login_menuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_double_login_menuActionPerformed
         // TODO add your handling code here:
         Main.MEGADOCTOR_MISC.put("double_login", double_login_menu.isSelected());
+
         saveMISC();
     }//GEN-LAST:event_double_login_menuActionPerformed
+
+    private void check_force_full_checkboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_check_force_full_checkboxActionPerformed
+        // TODO add your handling code here:
+        if (check_force_full_checkbox.isSelected()) {
+            double_login_menu.setSelected(true);
+        }
+
+        Main.MEGADOCTOR_MISC.put("double_login", double_login_menu.isSelected());
+        Main.MEGADOCTOR_MISC.put("check_force_full", check_force_full_checkbox.isSelected());
+
+        saveMISC();
+    }//GEN-LAST:event_check_force_full_checkboxActionPerformed
+
+    private void check_only_new_checkboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_check_only_new_checkboxActionPerformed
+        // TODO add your handling code here:
+        Main.MEGADOCTOR_MISC.put("check_only_new", check_only_new_checkbox.isSelected());
+
+        saveMISC();
+    }//GEN-LAST:event_check_only_new_checkboxActionPerformed
 
     /**
      * @param args the command line arguments
