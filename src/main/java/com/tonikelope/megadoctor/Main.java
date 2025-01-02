@@ -1979,8 +1979,6 @@ public class Main extends javax.swing.JFrame {
             cuentas_scrollpanel.setVisible(!(Main.MEGADOCTOR_MISC.containsKey("hide_accounts") && (boolean) Main.MEGADOCTOR_MISC.get("hide_accounts")));
             show_accounts.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/vertical_" + (cuentas_scrollpanel.isVisible() ? "less" : "more") + ".png")));
 
-            mk_menu_checkbox.setSelected((Main.MEGADOCTOR_MISC.containsKey("print_mk") && (boolean) Main.MEGADOCTOR_MISC.get("print_mk")));
-
             headless_menu.setEnabled(double_login_menu.isSelected());
 
             revalidate();
@@ -2801,9 +2799,14 @@ public class Main extends javax.swing.JFrame {
         options_menu.add(jSeparator3);
 
         mk_menu_checkbox.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
-        mk_menu_checkbox.setText("Print account Master Key");
+        mk_menu_checkbox.setText("Print account/s Master Key/s");
         mk_menu_checkbox.setToolTipText("Useful for recovering a blocked account but be careful where it is stored.");
         mk_menu_checkbox.setDoubleBuffered(true);
+        mk_menu_checkbox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mk_menu_checkboxActionPerformed(evt);
+            }
+        });
         options_menu.add(mk_menu_checkbox);
         options_menu.add(jSeparator4);
 
@@ -3937,6 +3940,13 @@ public class Main extends javax.swing.JFrame {
         runTransferenceWatchdog();
 
     }//GEN-LAST:event_formComponentShown
+
+    private void mk_menu_checkboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mk_menu_checkboxActionPerformed
+        // TODO add your handling code here:
+        if (mk_menu_checkbox.isSelected()) {
+            Helpers.mostrarMensajeAviso(this, "Be careful where you keep your account master key because it could be stolen.");
+        }
+    }//GEN-LAST:event_mk_menu_checkboxActionPerformed
 
     /**
      * @param args the command line arguments
