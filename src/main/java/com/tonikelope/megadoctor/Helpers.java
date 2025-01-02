@@ -68,11 +68,16 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.KeySpec;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
@@ -90,6 +95,8 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.List;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiEvent;
 import javax.sound.midi.MidiSystem;
@@ -140,7 +147,36 @@ public class Helpers {
 
     public static final float FILE_DIALOG_SIZE_ZOOM = 0.7f;
 
+    public static final int MASTER_PASSWORD_PBKDF2_SALT_BYTE_LENGTH = 16;
+
+    public static final int MASTER_PASSWORD_PBKDF2_OUTPUT_BIT_LENGTH = 256;
+
+    public static final int MASTER_PASSWORD_PBKDF2_ITERATIONS = 65536;
+
     public static final ConcurrentLinkedQueue<Process> PROCESSES_QUEUE = new ConcurrentLinkedQueue<>();
+
+    public static byte[] PBKDF2HMACSHA256(String password, byte[] salt, int iterations, int output_length) throws NoSuchAlgorithmException, InvalidKeySpecException {
+
+        SecretKeyFactory f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+
+        KeySpec ks = new PBEKeySpec(password.toCharArray(), salt, iterations, output_length);
+
+        return f.generateSecret(ks).getEncoded();
+    }
+
+    public static byte[] BASE642Bin(String data) {
+        return Base64.getDecoder().decode(data);
+    }
+
+    public static String Bin2BASE64(byte[] data) {
+        return Base64.getEncoder().encodeToString(data);
+    }
+
+    public static byte[] HashBin(String algo, byte[] data) throws NoSuchAlgorithmException {
+        MessageDigest md = MessageDigest.getInstance(algo);
+
+        return md.digest(data);
+    }
 
     public static void fetchTMmailMessages(String email, String password) {
 

@@ -47,6 +47,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.crypto.Cipher;
+import javax.crypto.CipherInputStream;
+import javax.crypto.CipherOutputStream;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
@@ -70,7 +75,7 @@ import javax.swing.text.BadLocationException;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "3.30";
+    public final static String VERSION = "3.31";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -90,6 +95,7 @@ public class Main extends javax.swing.JFrame {
     public final static Object LOG_LOCK = new Object();
     public volatile static ServerSocket ONE_INSTANCE_SOCKET = null;
     public volatile static boolean EXIT = false;
+    public final static String PASS_SALT = "megadoctor";
 
     public final static ConcurrentHashMap<Component, Transference> TRANSFERENCES_MAP = new ConcurrentHashMap<>();
     public final static Object FILE_SPLITTER_LOCK = new Object();
@@ -118,6 +124,8 @@ public class Main extends javax.swing.JFrame {
     private volatile boolean _pausing_transference = false;
     private volatile boolean _transferences_paused = false;
     private volatile boolean _provisioning_upload = false;
+    private volatile byte[] _password = null;
+    private volatile String _password_hash = "";
 
     public void output_textarea_append(String msg) {
         synchronized (LOG_LOCK) {
@@ -615,12 +623,10 @@ public class Main extends javax.swing.JFrame {
     }
 
     public void init() {
+        loadMISC();
         Helpers.threadRun(() -> {
-            loadMISC();
             loadLog();
             runMEGACMDCHecker();
-            loadAccountsAndTransfers();
-            runTransferenceWatchdog();
         });
     }
 
@@ -1015,7 +1021,7 @@ public class Main extends javax.swing.JFrame {
                 }
             }
 
-            if (_firstAccountsTextareaClick && !MEGA_ACCOUNTS.isEmpty() && (session_menu.isSelected() || Helpers.mostrarMensajeInformativoSINO(this, "Do you want to save your MEGA accounts/sessions/transfers to disk to speed up next time?\n\n(If you are using a public computer it is NOT recommended to do so for security reasons).") == 0)) {
+            if (_firstAccountsTextareaClick && !MEGA_ACCOUNTS.isEmpty()) {
                 synchronized (TRANSFERENCES_LOCK) {
                     Helpers.GUIRunAndWait(() -> {
                         progressbar.setIndeterminate(true);
@@ -1051,13 +1057,15 @@ public class Main extends javax.swing.JFrame {
                 }
 
                 saveMISC();
-                saveAccounts();
+
+                if (!"".equals(_password_hash)) {
+                    saveEncryptedAccounts();
+                } else {
+                    saveAccounts();
+                }
                 saveTransfers();
                 saveLog();
                 logout(true);
-            } else {
-                removeSessionFILES();
-                logout(false);
             }
 
             if (ONE_INSTANCE_SOCKET != null) {
@@ -1076,24 +1084,6 @@ public class Main extends javax.swing.JFrame {
 
         });
 
-    }
-
-    public void removeSessionFILES() {
-        try {
-            Files.deleteIfExists(Paths.get(ACCOUNTS_FILE));
-        } catch (Exception ex) {
-            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        try {
-            Files.deleteIfExists(Paths.get(SESSIONS_FILE));
-        } catch (Exception ex) {
-            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        try {
-            Files.deleteIfExists(Paths.get(TRANSFERS_FILE));
-        } catch (Exception ex) {
-            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-        }
     }
 
     public void saveFileSplitterTasks() {
@@ -1129,7 +1119,7 @@ public class Main extends javax.swing.JFrame {
 
         synchronized (TRANSFERENCES_LOCK) {
             Helpers.GUIRunAndWait(() -> {
-                if (session_menu.isSelected() && transferences.getComponentCount() > 0) {
+                if (transferences.getComponentCount() > 0) {
 
                     final ArrayList<Object[]> trans = new ArrayList<>();
 
@@ -1874,6 +1864,39 @@ public class Main extends javax.swing.JFrame {
         _running_main_action = false;
     }
 
+    public void saveEncryptedAccounts() {
+        try {
+            // Crear la clave AES de 256 bits desde el arreglo de bytes
+            SecretKey secretKey = new SecretKeySpec(_password, "AES");
+
+            // Guardar cada objeto cifrado
+            encryptAndSave(ACCOUNTS_FILE, MEGA_ACCOUNTS, secretKey);
+            encryptAndSave(EXCLUDED_ACCOUNTS_FILE, MEGA_EXCLUDED_ACCOUNTS, secretKey);
+            encryptAndSave(SESSIONS_FILE, MEGA_SESSIONS, secretKey);
+            encryptAndSave(NODES_FILE, MEGA_NODES, secretKey);
+            encryptAndSave(FREE_SPACE_CACHE_FILE, FREE_SPACE_CACHE, secretKey);
+
+        } catch (Exception ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void encryptAndSave(String fileName, Object data, SecretKey key) {
+        try (FileOutputStream fos = new FileOutputStream(fileName); CipherOutputStream cos = new CipherOutputStream(fos, initCipher(Cipher.ENCRYPT_MODE, key)); ObjectOutputStream oos = new ObjectOutputStream(cos)) {
+
+            oos.writeObject(data);
+
+        } catch (Exception ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "Error saving file: " + fileName, ex);
+        }
+    }
+
+    private Cipher initCipher(int mode, SecretKey key) throws Exception {
+        Cipher cipher = Cipher.getInstance("AES");
+        cipher.init(mode, key);
+        return cipher;
+    }
+
     private void saveAccounts() {
 
         try (FileOutputStream fos = new FileOutputStream(ACCOUNTS_FILE); ObjectOutputStream oos = new ObjectOutputStream(fos)) {
@@ -1953,6 +1976,9 @@ public class Main extends javax.swing.JFrame {
 
             cuentas_scrollpanel.setVisible(!(Main.MEGADOCTOR_MISC.containsKey("hide_accounts") && (boolean) Main.MEGADOCTOR_MISC.get("hide_accounts")));
             show_accounts.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/vertical_" + (cuentas_scrollpanel.isVisible() ? "less" : "more") + ".png")));
+
+            headless_menu.setEnabled(double_login_menu.isSelected());
+
             revalidate();
             repaint();
         });
@@ -1984,6 +2010,83 @@ public class Main extends javax.swing.JFrame {
 
     }
 
+    public void loadEncryptedAccountsAndTransfers() {
+        try {
+            // Crear la clave AES desde el arreglo de bytes
+            SecretKey secretKey = new SecretKeySpec(_password, "AES");
+
+            // Cargar y desencriptar cada archivo
+            if (Files.exists(Paths.get(ACCOUNTS_FILE))) {
+                MEGA_ACCOUNTS = (LinkedHashMap<String, String>) decryptAndLoad(ACCOUNTS_FILE, secretKey);
+
+                if (!MEGA_ACCOUNTS.isEmpty()) {
+                    ArrayList<String> accounts = new ArrayList<>();
+                    for (String k : MEGA_ACCOUNTS.keySet()) {
+                        accounts.add(k + "#" + MEGA_ACCOUNTS.get(k));
+                    }
+
+                    Collections.sort(accounts, String.CASE_INSENSITIVE_ORDER);
+
+                    Helpers.GUIRun(() -> {
+                        if (!_firstAccountsTextareaClick) {
+                            _firstAccountsTextareaClick = true;
+                            cuentas_textarea.setText("");
+                            cuentas_textarea.setForeground(null);
+                        }
+
+                        cuentas_textarea.append(String.join("\n", accounts) + "\n");
+                        cuentas_textarea.setCaretPosition(0);
+                        getUpload_button().setEnabled(true);
+                    });
+                }
+            }
+
+            if (Files.exists(Paths.get(EXCLUDED_ACCOUNTS_FILE))) {
+                MEGA_EXCLUDED_ACCOUNTS = (ConcurrentLinkedQueue<String>) decryptAndLoad(EXCLUDED_ACCOUNTS_FILE, secretKey);
+            }
+
+            if (Files.exists(Paths.get(NODES_FILE))) {
+                MEGA_NODES = (ConcurrentHashMap<String, Object[]>) decryptAndLoad(NODES_FILE, secretKey);
+                if (MEGA_NODES.values().toArray().length > 0) {
+                    Object[] test = (Object[]) MEGA_NODES.values().toArray()[0];
+                    if (test.length != 4) {
+                        MEGA_NODES.clear();
+                        Files.deleteIfExists(Paths.get(NODES_FILE));
+                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "WRONG NODES FILE (DELETING...)");
+                    }
+                }
+            }
+
+            if (Files.exists(Paths.get(SESSIONS_FILE))) {
+                MEGA_SESSIONS = (HashMap<String, String>) decryptAndLoad(SESSIONS_FILE, secretKey);
+                if (!MEGA_SESSIONS.isEmpty()) {
+                    loadTransfers();
+                }
+            }
+
+            if (Files.exists(Paths.get(FREE_SPACE_CACHE_FILE))) {
+                FREE_SPACE_CACHE = (ConcurrentHashMap<String, Long>) decryptAndLoad(FREE_SPACE_CACHE_FILE, secretKey);
+            }
+
+        } catch (Exception ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        runFileSplitter();
+    }
+
+    private Object decryptAndLoad(String fileName, SecretKey key) {
+        try (FileInputStream fis = new FileInputStream(fileName); CipherInputStream cis = new CipherInputStream(fis, initCipher(Cipher.DECRYPT_MODE, key)); ObjectInputStream ois = new ObjectInputStream(cis)) {
+
+            return ois.readObject();
+
+        } catch (Exception ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, ex.getMessage());
+            System.exit(1);
+        }
+        return null;
+    }
+
     private void loadAccountsAndTransfers() {
 
         if (Files.exists(Paths.get(ACCOUNTS_FILE))) {
@@ -2013,19 +2116,14 @@ public class Main extends javax.swing.JFrame {
 
                         cuentas_textarea.setCaretPosition(0);
 
-                        session_menu.setSelected(true);
-
                         getUpload_button().setEnabled(true);
 
-                    });
-                } else {
-                    Helpers.GUIRun(() -> {
-                        session_menu.setSelected(false);
                     });
                 }
 
             } catch (Exception ex) {
                 Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                System.exit(1);
             }
 
             if (Files.exists(Paths.get(EXCLUDED_ACCOUNTS_FILE))) {
@@ -2087,10 +2185,6 @@ public class Main extends javax.swing.JFrame {
                 }
             }
 
-        } else {
-            Helpers.GUIRun(() -> {
-                session_menu.setSelected(false);
-            });
         }
 
         runFileSplitter();
@@ -2302,9 +2396,11 @@ public class Main extends javax.swing.JFrame {
         barra_menu = new javax.swing.JMenuBar();
         options_menu = new javax.swing.JMenu();
         jMenuItem2 = new javax.swing.JMenuItem();
+        jMenuItem3 = new javax.swing.JMenuItem();
+        jSeparator2 = new javax.swing.JPopupMenu.Separator();
         double_login_menu = new javax.swing.JCheckBoxMenuItem();
         headless_menu = new javax.swing.JCheckBoxMenuItem();
-        session_menu = new javax.swing.JCheckBoxMenuItem();
+        jSeparator3 = new javax.swing.JPopupMenu.Separator();
         menu_https = new javax.swing.JCheckBoxMenuItem();
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
         purge_cache_menu = new javax.swing.JMenuItem();
@@ -2314,6 +2410,11 @@ public class Main extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle("MegaDoctor");
         setIconImage(new javax.swing.ImageIcon(getClass().getResource("/images/megadoctor_51.png")).getImage() );
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            public void componentShown(java.awt.event.ComponentEvent evt) {
+                formComponentShown(evt);
+            }
+        });
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
                 formWindowClosing(evt);
@@ -2564,9 +2665,8 @@ public class Main extends javax.swing.JFrame {
         check_options_panel.setBorder(javax.swing.BorderFactory.createTitledBorder("Check options"));
 
         check_force_full_checkbox.setFont(new java.awt.Font("Noto Sans", 1, 16)); // NOI18N
-        check_force_full_checkbox.setSelected(true);
         check_force_full_checkbox.setText("Force FULL session refresh");
-        check_force_full_checkbox.setToolTipText("Force FULL login");
+        check_force_full_checkbox.setToolTipText("Force session refresh for cached accounts (could help with weird login errors but it's slower)");
         check_force_full_checkbox.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         check_force_full_checkbox.setDoubleBuffered(true);
         check_force_full_checkbox.addActionListener(new java.awt.event.ActionListener() {
@@ -2660,8 +2760,19 @@ public class Main extends javax.swing.JFrame {
         });
         options_menu.add(jMenuItem2);
 
+        jMenuItem3.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
+        jMenuItem3.setText("Set MASTER PASSWORD");
+        jMenuItem3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem3ActionPerformed(evt);
+            }
+        });
+        options_menu.add(jMenuItem3);
+        options_menu.add(jSeparator2);
+
         double_login_menu.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
-        double_login_menu.setText("Double \"fresh\" login (web+megacmd)");
+        double_login_menu.setText("Double \"fresh\" login (web+MEGAcmd)");
+        double_login_menu.setToolTipText("Could help if MEGAcmd login is stuck");
         double_login_menu.setDoubleBuffered(true);
         double_login_menu.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -2673,6 +2784,7 @@ public class Main extends javax.swing.JFrame {
         headless_menu.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
         headless_menu.setSelected(true);
         headless_menu.setText("Headless web login");
+        headless_menu.setToolTipText("If not selected a web browser window will be launched");
         headless_menu.setDoubleBuffered(true);
         headless_menu.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -2680,15 +2792,11 @@ public class Main extends javax.swing.JFrame {
             }
         });
         options_menu.add(headless_menu);
-
-        session_menu.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
-        session_menu.setSelected(true);
-        session_menu.setText("Keep session on disk");
-        options_menu.add(session_menu);
+        options_menu.add(jSeparator3);
 
         menu_https.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
         menu_https.setSelected(true);
-        menu_https.setText("Use HTTPS TRANSFERS");
+        menu_https.setText("Use HTTPS for transfers");
         menu_https.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 menu_httpsActionPerformed(evt);
@@ -2700,7 +2808,8 @@ public class Main extends javax.swing.JFrame {
         purge_cache_menu.setFont(new java.awt.Font("Noto Sans", 1, 16)); // NOI18N
         purge_cache_menu.setForeground(new java.awt.Color(255, 0, 0));
         purge_cache_menu.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/menu/clear.png"))); // NOI18N
-        purge_cache_menu.setText("Purge MEGAcmd CACHE");
+        purge_cache_menu.setText("PURGE MEGAcmd CACHE");
+        purge_cache_menu.setToolTipText("Useful for weird MEGAcmd errors");
         purge_cache_menu.setDoubleBuffered(true);
         purge_cache_menu.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -3018,14 +3127,8 @@ public class Main extends javax.swing.JFrame {
 
                     if (isSomeTransference_running()) {
 
-                        if (!session_menu.isSelected()) {
-                            if (Helpers.mostrarMensajeInformativoSINO(this, "All transactions in progress or on hold will be lost. ARE YOU SURE?") == 0) {
+                        bye();
 
-                                bye();
-                            }
-                        } else {
-                            bye();
-                        }
                     } else {
 
                         bye();
@@ -3753,6 +3856,9 @@ public class Main extends javax.swing.JFrame {
 
     private void double_login_menuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_double_login_menuActionPerformed
         // TODO add your handling code here:
+
+        headless_menu.setEnabled(double_login_menu.isSelected());
+
         Main.MEGADOCTOR_MISC.put("double_login", double_login_menu.isSelected());
 
         saveMISC();
@@ -3760,11 +3866,6 @@ public class Main extends javax.swing.JFrame {
 
     private void check_force_full_checkboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_check_force_full_checkboxActionPerformed
         // TODO add your handling code here:
-        if (check_force_full_checkbox.isSelected()) {
-            double_login_menu.setSelected(true);
-        }
-
-        Main.MEGADOCTOR_MISC.put("double_login", double_login_menu.isSelected());
         Main.MEGADOCTOR_MISC.put("check_force_full", check_force_full_checkbox.isSelected());
 
         saveMISC();
@@ -3776,6 +3877,53 @@ public class Main extends javax.swing.JFrame {
 
         saveMISC();
     }//GEN-LAST:event_check_only_new_checkboxActionPerformed
+
+    private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed
+        // TODO add your handling code here:
+        SetMasterPasswordDialog dialog = new SetMasterPasswordDialog(this, true, PASS_SALT, Main.MEGADOCTOR_MISC.containsKey("master_pass_hash") ? (String) Main.MEGADOCTOR_MISC.get("master_pass_hash") : "");
+
+        dialog.setLocationRelativeTo(this);
+
+        dialog.setVisible(true);
+
+        if (dialog.isPass_ok()) {
+            _password = dialog.getNew_pass();
+            _password_hash = dialog.getNew_pass_hash();
+            Main.MEGADOCTOR_MISC.put("master_pass_hash", dialog.getNew_pass_hash());
+            saveMISC();
+            Helpers.mostrarMensajeInformativo(this, "".equals(_password_hash) ? "MASTER PASSWORD DISABLED" : "MASTER PASSWORD ENABLED");
+        }
+    }//GEN-LAST:event_jMenuItem3ActionPerformed
+
+    private void formComponentShown(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_formComponentShown
+        // TODO add your handling code here:
+        if (Main.MEGADOCTOR_MISC.containsKey("master_pass_hash") && !"".equals((String) Main.MEGADOCTOR_MISC.get("master_pass_hash"))) {
+
+            _password_hash = (String) Main.MEGADOCTOR_MISC.get("master_pass_hash");
+
+            GetMasterPasswordDialog dialog = new GetMasterPasswordDialog(this, true, _password_hash, PASS_SALT);
+
+            dialog.setLocationRelativeTo(this);
+
+            dialog.setVisible(true);
+
+            if (!dialog.isPass_ok()) {
+                Helpers.mostrarMensajeAviso(this, "If you do not remember your password, you MUST manually remove " + Main.MEGADOCTOR_DIR + " to start again from scratch.");
+                System.exit(1);
+            } else {
+                _password = dialog.getPass();
+            }
+        }
+
+        if (!"".equals(_password_hash)) {
+            loadEncryptedAccountsAndTransfers();
+        } else {
+            loadAccountsAndTransfers();
+        }
+
+        runTransferenceWatchdog();
+
+    }//GEN-LAST:event_formComponentShown
 
     /**
      * @param args the command line arguments
@@ -3882,10 +4030,13 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JMenuItem jMenuItem2;
+    private javax.swing.JMenuItem jMenuItem3;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JPopupMenu.Separator jSeparator1;
+    private javax.swing.JPopupMenu.Separator jSeparator2;
+    private javax.swing.JPopupMenu.Separator jSeparator3;
     private javax.swing.JButton load_log_button;
     private javax.swing.JLabel logo_label;
     private javax.swing.JSplitPane mainSplitPanel;
@@ -3898,7 +4049,6 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JProgressBar progressbar;
     private javax.swing.JMenuItem purge_cache_menu;
     private javax.swing.JButton save_button;
-    private javax.swing.JCheckBoxMenuItem session_menu;
     private javax.swing.JLabel show_accounts;
     private javax.swing.JLabel status_label;
     private javax.swing.JTabbedPane tabbed_panel;
