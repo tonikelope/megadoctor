@@ -75,7 +75,7 @@ import javax.swing.text.BadLocationException;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "3.31";
+    public final static String VERSION = "3.32";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -124,7 +124,7 @@ public class Main extends javax.swing.JFrame {
     private volatile boolean _pausing_transference = false;
     private volatile boolean _transferences_paused = false;
     private volatile boolean _provisioning_upload = false;
-    private volatile byte[] _password = null;
+    private byte[] _password = null;
     private volatile String _password_hash = "";
 
     public void output_textarea_append(String msg) {
@@ -1834,9 +1834,11 @@ public class Main extends javax.swing.JFrame {
 
             _last_email_force_refresh = email;
 
+            String mk = mk_menu_checkbox.isSelected() ? Helpers.getMasterKey() : "**********************";
+
             Helpers.GUIRun(() -> {
 
-                output_textarea_append("\n[" + email + "] (" + reason + ")\n\n" + stats + "\n\n");
+                output_textarea_append("\n[" + email + "] (" + reason + ")\n\n" + "Master Key: " + mk + "\n\n" + stats + "\n\n");
                 Helpers.JTextFieldRegularPopupMenu.addMainMEGAPopupMenuTo(output_textarea);
                 Helpers.JTextFieldRegularPopupMenu.addAccountsMEGAPopupMenuTo(cuentas_textarea);
             });
@@ -1976,6 +1978,8 @@ public class Main extends javax.swing.JFrame {
 
             cuentas_scrollpanel.setVisible(!(Main.MEGADOCTOR_MISC.containsKey("hide_accounts") && (boolean) Main.MEGADOCTOR_MISC.get("hide_accounts")));
             show_accounts.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/vertical_" + (cuentas_scrollpanel.isVisible() ? "less" : "more") + ".png")));
+
+            mk_menu_checkbox.setSelected((Main.MEGADOCTOR_MISC.containsKey("print_mk") && (boolean) Main.MEGADOCTOR_MISC.get("print_mk")));
 
             headless_menu.setEnabled(double_login_menu.isSelected());
 
@@ -2401,6 +2405,8 @@ public class Main extends javax.swing.JFrame {
         double_login_menu = new javax.swing.JCheckBoxMenuItem();
         headless_menu = new javax.swing.JCheckBoxMenuItem();
         jSeparator3 = new javax.swing.JPopupMenu.Separator();
+        mk_menu_checkbox = new javax.swing.JCheckBoxMenuItem();
+        jSeparator4 = new javax.swing.JPopupMenu.Separator();
         menu_https = new javax.swing.JCheckBoxMenuItem();
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
         purge_cache_menu = new javax.swing.JMenuItem();
@@ -2793,6 +2799,13 @@ public class Main extends javax.swing.JFrame {
         });
         options_menu.add(headless_menu);
         options_menu.add(jSeparator3);
+
+        mk_menu_checkbox.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
+        mk_menu_checkbox.setText("Print account Master Key");
+        mk_menu_checkbox.setToolTipText("Useful for recovering a blocked account but be careful where it is stored.");
+        mk_menu_checkbox.setDoubleBuffered(true);
+        options_menu.add(mk_menu_checkbox);
+        options_menu.add(jSeparator4);
 
         menu_https.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
         menu_https.setSelected(true);
@@ -4037,10 +4050,12 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JPopupMenu.Separator jSeparator2;
     private javax.swing.JPopupMenu.Separator jSeparator3;
+    private javax.swing.JPopupMenu.Separator jSeparator4;
     private javax.swing.JButton load_log_button;
     private javax.swing.JLabel logo_label;
     private javax.swing.JSplitPane mainSplitPanel;
     private javax.swing.JCheckBoxMenuItem menu_https;
+    private javax.swing.JCheckBoxMenuItem mk_menu_checkbox;
     private javax.swing.JButton new_account_button;
     private javax.swing.JSpinner new_account_counter;
     private javax.swing.JMenu options_menu;

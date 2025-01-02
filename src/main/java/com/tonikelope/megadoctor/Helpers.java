@@ -46,10 +46,12 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -154,6 +156,58 @@ public class Helpers {
     public static final int MASTER_PASSWORD_PBKDF2_ITERATIONS = 65536;
 
     public static final ConcurrentLinkedQueue<Process> PROCESSES_QUEUE = new ConcurrentLinkedQueue<>();
+
+    public static String getMasterKey() {
+        try {
+            // Iniciar la consola interactiva de MEGAcmd
+            ProcessBuilder processBuilder = new ProcessBuilder("mega-cmd");
+
+            // Configurar PATH según tu implementación actual
+            String path = Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null;
+            processBuilder.environment().put("PATH", path + File.pathSeparator + System.getenv("PATH"));
+
+            processBuilder.redirectErrorStream(true); // Redirige la salida de error a la salida estándar
+
+            Process process = processBuilder.start();
+
+            // Crear lector y escritor para interactuar con el proceso
+            try (
+                    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(process.getOutputStream())); BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+
+                String line;
+
+                String masterKey = null;
+
+                writer.write("masterkey\n");
+
+                writer.flush();
+
+                // Leer hasta que aparezca el prompt inicial
+                while ((line = reader.readLine()) != null) {
+
+                    if (line.trim().endsWith(":/$")) {
+                        break;
+                    }
+                }
+
+                while ((line = reader.readLine()) != null) {
+
+                    if (line.trim().length() > 0 && !line.trim().endsWith(":/$")) {
+                        masterKey = line.trim();
+                        break;
+                    }
+                }
+
+                return masterKey; // Retornar la clave maestra
+            } finally {
+                process.destroy(); // Asegurar destrucción del proceso
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return null;
+    }
 
     public static byte[] PBKDF2HMACSHA256(String password, byte[] salt, int iterations, int output_length) throws NoSuchAlgorithmException, InvalidKeySpecException {
 
