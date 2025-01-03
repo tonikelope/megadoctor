@@ -14,6 +14,8 @@ MegaDoctor is an unofficial application designed to help you manage your MEGA ac
 <p align="center"><img src="https://github.com/tonikelope/megadoctor/raw/main/snapshots/transfer.png"></p>
 <p align="center"><img src="https://github.com/tonikelope/megadoctor/raw/main/snapshots/23.png"></p>
 
-<p>Note: although MegaDoctor relies on MEGAcmd, it does not pretend to be a complete GUI for it.</p>
+<p align="center"><img src="https://raw.githubusercontent.com/tonikelope/megabasterd/master/coffee.png"><br><img src="https://raw.githubusercontent.com/tonikelope/megabasterd/master/src/main/resources/images/ethereum_toni.png"></p>
+
+<p align="center">Note: although MegaDoctor relies on MEGAcmd, it does not pretend to be a complete GUI for it.</p>
 
 <p align="center"><b>IMPORTANT:</b> MegaDoctor uses the official tool provided by MEGA <a href="https://mega.io/cmd"><b>MEGAcmd</b></a> to access all MEGA cloud functionality. Accordingly, you are not authorized to use MegaDoctor in any way that violates <a href="https://mega.io/es/terms"><b>MEGA's terms of use</b></a>.</p>
