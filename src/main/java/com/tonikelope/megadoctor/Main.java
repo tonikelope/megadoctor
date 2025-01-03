@@ -77,7 +77,7 @@ import javax.swing.text.BadLocationException;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "3.33";
+    public final static String VERSION = "3.34";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -1850,11 +1850,11 @@ public class Main extends javax.swing.JFrame {
 
             _last_email_force_refresh = email;
 
-            String mk = mk_menu_checkbox.isSelected() ? Helpers.getMasterKey() : "**********************";
+            String mk = mk_menu_checkbox.isSelected() ? Helpers.getMasterKey(email) : "**********************";
 
             Helpers.GUIRun(() -> {
 
-                output_textarea_append("\n[" + email + "] (" + reason + ")\n\n" + "Master-Key: " + mk + "\n\n" + stats + "\n\n");
+                output_textarea_append("\n[" + email + "] (" + reason + ")\n\n" + "MASTER-KEY (DO NOT SHARE!): " + mk + "\n\n" + stats + "\n\n");
                 Helpers.JTextFieldRegularPopupMenu.addMainMEGAPopupMenuTo(output_textarea);
                 Helpers.JTextFieldRegularPopupMenu.addAccountsMEGAPopupMenuTo(cuentas_textarea);
             });
@@ -3081,7 +3081,7 @@ public class Main extends javax.swing.JFrame {
                                     status_label.setText("Reading " + email + " info...");
                                 });
 
-                                final String mk = mk_menu_checkbox.isSelected() ? "Master-Key: " + Helpers.getMasterKey() + "\n\n" : "";
+                                final String mk = mk_menu_checkbox.isSelected() ? "MASTER-KEY (DO NOT SHARE!): " + Helpers.getMasterKey(email) + "\n\n" : "";
 
                                 final String stats = check_account_stats.isSelected() ? getAccountStatistics(email) + "\n\n" : "";
 
@@ -4038,7 +4038,7 @@ public class Main extends javax.swing.JFrame {
         // TODO add your handling code here:
         if (mk_menu_checkbox.isSelected() && "".equals(_password_hash)) {
 
-            Helpers.mostrarMensajeAviso(this, "It is recommended that you set up a MASTER PASSWORD if you are going to print master keys for your accounts in the LOG.");
+            Helpers.mostrarMensajeAviso(this, "It is recommended that you set up a MASTER PASSWORD if you are going to print account master keys in the LOG.");
         }
     }//GEN-LAST:event_mk_menu_checkboxActionPerformed
 

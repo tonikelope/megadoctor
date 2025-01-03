@@ -141,7 +141,7 @@ import me.shivzee.util.Response;
  */
 public class Helpers {
 
-    public static final int NEW_ACCOUNT_CONFIRM_TIMEOUT = 60;
+    public static final int NEW_ACCOUNT_CONFIRM_TIMEOUT = 90;
 
     public static final int DOM_SELECTOR_TIMEOUT = 20000;
 
@@ -157,22 +157,25 @@ public class Helpers {
 
     public static final ConcurrentLinkedQueue<Process> PROCESSES_QUEUE = new ConcurrentLinkedQueue<>();
 
-    public static String getMasterKey() {
+    public static String getMasterKey(String email) {
+
+        Main.MAIN_WINDOW.login(email);
+
+        Process process = null;
+
         try {
-            // Iniciar la consola interactiva de MEGAcmd
+
             ProcessBuilder processBuilder = new ProcessBuilder("mega-cmd");
 
-            // Configurar PATH según tu implementación actual
             String path = Helpers.isWindows() ? MEGA_CMD_WINDOWS_PATH : null;
+
             processBuilder.environment().put("PATH", path + File.pathSeparator + System.getenv("PATH"));
 
-            processBuilder.redirectErrorStream(true); // Redirige la salida de error a la salida estándar
+            processBuilder.redirectErrorStream(true);
 
-            Process process = processBuilder.start();
+            process = processBuilder.start();
 
-            // Crear lector y escritor para interactuar con el proceso
-            try (
-                    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(process.getOutputStream())); BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(process.getOutputStream())); BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
 
                 String line;
 
@@ -190,20 +193,24 @@ public class Helpers {
                     }
                 }
 
-                while ((line = reader.readLine()) != null) {
+                while (masterKey == null && (line = reader.readLine()) != null) {
 
                     if (line.trim().length() > 0 && !line.trim().endsWith(":/$")) {
                         masterKey = line.trim();
-                        break;
                     }
                 }
 
-                return masterKey; // Retornar la clave maestra
+                return masterKey;
+
             } finally {
-                process.destroy(); // Asegurar destrucción del proceso
+                process.destroy();
             }
         } catch (IOException ex) {
             Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        if (process != null && process.isAlive()) {
+            process.destroyForcibly();
         }
 
         return null;
@@ -1396,7 +1403,7 @@ public class Helpers {
         } catch (Exception ex) {
             Logger.getLogger(Helpers.class.getName()).log(Level.SEVERE, null, ex);
         }
-        if (process != null) {
+        if (process != null && process.isAlive()) {
             process.destroyForcibly();
         }
         PROCESSES_QUEUE.remove(process);
