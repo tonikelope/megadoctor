@@ -18,6 +18,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -29,6 +30,7 @@ import java.io.OutputStreamWriter;
 import java.io.RandomAccessFile;
 import java.net.ServerSocket;
 import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -75,7 +77,7 @@ import javax.swing.text.BadLocationException;
  */
 public class Main extends javax.swing.JFrame {
 
-    public final static String VERSION = "3.32";
+    public final static String VERSION = "3.33";
     public final static int MESSAGE_DIALOG_FONT_SIZE = 20;
     public final static int MEGADOCTOR_ONE_INSTANCE_PORT = 32856;
     public final static ThreadPoolExecutor THREAD_POOL = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -623,9 +625,19 @@ public class Main extends javax.swing.JFrame {
     }
 
     public void init() {
-        loadMISC();
+
         Helpers.threadRun(() -> {
-            loadLog();
+
+            if (!"".equals(_password_hash)) {
+                loadEncryptedLog();
+                loadEncryptedAccountsAndTransfers();
+            } else {
+                loadLog();
+                loadAccountsAndTransfers();
+            }
+
+            runTransferenceWatchdog();
+
             runMEGACMDCHecker();
         });
     }
@@ -824,12 +836,14 @@ public class Main extends javax.swing.JFrame {
             clear_log_button.setEnabled(enable);
             check_only_new_checkbox.setEnabled(enable);
             check_force_full_checkbox.setEnabled(enable);
+            check_account_stats.setEnabled(enable);
             vamos_button.setEnabled(enable || isRunning_global_check());
             upload_button.setEnabled(enable && !isPausing_transference() && !isProvisioning_upload());
             save_button.setEnabled(enable);
             load_log_button.setEnabled(enable);
             new_account_button.setEnabled(enable);
             options_menu.setEnabled(enable);
+            menu_help.setEnabled(enable);
         });
     }
 
@@ -1060,11 +1074,13 @@ public class Main extends javax.swing.JFrame {
 
                 if (!"".equals(_password_hash)) {
                     saveEncryptedAccounts();
+                    saveEncryptedLog();
                 } else {
                     saveAccounts();
+                    saveLog();
                 }
                 saveTransfers();
-                saveLog();
+
                 logout(true);
             }
 
@@ -1838,7 +1854,7 @@ public class Main extends javax.swing.JFrame {
 
             Helpers.GUIRun(() -> {
 
-                output_textarea_append("\n[" + email + "] (" + reason + ")\n\n" + "Master Key: " + mk + "\n\n" + stats + "\n\n");
+                output_textarea_append("\n[" + email + "] (" + reason + ")\n\n" + "Master-Key: " + mk + "\n\n" + stats + "\n\n");
                 Helpers.JTextFieldRegularPopupMenu.addMainMEGAPopupMenuTo(output_textarea);
                 Helpers.JTextFieldRegularPopupMenu.addAccountsMEGAPopupMenuTo(cuentas_textarea);
             });
@@ -1887,6 +1903,16 @@ public class Main extends javax.swing.JFrame {
         try (FileOutputStream fos = new FileOutputStream(fileName); CipherOutputStream cos = new CipherOutputStream(fos, initCipher(Cipher.ENCRYPT_MODE, key)); ObjectOutputStream oos = new ObjectOutputStream(cos)) {
 
             oos.writeObject(data);
+
+        } catch (Exception ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "Error saving file: " + fileName, ex);
+        }
+    }
+
+    private void encryptAndSave(String fileName, String data, SecretKey key) {
+        try (FileOutputStream fos = new FileOutputStream(fileName); CipherOutputStream cos = new CipherOutputStream(fos, initCipher(Cipher.ENCRYPT_MODE, key)); OutputStreamWriter osw = new OutputStreamWriter(cos, StandardCharsets.UTF_8)) {
+
+            osw.write(data);
 
         } catch (Exception ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "Error saving file: " + fileName, ex);
@@ -1948,6 +1974,22 @@ public class Main extends javax.swing.JFrame {
         }
     }
 
+    public void saveEncryptedLog() {
+        try {
+            // Crear la clave AES de 256 bits desde el arreglo de bytes
+            SecretKey secretKey = new SecretKeySpec(_password, "AES");
+
+            // Leer el contenido del área de texto o archivo de log
+            String logContent = output_textarea.getText();
+
+            // Guardar el contenido cifrado
+            encryptAndSave(LOG_FILE, logContent, secretKey);
+
+        } catch (Exception ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
     private void saveMISC() {
 
         try (FileOutputStream fos = new FileOutputStream(Main.MEGADOCTOR_MISC_FILE); ObjectOutputStream oos = new ObjectOutputStream(fos)) {
@@ -1974,6 +2016,7 @@ public class Main extends javax.swing.JFrame {
             headless_menu.setSelected(Main.MEGADOCTOR_MISC.containsKey("headless_weblogin") && (boolean) Main.MEGADOCTOR_MISC.get("headless_weblogin"));
 
             check_only_new_checkbox.setSelected(Main.MEGADOCTOR_MISC.containsKey("check_only_new") && (boolean) Main.MEGADOCTOR_MISC.get("check_only_new"));
+            check_account_stats.setSelected(Main.MEGADOCTOR_MISC.containsKey("check_account_stats") && (boolean) Main.MEGADOCTOR_MISC.get("check_account_stats"));
             check_force_full_checkbox.setSelected(Main.MEGADOCTOR_MISC.containsKey("check_force_full") && (boolean) Main.MEGADOCTOR_MISC.get("check_force_full"));
 
             cuentas_scrollpanel.setVisible(!(Main.MEGADOCTOR_MISC.containsKey("hide_accounts") && (boolean) Main.MEGADOCTOR_MISC.get("hide_accounts")));
@@ -2010,6 +2053,47 @@ public class Main extends javax.swing.JFrame {
             }
         }
 
+    }
+
+    private void loadEncryptedLog() {
+        if (Files.exists(Paths.get(LOG_FILE))) {
+            try {
+                // Crear la clave AES de 256 bits desde el arreglo de bytes
+                SecretKey secretKey = new SecretKeySpec(_password, "AES");
+
+                // Leer y descifrar el contenido del archivo
+                String logContent = decryptAndLoadString(LOG_FILE, secretKey);
+
+                // Actualizar el área de texto en el hilo de la interfaz gráfica
+                Helpers.GUIRun(() -> {
+                    try {
+                        output_textarea.getStyledDocument().insertString(0, logContent, null);
+                    } catch (BadLocationException ex) {
+                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                });
+
+            } catch (Exception ex) {
+                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "Error loading encrypted log file.", ex);
+            }
+        }
+    }
+
+    private String decryptAndLoadString(String fileName, SecretKey key) {
+        try (FileInputStream fis = new FileInputStream(fileName); CipherInputStream cis = new CipherInputStream(fis, initCipher(Cipher.DECRYPT_MODE, key)); InputStreamReader isr = new InputStreamReader(cis, StandardCharsets.UTF_8); BufferedReader br = new BufferedReader(isr)) {
+
+            // Leer el contenido descifrado línea por línea
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = br.readLine()) != null) {
+                sb.append(line).append(System.lineSeparator());
+            }
+            return sb.toString().trim();
+
+        } catch (Exception ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "Error decrypting file: " + fileName, ex);
+            return "";
+        }
     }
 
     public void loadEncryptedAccountsAndTransfers() {
@@ -2395,6 +2479,7 @@ public class Main extends javax.swing.JFrame {
         check_options_panel = new javax.swing.JPanel();
         check_force_full_checkbox = new javax.swing.JCheckBox();
         check_only_new_checkbox = new javax.swing.JCheckBox();
+        check_account_stats = new javax.swing.JCheckBox();
         barra_menu = new javax.swing.JMenuBar();
         options_menu = new javax.swing.JMenu();
         jMenuItem2 = new javax.swing.JMenuItem();
@@ -2408,7 +2493,7 @@ public class Main extends javax.swing.JFrame {
         menu_https = new javax.swing.JCheckBoxMenuItem();
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
         purge_cache_menu = new javax.swing.JMenuItem();
-        jMenu1 = new javax.swing.JMenu();
+        menu_help = new javax.swing.JMenu();
         jMenuItem1 = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
@@ -2565,7 +2650,7 @@ public class Main extends javax.swing.JFrame {
                 .addComponent(pause_button)
                 .addGap(18, 18, 18)
                 .addComponent(cancel_all_button)
-                .addContainerGap(650, Short.MAX_VALUE))
+                .addContainerGap(862, Short.MAX_VALUE))
         );
         transferences_control_panelLayout.setVerticalGroup(
             transferences_control_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -2690,14 +2775,27 @@ public class Main extends javax.swing.JFrame {
             }
         });
 
+        check_account_stats.setFont(new java.awt.Font("Noto Sans", 1, 16)); // NOI18N
+        check_account_stats.setSelected(true);
+        check_account_stats.setText("Print account stats");
+        check_account_stats.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        check_account_stats.setDoubleBuffered(true);
+        check_account_stats.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                check_account_statsActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout check_options_panelLayout = new javax.swing.GroupLayout(check_options_panel);
         check_options_panel.setLayout(check_options_panelLayout);
         check_options_panelLayout.setHorizontalGroup(
             check_options_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(check_options_panelLayout.createSequentialGroup()
-                .addContainerGap()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(check_only_new_checkbox)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGap(18, 18, 18)
+                .addComponent(check_account_stats)
+                .addGap(18, 18, 18)
                 .addComponent(check_force_full_checkbox)
                 .addContainerGap())
         );
@@ -2707,7 +2805,8 @@ public class Main extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(check_options_panelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(check_only_new_checkbox)
-                    .addComponent(check_force_full_checkbox))
+                    .addComponent(check_force_full_checkbox)
+                    .addComponent(check_account_stats))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -2836,8 +2935,8 @@ public class Main extends javax.swing.JFrame {
 
         barra_menu.add(options_menu);
 
-        jMenu1.setText("Help");
-        jMenu1.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
+        menu_help.setText("Help");
+        menu_help.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
 
         jMenuItem1.setFont(new java.awt.Font("Noto Sans", 0, 16)); // NOI18N
         jMenuItem1.setText("About");
@@ -2846,9 +2945,9 @@ public class Main extends javax.swing.JFrame {
                 jMenuItem1ActionPerformed(evt);
             }
         });
-        jMenu1.add(jMenuItem1);
+        menu_help.add(jMenuItem1);
 
-        barra_menu.add(jMenu1);
+        barra_menu.add(menu_help);
 
         setJMenuBar(barra_menu);
 
@@ -2982,13 +3081,17 @@ public class Main extends javax.swing.JFrame {
                                     status_label.setText("Reading " + email + " info...");
                                 });
 
-                                String stats = getAccountStatistics(email);
+                                final String mk = mk_menu_checkbox.isSelected() ? "Master-Key: " + Helpers.getMasterKey() + "\n\n" : "";
 
-                                Helpers.GUIRun(() -> {
+                                final String stats = check_account_stats.isSelected() ? getAccountStatistics(email) + "\n\n" : "";
 
-                                    output_textarea_append("\n[" + email + "]\n\n" + stats + "\n\n");
+                                if (!"".equals(mk) || !"".equals(stats)) {
+                                    Helpers.GUIRun(() -> {
 
-                                });
+                                        output_textarea_append("\n[" + email + "]\n\n" + mk + stats);
+
+                                    });
+                                }
 
                                 String[] space_stats = Helpers.getAccountSpaceData(email);
 
@@ -3038,18 +3141,14 @@ public class Main extends javax.swing.JFrame {
 
                             output_textarea_append("TOTAL FREE SPACE: " + Helpers.formatBytes(total_space - total_space_used) + " (of " + Helpers.formatBytes(total_space) + ")\n\n");
 
-                            String cuentas_text = cuentas_textarea.getText();
-
                             if (!login_error_accounts.isEmpty()) {
 
                                 output_textarea_append("(WARNING) LOGIN ERRORS: " + String.valueOf(login_error_accounts.size()) + "\n");
 
                                 for (String error_account : login_error_accounts) {
                                     output_textarea_append("    ERROR: " + error_account + "\n");
-                                    cuentas_text.replace(error_account, "");
                                 }
 
-                                cuentas_textarea.setText(cuentas_text);
                             }
 
                             output_textarea_append("\nCHECKING END -> " + Helpers.getFechaHoraActual() + "\n");
@@ -3060,7 +3159,7 @@ public class Main extends javax.swing.JFrame {
 
                         });
 
-                        Helpers.mostrarMensajeInformativo(this, isAborting_global_check() ? "CANCELED!" : "ALL ACCOUNTS CHECKED");
+                        Helpers.mostrarMensajeInformativo(this, isAborting_global_check() ? "ACCOUNTS CHECKING CANCELED!" : "ALL ACCOUNTS CHECKED");
 
                     } else {
                         Helpers.mostrarMensajeInformativo(this, "ALL ACCOUNTS CHECKED");
@@ -3931,22 +4030,24 @@ public class Main extends javax.swing.JFrame {
             }
         }
 
-        if (!"".equals(_password_hash)) {
-            loadEncryptedAccountsAndTransfers();
-        } else {
-            loadAccountsAndTransfers();
-        }
-
-        runTransferenceWatchdog();
+        init();
 
     }//GEN-LAST:event_formComponentShown
 
     private void mk_menu_checkboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mk_menu_checkboxActionPerformed
         // TODO add your handling code here:
-        if (mk_menu_checkbox.isSelected()) {
-            Helpers.mostrarMensajeAviso(this, "Be careful where you keep your account master key because it could be stolen.");
+        if (mk_menu_checkbox.isSelected() && "".equals(_password_hash)) {
+
+            Helpers.mostrarMensajeAviso(this, "It is recommended that you set up a MASTER PASSWORD if you are going to print master keys for your accounts in the LOG.");
         }
     }//GEN-LAST:event_mk_menu_checkboxActionPerformed
+
+    private void check_account_statsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_check_account_statsActionPerformed
+        // TODO add your handling code here:
+        Main.MEGADOCTOR_MISC.put("check_account_stats", check_account_stats.isSelected());
+
+        saveMISC();
+    }//GEN-LAST:event_check_account_statsActionPerformed
 
     /**
      * @param args the command line arguments
@@ -3988,7 +4089,7 @@ public class Main extends javax.swing.JFrame {
                 public void run() {
 
                     MAIN_WINDOW = new Main();
-                    MAIN_WINDOW.init();
+                    MAIN_WINDOW.loadMISC();
                     MAIN_WINDOW.setExtendedState(JFrame.MAXIMIZED_BOTH);
                     MAIN_WINDOW.setVisible(true);
                 }
@@ -4012,7 +4113,7 @@ public class Main extends javax.swing.JFrame {
                     public void run() {
 
                         MAIN_WINDOW = new Main();
-                        MAIN_WINDOW.init();
+                        MAIN_WINDOW.loadMISC();
                         MAIN_WINDOW.setExtendedState(JFrame.MAXIMIZED_BOTH);
                         MAIN_WINDOW.setVisible(true);
                     }
@@ -4040,6 +4141,7 @@ public class Main extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenuBar barra_menu;
     private javax.swing.JButton cancel_all_button;
+    private javax.swing.JCheckBox check_account_stats;
     private javax.swing.JCheckBox check_force_full_checkbox;
     private javax.swing.JCheckBox check_only_new_checkbox;
     private javax.swing.JPanel check_options_panel;
@@ -4050,7 +4152,6 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JTextArea cuentas_textarea;
     private javax.swing.JCheckBoxMenuItem double_login_menu;
     private javax.swing.JCheckBoxMenuItem headless_menu;
-    private javax.swing.JMenu jMenu1;
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JMenuItem jMenuItem2;
     private javax.swing.JMenuItem jMenuItem3;
@@ -4064,6 +4165,7 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JButton load_log_button;
     private javax.swing.JLabel logo_label;
     private javax.swing.JSplitPane mainSplitPanel;
+    private javax.swing.JMenu menu_help;
     private javax.swing.JCheckBoxMenuItem menu_https;
     private javax.swing.JCheckBoxMenuItem mk_menu_checkbox;
     private javax.swing.JButton new_account_button;
